@@ -59,12 +59,12 @@ const Footer = () => {
 								<Zap className="h-5 w-5 text-primary-foreground" />
 							</div>
 							<span className="font-bold text-xl tracking-tight">
-								SaaS Starter
+								Leady
 							</span>
 						</a>
 						<p className="text-sm text-muted-foreground max-w-xs pt-4 leading-relaxed">
-							The ultimate boilerplate to build robust SaaS applications
-							quickly. Stop rebuilding the wheel and focus on your core product.
+							Open-source AI support platform — embeddable chat widget with
+							knowledge base, retrieval, and lead capture.
 						</p>
 					</div>
 
@@ -95,7 +95,7 @@ const Footer = () => {
 				{/* Bottom Section */}
 				<div className="flex flex-col md:flex-row justify-between items-center gap-4">
 					<div className="text-sm text-muted-foreground text-center md:text-left">
-						© {new Date().getFullYear()} SaaS Starter. All rights reserved.
+						© {new Date().getFullYear()} Leady. All rights reserved.
 					</div>
 
 					<div className="flex items-center space-x-6">

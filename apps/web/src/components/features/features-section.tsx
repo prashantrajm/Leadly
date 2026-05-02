@@ -18,8 +18,8 @@ export function FeaturesSection() {
 						Everything you need to ship
 					</h2>
 					<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-						Fully configured with authentication, database, UI components, and
-						edge-first APIs. No boilerplate fatigue.
+						Embeddable chat widget, knowledge base with retrieval, lead
+						capture, and a live human-takeover inbox.
 					</p>
 				</div>
 

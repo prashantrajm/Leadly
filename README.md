@@ -1,126 +1,80 @@
-# SaaS Boilerplate
+# Leady
 
-A Bun-powered monorepo for building modern SaaS applications.
+Open-source AI support platform — embeddable chat (and later voice) widget with knowledge base, retrieval, lead capture, and a live human-takeover inbox.
+
+See [`docs/v1-design.md`](./docs/v1-design.md) for the full v1 design.
 
 ## Structure
 
 ```
-saas-boilerplate/
+leady/
 ├── apps/
-│   ├── web/          # React frontend application
-│   └── api/          # Cloudflare Workers API (Hono)
-├── packages/         # Shared packages (future)
-└── package.json      # Root workspace configuration
+│   ├── web/      # React dashboard (Vite + TanStack Router)
+│   ├── api/      # Hono backend
+│   └── native/   # Expo mobile app
+├── packages/     # Shared packages (future)
+├── docs/         # Design docs
+└── package.json  # Root workspace
 ```
 
 ## Prerequisites
 
-- [Bun](https://bun.sh) installed on your system
+- [Bun](https://bun.sh)
 
 ## Getting Started
-
-### Install Dependencies
 
 ```bash
 bun install
 ```
 
-### Development
+### Develop
 
-Run all apps in development mode:
 ```bash
+# All apps
 bun dev
-```
 
-Run specific apps:
-```bash
-# Web app only
+# Web only
 bun dev:web
 
 # API only
 bun dev:api
 ```
 
-### Building
+### Build
 
-Build all apps:
 ```bash
 bun build
-```
-
-Build specific apps:
-```bash
-# Web app
 bun build:web
-
-# API (deploy to Cloudflare)
 bun build:api
 ```
 
-### Testing
+### Test / Lint / Format
 
-Run tests across all workspaces:
 ```bash
 bun test
-```
-
-### Linting & Formatting
-
-```bash
-# Lint all workspaces
 bun lint
-
-# Format all workspaces
 bun format
-
-# Check all workspaces (Biome)
 bun check
 ```
 
 ## Apps
 
 ### Web (`apps/web`)
-- React 19 with TypeScript
-- Vite for bundling
-- TanStack Router for routing
-- TanStack Query for data fetching
-- Tailwind CSS v4 for styling
-- Radix UI components
-- Biome for linting and formatting
+React 19, Vite, TanStack Router, TanStack Query, Tailwind v4, Radix UI, Biome.
 
 ### API (`apps/api`)
-- Hono framework
-- Cloudflare Workers runtime
-- TypeScript
+Hono, TypeScript. Runtime is migrating to Bun on a VPS (see `docs/v1-design.md` §5).
 
-## Adding Shared Packages
+### Native (`apps/native`)
+Expo Router. Not in v1 scope.
 
-Create packages in the `packages/` directory:
-
-```bash
-mkdir -p packages/your-package
-cd packages/your-package
-bun init
-```
-
-Then reference them in your apps:
-
-```json
-{
-  "dependencies": {
-    "your-package": "workspace:*"
-  }
-}
-```
-
-## Workspace Commands
-
-Bun workspaces support filtering:
+## Workspace commands
 
 ```bash
-# Run a command in all workspaces
 bun run --filter='*' <command>
-
-# Run in specific workspace
 bun run --filter=web <command>
 ```
+
+## License
+
+Apache-2.0.

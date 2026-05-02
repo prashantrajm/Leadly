@@ -20,7 +20,7 @@ apiApp.get("/health", (c) => {
   return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    service: "SaaS API",
+    service: "Leady API",
   });
 });
 
@@ -32,7 +32,7 @@ apiApp.doc("/doc", {
   openapi: "3.0.0",
   info: {
     version: "1.0.0",
-    title: "SaaS API",
-    description: "API for SaaS boilerplate",
+    title: "Leady API",
+    description: "API for Leady — AI support platform with knowledge base and lead capture.",
   },
 });

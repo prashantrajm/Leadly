@@ -1,21 +1,31 @@
-```txt
-npm install
-npm run dev
+# Leady — API
+
+The Leady backend. Hono + TypeScript. Currently scaffolded on Cloudflare Workers; migrating to Bun-on-VPS per `docs/v1-design.md` §5.
+
+## Develop
+
+```bash
+bun install
+bun dev   # wrangler dev on port 8787 (until the runtime migration)
 ```
 
-```txt
-npm run deploy
+## Deploy
+
+```bash
+bun deploy
 ```
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
+## Database
 
-```txt
-npm run cf-typegen
+Postgres + pgvector via Prisma. See `prisma/schema.prisma` and `prisma/auth.prisma`.
+
+```bash
+bun migrate         # prisma migrate dev
+bun generate        # prisma generate
+bun studio          # prisma studio
+bun db:seed         # seed local DB
 ```
 
-Pass the `CloudflareBindings` as generics when instantiation `Hono`:
+## Auth
 
-```ts
-// src/index.ts
-const app = new Hono<{ Bindings: CloudflareBindings }>()
-```
+Better Auth, Google OAuth provider. Routes mounted at `/api/auth/*`.
