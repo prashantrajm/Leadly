@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LayoutTemplate, Menu, Zap } from "lucide-react";
+import { Github, LayoutTemplate, Menu, Zap } from "lucide-react";
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -23,8 +23,6 @@ import { Button } from "./ui/button";
 
 const navigationItems: NavItem[] = [
 	{ title: "Features", href: "/#features" },
-	{ title: "Pricing", href: "/#pricing" },
-	{ title: "Documentation", href: "/#docs" },
 ];
 
 export function Header() {
@@ -61,6 +59,16 @@ export function Header() {
 					</nav>
 
 					<div className="flex items-center space-x-2 ml-6">
+						<Button variant="ghost" size="icon" asChild className="h-8 w-8">
+							<a
+								href="https://github.com/rajmaurya-dev/Leady"
+								target="_blank"
+								rel="noopener noreferrer"
+								aria-label="GitHub"
+							>
+								<Github className="h-4 w-4" />
+							</a>
+						</Button>
 						{isPending ? (
 							<div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
 						) : session?.user ? (
