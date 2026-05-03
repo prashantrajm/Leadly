@@ -1,7 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-  runtime  = "cloudflare"
-  output   = "../src/generated/client"
+  provider     = "prisma-client-js"
+  output       = "../src/generated/client"
   moduleFormat = "esm"
 }
 

@@ -1,13 +1,9 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { authMiddleware, requireBusinessOwner, type AuthUser } from "../middleware/auth";
 import { ErrorSchema } from "../schemas";
+import { deleteObject, getObject, putObject } from "../lib/s3";
 
 type Env = {
-  Bindings: {
-    DATABASE_URL: string;
-    BETTER_AUTH_SECRET: string;
-    MEDIA_BUCKET: R2Bucket;
-  };
   Variables: {
     user: AuthUser;
     session: unknown;
@@ -19,10 +15,6 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "im
 
 export const uploadsApp = new OpenAPIHono<Env>();
 
-// ============================================
-// Schemas
-// ============================================
-
 const UploadResponseSchema = z.object({
   url: z.string(),
   key: z.string(),
@@ -31,10 +23,6 @@ const UploadResponseSchema = z.object({
 const DeleteUploadSchema = z.object({
   key: z.string(),
 }).openapi("DeleteUpload");
-
-// ============================================
-// Route Definitions
-// ============================================
 
 const uploadFileRoute = createRoute({
   method: "post",
@@ -46,7 +34,7 @@ const uploadFileRoute = createRoute({
         "multipart/form-data": {
           schema: z.object({
             file: z.any().openapi({ type: "string", format: "binary" }),
-            folder: z.string().openapi({ example: "businesses/abc123" }),
+            folder: z.string().openapi({ example: "agents/abc123" }),
           }),
         },
       },
@@ -95,28 +83,29 @@ const deleteFileRoute = createRoute({
   },
 });
 
-// ============================================
-// Route Handlers
-// ============================================
-
-// Public GET — serve images from R2 (no auth required)
+// Public GET — proxy from S3-compatible store. Self-hosters can also point a
+// CDN directly at the bucket and skip this route.
 uploadsApp.get("/file/*", async (c) => {
   const key = c.req.path.replace(/^\/file\//, "");
   if (!key) {
     return c.json({ error: "File key is required" }, 400);
   }
 
-  const object = await c.env.MEDIA_BUCKET.get(key);
-  if (!object) {
+  try {
+    const object = await getObject(key);
+    if (!object.Body) {
+      return c.json({ error: "File not found" }, 404);
+    }
+
+    const headers = new Headers();
+    headers.set("Content-Type", object.ContentType || "application/octet-stream");
+    headers.set("Cache-Control", "public, max-age=31536000, immutable");
+    if (object.ETag) headers.set("ETag", object.ETag);
+
+    return new Response(object.Body as ReadableStream, { headers });
+  } catch {
     return c.json({ error: "File not found" }, 404);
   }
-
-  const headers = new Headers();
-  headers.set("Content-Type", object.httpMetadata?.contentType || "application/octet-stream");
-  headers.set("Cache-Control", "public, max-age=31536000, immutable");
-  headers.set("ETag", object.httpEtag);
-
-  return new Response(object.body, { headers });
 });
 
 uploadsApp.openapi(uploadFileRoute, async (c) => {
@@ -137,30 +126,22 @@ uploadsApp.openapi(uploadFileRoute, async (c) => {
     return c.json({ error: "Folder path is required" }, 400);
   }
 
-  // Validate file type
   if (!ALLOWED_TYPES.includes(file.type)) {
     return c.json({ error: `Invalid file type: ${file.type}. Allowed: ${ALLOWED_TYPES.join(", ")}` }, 400);
   }
 
-  // Validate file size
   if (file.size > MAX_FILE_SIZE) {
     return c.json({ error: `File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB` }, 400);
   }
 
-  // Generate unique key
-  const ext = file.name.split(".").pop() || "jpg";
+  const ext = file.name.split(".").pop() || "bin";
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   const key = `${folder}/${timestamp}-${random}.${ext}`;
 
-  // Upload to R2
-  await c.env.MEDIA_BUCKET.put(key, file.stream(), {
-    httpMetadata: {
-      contentType: file.type,
-    },
-  });
+  const buffer = new Uint8Array(await file.arrayBuffer());
+  await putObject(key, buffer, file.type);
 
-  // Return the key and the serving URL
   return c.json({ url: `/api/uploads/file/${key}`, key }, 200);
 });
 
@@ -172,7 +153,7 @@ uploadsApp.openapi(deleteFileRoute, async (c) => {
 
   const { key } = c.req.valid("json");
 
-  await c.env.MEDIA_BUCKET.delete(key);
+  await deleteObject(key);
 
   return c.json({ success: true }, 200);
 });

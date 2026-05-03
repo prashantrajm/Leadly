@@ -1,10 +1,24 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/client";
-import { withAccelerate } from "@prisma/extension-accelerate";
 
-export const getPrisma = (databaseUrl: string) => {
-  return new PrismaClient({
-    accelerateUrl: databaseUrl,
-  }).$extends(withAccelerate());
-};
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined;
+}
 
-export type ExtendedPrismaClient = ReturnType<typeof getPrisma>;
+function createClient() {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is required");
+  }
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({ adapter });
+}
+
+export const prisma: PrismaClient = globalThis.__prisma ?? createClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalThis.__prisma = prisma;
+}
+
+export type DbClient = typeof prisma;
