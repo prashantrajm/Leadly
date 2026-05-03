@@ -22,9 +22,9 @@ export function InstallCard() {
 	};
 
 	return (
-		<div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-shadow hover:shadow-lg md:p-8">
+		<div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8">
 			<div className="mb-4">
-				<div className="mb-2 text-xs font-medium uppercase tracking-wider text-primary">
+				<div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 					Install
 				</div>
 				<h3 className="text-xl font-semibold tracking-tight md:text-2xl">
@@ -44,9 +44,9 @@ export function InstallCard() {
 				>
 					<div className="flex items-center justify-between border-b border-border px-3 py-2">
 						<div className="flex items-center gap-1.5">
-							<span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
-							<span className="h-2.5 w-2.5 rounded-full bg-primary/40" />
-							<span className="h-2.5 w-2.5 rounded-full bg-primary/70" />
+							<span className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+							<span className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+							<span className="h-2 w-2 rounded-full bg-muted-foreground/30" />
 						</div>
 						<button
 							type="button"

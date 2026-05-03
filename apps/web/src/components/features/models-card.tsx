@@ -1,28 +1,28 @@
-import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { motion, useInView } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-const MODELS = [
-	"OpenAI",
-	"Anthropic",
-	"Google",
-	"Mistral",
-	"Groq",
-	"Local",
-];
+const MODELS = ["OpenAI", "Anthropic", "Google", "Mistral", "Groq", "Local"];
 
 export function ModelsCard() {
-	const [active, setActive] = useState(0);
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-80px" });
+	const [revealed, setRevealed] = useState(0);
 
 	useEffect(() => {
-		const t = setInterval(() => setActive((a) => (a + 1) % MODELS.length), 1400);
-		return () => clearInterval(t);
-	}, []);
+		if (!inView) return;
+		if (revealed >= MODELS.length) return;
+		const t = setTimeout(() => setRevealed((r) => r + 1), 90);
+		return () => clearTimeout(t);
+	}, [inView, revealed]);
 
 	return (
-		<div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-shadow hover:shadow-lg md:p-8">
+		<div
+			ref={ref}
+			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8"
+		>
 			<div className="mb-4">
-				<div className="mb-2 text-xs font-medium uppercase tracking-wider text-primary">
+				<div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 					Your model
 				</div>
 				<h3 className="text-xl font-semibold tracking-tight">
@@ -34,23 +34,26 @@ export function ModelsCard() {
 			</div>
 
 			<div className="mt-auto flex flex-wrap gap-2">
-				{MODELS.map((m, i) => (
-					<motion.span
-						key={m}
-						animate={{
-							scale: active === i ? 1.05 : 1,
-						}}
-						transition={{ duration: 0.3 }}
-						className={cn(
-							"rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-							active === i
-								? "border-primary/40 bg-primary/10 text-primary"
-								: "border-border bg-secondary/30 text-muted-foreground",
-						)}
-					>
-						{m}
-					</motion.span>
-				))}
+				{MODELS.map((m, i) => {
+					const isVisible = i < revealed;
+					const isActive = i === 0; // OpenAI as the visually-active default
+					return (
+						<motion.span
+							key={m}
+							initial={{ opacity: 0, y: 4 }}
+							animate={isVisible ? { opacity: 1, y: 0 } : {}}
+							transition={{ duration: 0.25 }}
+							className={cn(
+								"rounded-full border px-3 py-1.5 text-xs font-medium",
+								isActive
+									? "border-foreground/30 bg-foreground text-background"
+									: "border-border bg-secondary/30 text-muted-foreground",
+							)}
+						>
+							{m}
+						</motion.span>
+					);
+				})}
 			</div>
 		</div>
 	);

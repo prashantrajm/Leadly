@@ -1,37 +1,36 @@
-import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { motion, useInView } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const ARTICLES = [
-	"Shipping & delivery",
-	"Returns policy",
-	"International orders",
-	"Bundles & discounts",
-	"Account settings",
+	{ title: "Shipping & delivery", score: 0.94 },
+	{ title: "Returns policy", score: 0.41 },
+	{ title: "International orders", score: 0.88 },
+	{ title: "Bundles & discounts", score: 0.36 },
+	{ title: "Account settings", score: 0.22 },
 ];
 
-// indices of "matched" articles per cycle step
-const MATCHES: number[][] = [
-	[0, 2],
-	[1],
-	[3, 0],
-	[4],
-];
+const MATCH_INDICES = new Set([0, 2]);
 
 export function KnowledgeCard() {
-	const [step, setStep] = useState(0);
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-80px" });
+	const [revealed, setRevealed] = useState(0);
 
 	useEffect(() => {
-		const t = setInterval(() => setStep((s) => (s + 1) % MATCHES.length), 2200);
-		return () => clearInterval(t);
-	}, []);
-
-	const matched = new Set(MATCHES[step]);
+		if (!inView) return;
+		if (revealed >= ARTICLES.length) return;
+		const t = setTimeout(() => setRevealed((r) => r + 1), 140);
+		return () => clearTimeout(t);
+	}, [inView, revealed]);
 
 	return (
-		<div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-shadow hover:shadow-lg md:p-8">
+		<div
+			ref={ref}
+			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8"
+		>
 			<div className="mb-5">
-				<div className="mb-2 text-xs font-medium uppercase tracking-wider text-primary">
+				<div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 					Knowledge base
 				</div>
 				<h3 className="text-xl font-semibold tracking-tight md:text-2xl">
@@ -44,31 +43,35 @@ export function KnowledgeCard() {
 			</div>
 
 			<div className="mt-auto flex flex-col gap-2">
-				{ARTICLES.map((title, i) => {
-					const isMatch = matched.has(i);
+				{ARTICLES.map((article, i) => {
+					const isMatch = MATCH_INDICES.has(i);
+					const isVisible = i < revealed;
 					return (
 						<motion.div
-							key={title}
-							animate={{
-								opacity: isMatch ? 1 : 0.45,
-								x: isMatch ? 0 : -2,
-							}}
-							transition={{ duration: 0.4 }}
+							key={article.title}
+							initial={{ opacity: 0, x: -8 }}
+							animate={
+								isVisible
+									? { opacity: isMatch ? 1 : 0.4, x: 0 }
+									: { opacity: 0, x: -8 }
+							}
+							transition={{ duration: 0.3 }}
 							className={cn(
-								"flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors",
+								"flex items-center justify-between rounded-lg border px-3 py-2 text-sm",
 								isMatch
-									? "border-primary/30 bg-primary/5 text-foreground"
-									: "border-border bg-secondary/30 text-muted-foreground",
+									? "border-foreground/20 bg-secondary/60 text-foreground"
+									: "border-border bg-secondary/20 text-muted-foreground",
 							)}
 						>
-							<span className="truncate">{title}</span>
-							{isMatch && (
+							<span className="truncate">{article.title}</span>
+							{isMatch && isVisible && (
 								<motion.span
 									initial={{ scale: 0.6, opacity: 0 }}
 									animate={{ scale: 1, opacity: 1 }}
-									className="ml-3 shrink-0 rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[10px] tracking-wider text-primary"
+									transition={{ delay: 0.2 }}
+									className="ml-3 shrink-0 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] tracking-[0.15em] text-foreground"
 								>
-									0.9{Math.floor(Math.random() * 9)}
+									{article.score.toFixed(2)}
 								</motion.span>
 							)}
 						</motion.div>

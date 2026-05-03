@@ -1,5 +1,5 @@
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useInView } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type Turn = {
@@ -32,25 +32,30 @@ const SCRIPT: Turn[] = [
 ];
 
 export function TakeoverCard() {
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-80px" });
 	const [step, setStep] = useState(0);
 
 	useEffect(() => {
-		const t = setInterval(() => {
-			setStep((s) => (s + 1) % (SCRIPT.length + 1));
-		}, 2400);
-		return () => clearInterval(t);
-	}, []);
+		if (!inView) return;
+		if (step >= SCRIPT.length) return;
+		const t = setTimeout(() => setStep((s) => s + 1), step === 0 ? 400 : 900);
+		return () => clearTimeout(t);
+	}, [inView, step]);
 
 	const visible = SCRIPT.slice(0, step);
 
 	return (
-		<div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 transition-shadow hover:shadow-lg md:p-8">
+		<div
+			ref={ref}
+			className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8"
+		>
 			<div className="relative z-10 flex h-full flex-col">
 				<div className="mb-6 max-w-md">
-					<div className="mb-2 inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
-						<span className="relative flex h-2 w-2">
-							<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-							<span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+					<div className="mb-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+						<span className="relative flex h-1.5 w-1.5">
+							<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground opacity-60" />
+							<span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-foreground" />
 						</span>
 						Live takeover
 					</div>
@@ -79,10 +84,10 @@ export function TakeoverCard() {
 							>
 								<div
 									className={cn(
-										"relative max-w-[78%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
+										"relative max-w-[78%] rounded-2xl px-4 py-2.5 text-sm",
 										turn.from === "visitor"
 											? "rounded-bl-sm bg-secondary text-secondary-foreground"
-											: "rounded-br-sm bg-primary text-primary-foreground",
+											: "rounded-br-sm bg-foreground text-background",
 									)}
 								>
 									{turn.text}
@@ -91,7 +96,7 @@ export function TakeoverCard() {
 											initial={{ opacity: 0, scale: 0.6 }}
 											animate={{ opacity: 1, scale: 1 }}
 											transition={{ delay: 0.2 }}
-											className="pointer-events-none absolute -top-2 -right-2 rounded-full bg-card px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary shadow-sm ring-1 ring-border"
+											className="pointer-events-none absolute -top-2 -right-2 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-foreground"
 											title="Visitor sees no difference. Only your dashboard knows."
 										>
 											human
@@ -106,7 +111,7 @@ export function TakeoverCard() {
 
 			<div
 				aria-hidden
-				className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+				className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-foreground/[0.04] blur-3xl"
 			/>
 		</div>
 	);

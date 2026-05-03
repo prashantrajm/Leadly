@@ -11,13 +11,13 @@ export function FeaturesSection() {
 		<section id="features" className="bg-background py-20 md:py-28">
 			<div className="container mx-auto max-w-7xl px-4">
 				<div className="mx-auto mb-14 max-w-2xl text-center md:mb-20">
-					<Badge variant="secondary" className="mb-4">
+					<Badge variant="outline" className="mb-5 font-mono text-[10px] uppercase tracking-[0.18em]">
 						Features
 					</Badge>
-					<h2 className="text-3xl font-semibold tracking-tight md:text-5xl">
+					<h2 className="text-balance text-3xl font-semibold tracking-tighter md:text-5xl">
 						Everything one conversation needs.
 					</h2>
-					<p className="mt-4 text-base text-muted-foreground md:text-lg">
+					<p className="mt-4 text-pretty text-base text-muted-foreground md:text-lg">
 						An agent your visitors actually want to talk to. An inbox you
 						actually want to open.
 					</p>
