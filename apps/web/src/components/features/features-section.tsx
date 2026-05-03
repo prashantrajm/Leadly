@@ -24,9 +24,9 @@ export function FeaturesSection() {
 				</div>
 
 				<div className="grid grid-cols-1 gap-3 md:grid-cols-6 md:gap-4">
-					{/* Row 1 — hero takeover (4 cols) + install (2 cols) */}
+					{/* Row 1 — hero knowledge (4 cols) + install (2 cols) */}
 					<div className="md:col-span-4 md:row-span-2">
-						<TakeoverCard />
+						<KnowledgeCard />
 					</div>
 					<div className="md:col-span-2">
 						<InstallCard />
@@ -37,9 +37,9 @@ export function FeaturesSection() {
 						<ModelsCard />
 					</div>
 
-					{/* Row 3 — knowledge (3 cols) + leads (3 cols) */}
+					{/* Row 3 — takeover (3 cols) + leads (3 cols) */}
 					<div className="md:col-span-3">
-						<KnowledgeCard />
+						<TakeoverCard />
 					</div>
 					<div className="md:col-span-3">
 						<LeadsCard />

@@ -51,20 +51,20 @@ function Hero() {
 							<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground opacity-60" />
 							<span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-foreground" />
 						</span>
-						Live human takeover, no awkward handoff
+						Grounded in your content, every answer cited
 					</div>
 
 					<h1 className="text-balance text-5xl font-semibold tracking-tighter md:text-6xl lg:text-7xl">
-						AI support that knows{" "}
+						AI customer support{" "}
 						<span className="bg-gradient-to-b from-foreground to-foreground/55 bg-clip-text text-transparent">
-							when to step aside.
+							that handles it.
 						</span>
 					</h1>
 
 					<p className="mx-auto mt-7 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
-						Leadly answers your visitors instantly. When a real person needs to
-						step in, they take over the conversation — same name, same voice,
-						no awkward "let me transfer you."
+						Leadly answers your visitors with replies grounded in your own
+						content — cited, captures leads inside the conversation, and lets
+						your team step in only when they want to.
 					</p>
 
 					<div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -118,11 +118,11 @@ function ProductShot() {
 			<div className="container mx-auto max-w-6xl px-4">
 				<div className="mx-auto mb-12 max-w-2xl text-center md:mb-16">
 					<h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-						One inbox. Both kinds of replies.
+						An inbox built for AI conversations.
 					</h2>
 					<p className="mt-4 text-base text-muted-foreground md:text-lg">
-						Watch your agent work in real time. Step in with a click — your
-						visitor never knows the difference.
+						See every conversation in real time. Read transcripts, review
+						captured leads, and step in any time you want to.
 					</p>
 				</div>
 
