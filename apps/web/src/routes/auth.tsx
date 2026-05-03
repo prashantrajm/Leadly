@@ -34,7 +34,7 @@ const signUpSchema = z.object({
 
 function AuthPage() {
 	return (
-		<div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 lg:grid-cols-2">
+		<div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
 			<VisualPane />
 			<FormPane />
 		</div>
