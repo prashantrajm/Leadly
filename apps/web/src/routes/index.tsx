@@ -2,6 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { FeaturesSection } from "@/components/features";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -15,6 +22,7 @@ function HomePage() {
 			<TrustStrip />
 			<FeaturesSection />
 			<ProductShot />
+			<Faq />
 			<ClosingCta />
 		</>
 	);
@@ -264,6 +272,81 @@ function ChatBubble({
 				)}
 			</div>
 		</div>
+	);
+}
+
+const FAQS: { q: string; a: string }[] = [
+	{
+		q: "How long does setup actually take?",
+		a: "Under five minutes for the basic install. Create an agent, paste your knowledge base content (Markdown, or upload a .md / .txt file), copy the script tag, and drop it into your site's <head>. The widget appears on the next page load.",
+	},
+	{
+		q: "Will my visitors know when a human takes over?",
+		a: "No — that's the whole point. Human replies render under the same agent name and avatar, with the same typing animation. Your dashboard records who sent each turn for your own audit, but the visitor sees one continuous conversation.",
+	},
+	{
+		q: "Which LLM does it use? Can I bring my own key?",
+		a: "Leadly works with OpenAI, Anthropic, Google, Mistral, Groq, and local models — pick per agent. You can use your own API key (BYOK) and Leadly only charges for the platform, not the tokens.",
+	},
+	{
+		q: "How does the knowledge base work?",
+		a: "Write articles in Markdown or upload existing docs. Leadly chunks them, embeds each chunk, and retrieves the most relevant passages on every turn — so the agent answers from your content and cites the article it used. Re-embedding happens automatically when you edit.",
+	},
+	{
+		q: "Can I self-host it?",
+		a: "Yes. Leadly is open source. Clone the repo, point it at a Postgres database with pgvector and any S3-compatible blob store, and you're running your own instance. The hosted version exists for teams who'd rather not run infra.",
+	},
+	{
+		q: "Does it support voice calls?",
+		a: "Voice is on the roadmap — the architecture is built for it. The first release is chat-only so we can ship something that works well end-to-end before adding the voice transport, ASR, and TTS pieces.",
+	},
+];
+
+function Faq() {
+	return (
+		<section id="faq" className="bg-background py-20 md:py-28">
+			<div className="container mx-auto max-w-3xl px-4">
+				<div className="mb-12 text-center md:mb-16">
+					<Badge
+						variant="outline"
+						className="mb-5 font-mono text-[10px] uppercase tracking-[0.18em]"
+					>
+						FAQ
+					</Badge>
+					<h2 className="text-balance text-3xl font-semibold tracking-tighter md:text-5xl">
+						Questions, answered.
+					</h2>
+					<p className="mt-4 text-pretty text-base text-muted-foreground md:text-lg">
+						The things people ask before they sign up.
+					</p>
+				</div>
+
+				<motion.div
+					initial={{ opacity: 0, y: 12 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true, margin: "-80px" }}
+					transition={{ duration: 0.5, ease: "easeOut" }}
+					className="rounded-2xl border border-border bg-card px-6 md:px-8"
+				>
+					<Accordion type="single" collapsible className="w-full">
+						{FAQS.map((item, i) => (
+							<AccordionItem
+								key={item.q}
+								value={`faq-${i}`}
+								className="border-border/60"
+							>
+								<AccordionTrigger className="py-5 text-left text-base font-medium tracking-tight hover:no-underline md:text-lg">
+									{item.q}
+								</AccordionTrigger>
+								<AccordionContent className="pb-5 text-sm leading-relaxed text-muted-foreground md:text-base">
+									{item.a}
+								</AccordionContent>
+							</AccordionItem>
+						))}
+					</Accordion>
+				</motion.div>
+			</div>
+		</section>
 	);
 }
 
