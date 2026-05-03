@@ -6,37 +6,36 @@ const footerSections: FooterSection[] = [
 	{
 		title: "Product",
 		links: [
-			{ title: "Features", href: "#features" },
-			{ title: "Integrations", href: "#integrations" },
-			{ title: "Pricing", href: "#pricing" },
-			{ title: "Changelog", href: "#changelog" },
-			{ title: "Docs", href: "#docs" },
+			{ title: "Features", href: "/#features" },
+			{ title: "Integrations", href: "/integrations" },
+			{ title: "Pricing", href: "/pricing" },
+			{ title: "Changelog", href: "/changelog" },
+			{ title: "Docs", href: "/docs" },
 		],
 	},
 	{
 		title: "Resources",
 		links: [
-			{ title: "Blog", href: "#blog" },
-			{ title: "Community", href: "#community" },
-			{ title: "Guides", href: "#guides" },
-			{ title: "Help Center", href: "#help-center" },
+			{ title: "Blog", href: "/blog" },
+			{ title: "Community", href: "/community" },
+			{ title: "Guides", href: "/guides" },
+			{ title: "Help Center", href: "/help" },
 		],
 	},
 	{
 		title: "Company",
 		links: [
-			{ title: "About Us", href: "#about" },
-			{ title: "Careers", href: "#careers" },
-			{ title: "Contact", href: "#contact" },
-			{ title: "Partners", href: "#partners" },
+			{ title: "About Us", href: "/about" },
+			{ title: "Careers", href: "/careers" },
+			{ title: "Contact", href: "/contact-us" },
 		],
 	},
 	{
 		title: "Legal",
 		links: [
-			{ title: "Privacy Policy", href: "#privacy" },
-			{ title: "Terms of Service", href: "#terms" },
-			{ title: "Cookie Policy", href: "#cookies" },
+			{ title: "Privacy Policy", href: "/privacy-policy" },
+			{ title: "Terms of Service", href: "/terms-and-conditions" },
+			{ title: "Refund Policy", href: "/refund-policy" },
 		],
 	},
 ];
