@@ -168,9 +168,157 @@ exports.Prisma.VerificationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.OrganizationScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MembershipScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.OrgApiKeyScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  provider: 'provider',
+  ciphertext: 'ciphertext',
+  iv: 'iv',
+  authTag: 'authTag',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgentScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  name: 'name',
+  slug: 'slug',
+  greeting: 'greeting',
+  accentColor: 'accentColor',
+  identityPolicy: 'identityPolicy',
+  llmProvider: 'llmProvider',
+  llmModel: 'llmModel',
+  systemPromptOverlay: 'systemPromptOverlay',
+  maxTurns: 'maxTurns',
+  fallbackMessage: 'fallbackMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgentApiKeyScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  provider: 'provider',
+  ciphertext: 'ciphertext',
+  iv: 'iv',
+  authTag: 'authTag',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.KbArticleScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  title: 'title',
+  contentMarkdown: 'contentMarkdown',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.KbChunkScalarFieldEnum = {
+  id: 'id',
+  articleId: 'articleId',
+  agentId: 'agentId',
+  ord: 'ord',
+  text: 'text',
+  tokens: 'tokens',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ToolScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  scope: 'scope',
+  name: 'name',
+  description: 'description',
+  enabled: 'enabled',
+  transport: 'transport',
+  config: 'config',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.VisitorScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  externalId: 'externalId',
+  leadId: 'leadId',
+  firstSeenAt: 'firstSeenAt',
+  lastSeenAt: 'lastSeenAt',
+  metadata: 'metadata'
+};
+
+exports.Prisma.LeadScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  email: 'email',
+  phone: 'phone',
+  name: 'name',
+  customFields: 'customFields',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  visitorId: 'visitorId',
+  leadId: 'leadId',
+  channel: 'channel',
+  mode: 'mode',
+  status: 'status',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  summary: 'summary',
+  sentiment: 'sentiment',
+  tags: 'tags'
+};
+
+exports.Prisma.TurnScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  role: 'role',
+  text: 'text',
+  audioUrl: 'audioUrl',
+  durationMs: 'durationMs',
+  asrConfidence: 'asrConfidence',
+  toolName: 'toolName',
+  toolArgs: 'toolArgs',
+  toolResult: 'toolResult',
+  llmProvider: 'llmProvider',
+  model: 'model',
+  latencyMs: 'latencyMs',
+  tokensIn: 'tokensIn',
+  tokensOut: 'tokensOut',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -183,12 +331,30 @@ exports.Prisma.NullsOrder = {
   last: 'last'
 };
 
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+
 
 exports.Prisma.ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  Organization: 'Organization',
+  Membership: 'Membership',
+  OrgApiKey: 'OrgApiKey',
+  Agent: 'Agent',
+  AgentApiKey: 'AgentApiKey',
+  KbArticle: 'KbArticle',
+  KbChunk: 'KbChunk',
+  Tool: 'Tool',
+  Visitor: 'Visitor',
+  Lead: 'Lead',
+  Conversation: 'Conversation',
+  Turn: 'Turn'
 };
 
 /**

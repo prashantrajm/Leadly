@@ -1,15 +1,16 @@
 model User {
-  id            String    @id
+  id            String       @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean      @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  isOnboarded   Boolean   @default(false)
-  role          String    @default("user") // "user" | "business_owner" | "admin"
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  isOnboarded   Boolean      @default(false)
+  role          String       @default("user")
   sessions      Session[]
   accounts      Account[]
+  memberships   Membership[]
 
   @@unique([email])
   @@map("user")
@@ -71,4 +72,260 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// Tenancy ────────────────────────────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members Membership[]
+  agents  Agent[]
+  apiKeys OrgApiKey[]
+
+  @@map("organization")
+}
+
+model Membership {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String   @default("member") // "owner" | "member"
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("membership")
+}
+
+// BYOK credential storage. AES-256-GCM, decrypted in-process at LLM-call time.
+// Per-org default key (most SMBs); per-agent override (small agencies). §5.6.
+model OrgApiKey {
+  id             String   @id @default(cuid())
+  organizationId String
+  provider       String // "openai" | "anthropic" | "google" | "groq" | ...
+  ciphertext     Bytes
+  iv             Bytes
+  authTag        Bytes
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider])
+  @@map("org_api_key")
+}
+
+// Agent ──────────────────────────────────────────────────────────────────────
+
+model Agent {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  name                String
+  slug                String
+  greeting            String   @default("Hi! How can I help?")
+  accentColor         String   @default("#000000")
+  identityPolicy      String   @default("optional") // optional | required_before_chat | identified_only
+  llmProvider         String   @default("openai")
+  llmModel            String   @default("gpt-4o-mini")
+  systemPromptOverlay String?
+  maxTurns            Int      @default(50)
+  fallbackMessage     String   @default("I don't have that information yet.")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  apiKey        AgentApiKey?
+  kbArticles    KbArticle[]
+  kbChunks      KbChunk[]
+  tools         Tool[]
+  visitors      Visitor[]
+  leads         Lead[]
+  conversations Conversation[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("agent")
+}
+
+model AgentApiKey {
+  id         String   @id @default(cuid())
+  agentId    String   @unique
+  provider   String
+  ciphertext Bytes
+  iv         Bytes
+  authTag    Bytes
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("agent_api_key")
+}
+
+// Knowledge base ─────────────────────────────────────────────────────────────
+
+model KbArticle {
+  id              String   @id @default(cuid())
+  agentId         String
+  title           String
+  contentMarkdown String
+  // Enum-as-string: future values include "notion" | "gdrive" | "web_crawl" (§3.1).
+  source          String   @default("manual") // "manual" | "upload"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  agent  Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  chunks KbChunk[]
+
+  @@index([agentId])
+  @@map("kb_article")
+}
+
+// pgvector chunk. The `embedding` column uses Unsupported() so Prisma keeps
+// hands off; retrieval is done via raw SQL with the `<=>` cosine operator
+// against an HNSW index (created in the migration).
+model KbChunk {
+  id        String                       @id @default(cuid())
+  articleId String
+  agentId   String
+  ord       Int
+  text      String
+  embedding Unsupported("vector(1536)")?
+  tokens    Int
+  createdAt DateTime                     @default(now())
+
+  article KbArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  agent   Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([articleId])
+  @@map("kb_chunk")
+}
+
+// Tools ──────────────────────────────────────────────────────────────────────
+
+model Tool {
+  id          String   @id @default(cuid())
+  agentId     String
+  scope       String // "system" | "customer"
+  name        String
+  description String?
+  enabled     Boolean  @default(true)
+  // Reserved for v2 customer tools (§6.1). Null in v1.
+  transport   String? // "http" | "mcp"
+  config      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, name])
+  @@index([agentId])
+  @@map("tool")
+}
+
+// Identity ───────────────────────────────────────────────────────────────────
+
+model Visitor {
+  id          String   @id @default(cuid())
+  agentId     String
+  externalId  String?
+  leadId      String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  metadata    Json?
+
+  agent         Agent          @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  lead          Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  conversations Conversation[]
+
+  @@index([agentId])
+  @@index([leadId])
+  @@index([externalId])
+  @@map("visitor")
+}
+
+model Lead {
+  id           String   @id @default(cuid())
+  agentId      String
+  email        String?
+  phone        String?
+  name         String?
+  customFields Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  agent         Agent          @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  visitors      Visitor[]
+  conversations Conversation[]
+
+  // Postgres treats NULLs as distinct, so anonymous Leads (no email/phone)
+  // never collide with each other on these uniques.
+  @@unique([agentId, email])
+  @@unique([agentId, phone])
+  @@index([agentId])
+  @@map("lead")
+}
+
+// Conversation ───────────────────────────────────────────────────────────────
+
+model Conversation {
+  id        String    @id @default(cuid())
+  agentId   String
+  visitorId String
+  leadId    String?
+  channel   String    @default("chat") // "chat" | "voice" — voice null in v1
+  mode      String    @default("auto") // "auto" | "paused"
+  status    String    @default("active") // "active" | "ended" | "abandoned"
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  summary   String?
+  sentiment String?
+  tags      Json?
+
+  agent   Agent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  lead    Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  turns   Turn[]
+
+  @@index([agentId])
+  @@index([visitorId])
+  @@index([leadId])
+  @@index([status])
+  @@map("conversation")
+}
+
+model Turn {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String // "user" | "agent" | "human" | "tool" | "system"
+  text           String
+  // Voice-only fields. Always null in v1 (§2.2).
+  audioUrl       String?
+  durationMs     Int?
+  asrConfidence  Float?
+  // Tool turns.
+  toolName       String?
+  toolArgs       Json?
+  toolResult     Json?
+  // Agent turn telemetry.
+  llmProvider    String?
+  model          String?
+  latencyMs      Int?
+  tokensIn       Int?
+  tokensOut      Int?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("turn")
 }
