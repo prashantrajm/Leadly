@@ -8,9 +8,9 @@ import { TakeoverCard } from "./takeover-card";
 
 export function FeaturesSection() {
 	return (
-		<section id="features" className="bg-background py-20 md:py-28">
-			<div className="container mx-auto max-w-7xl px-4">
-				<div className="mx-auto mb-14 max-w-2xl text-center md:mb-20">
+		<section id="features" className="bg-background py-16 md:py-20">
+			<div className="container mx-auto max-w-6xl px-4">
+				<div className="mx-auto mb-10 max-w-2xl text-center md:mb-14">
 					<Badge variant="outline" className="mb-5 font-mono text-[10px] uppercase tracking-[0.18em]">
 						Features
 					</Badge>
@@ -23,7 +23,7 @@ export function FeaturesSection() {
 					</p>
 				</div>
 
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-6 md:gap-5">
+				<div className="grid grid-cols-1 gap-3 md:grid-cols-6 md:gap-4">
 					{/* Row 1 — hero takeover (4 cols) + install (2 cols) */}
 					<div className="md:col-span-4 md:row-span-2">
 						<TakeoverCard />

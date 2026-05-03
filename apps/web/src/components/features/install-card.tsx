@@ -22,17 +22,16 @@ export function InstallCard() {
 	};
 
 	return (
-		<div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8">
-			<div className="mb-4">
-				<div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+		<div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:border-border/80 md:p-6">
+			<div className="mb-3">
+				<div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 					Install
 				</div>
-				<h3 className="text-xl font-semibold tracking-tight md:text-2xl">
+				<h3 className="text-lg font-semibold tracking-tight md:text-xl">
 					One script. You're live.
 				</h3>
-				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-					Drop it in your &lt;head&gt;. The widget appears the moment the page
-					loads. No SDK, no build step.
+				<p className="mt-1.5 text-xs leading-relaxed text-muted-foreground md:text-sm">
+					Drop it in your &lt;head&gt;. No SDK, no build step.
 				</p>
 			</div>
 
@@ -66,7 +65,7 @@ export function InstallCard() {
 							)}
 						</button>
 					</div>
-					<pre className="overflow-x-auto px-4 py-3 font-mono text-[13px] leading-relaxed text-foreground/90">
+					<pre className="overflow-x-auto px-3 py-2.5 font-mono text-[12px] leading-relaxed text-foreground/90">
 						<code>{SNIPPET}</code>
 					</pre>
 				</motion.div>

@@ -27,18 +27,17 @@ export function KnowledgeCard() {
 	return (
 		<div
 			ref={ref}
-			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8"
+			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:border-border/80 md:p-6"
 		>
-			<div className="mb-5">
-				<div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+			<div className="mb-4">
+				<div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 					Knowledge base
 				</div>
-				<h3 className="text-xl font-semibold tracking-tight md:text-2xl">
+				<h3 className="text-lg font-semibold tracking-tight md:text-xl">
 					Answers grounded in your content.
 				</h3>
-				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-					Write your KB in Markdown, upload a doc, or paste it in. Leadly
-					retrieves the right passage — and cites it.
+				<p className="mt-1.5 text-xs leading-relaxed text-muted-foreground md:text-sm">
+					Markdown articles, retrieved on every turn — and cited.
 				</p>
 			</div>
 
@@ -57,7 +56,7 @@ export function KnowledgeCard() {
 							}
 							transition={{ duration: 0.3 }}
 							className={cn(
-								"flex items-center justify-between rounded-lg border px-3 py-2 text-sm",
+								"flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs md:text-sm",
 								isMatch
 									? "border-foreground/20 bg-secondary/60 text-foreground"
 									: "border-border bg-secondary/20 text-muted-foreground",

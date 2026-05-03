@@ -48,23 +48,23 @@ export function TakeoverCard() {
 	return (
 		<div
 			ref={ref}
-			className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8"
+			className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:border-border/80 md:p-6"
 		>
 			<div className="relative z-10 flex h-full flex-col">
-				<div className="mb-6 max-w-md">
-					<div className="mb-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+				<div className="mb-4 max-w-md">
+					<div className="mb-2 inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 						<span className="relative flex h-1.5 w-1.5">
 							<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground opacity-60" />
 							<span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-foreground" />
 						</span>
 						Live takeover
 					</div>
-					<h3 className="text-2xl font-semibold tracking-tight md:text-3xl">
+					<h3 className="text-xl font-semibold tracking-tight md:text-2xl">
 						Same name. Same voice.
 					</h3>
-					<p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">
+					<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
 						The AI handles the conversation. When you step in, the visitor sees
-						no break — no "transferring you to Sarah," no awkward handoff.
+						no break — no awkward handoff.
 					</p>
 				</div>
 

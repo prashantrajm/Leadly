@@ -9,18 +9,17 @@ export function LeadsCard() {
 	return (
 		<div
 			ref={ref}
-			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8"
+			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:border-border/80 md:p-6"
 		>
-			<div className="mb-5">
-				<div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+			<div className="mb-4">
+				<div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 					Lead capture
 				</div>
-				<h3 className="text-xl font-semibold tracking-tight">
-					Captures contacts inside the conversation.
+				<h3 className="text-lg font-semibold tracking-tight md:text-xl">
+					Captured inside the conversation.
 				</h3>
-				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-					No pop-up form. The agent asks naturally, then the lead lands in
-					your inbox.
+				<p className="mt-1.5 text-xs leading-relaxed text-muted-foreground md:text-sm">
+					No pop-up form. The agent asks naturally; leads land in your inbox.
 				</p>
 			</div>
 
@@ -29,11 +28,11 @@ export function LeadsCard() {
 					initial={{ opacity: 0, y: 10 }}
 					animate={inView ? { opacity: 1, y: 0 } : {}}
 					transition={{ duration: 0.45, ease: "easeOut", delay: 0.2 }}
-					className="rounded-xl border border-border bg-secondary/30 p-4"
+					className="rounded-xl border border-border bg-secondary/30 p-3"
 				>
 					<div className="flex items-center gap-3">
-						<div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground">
-							<User className="h-4 w-4" />
+						<div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground">
+							<User className="h-3.5 w-3.5" />
 						</div>
 						<div className="min-w-0 flex-1">
 							<div className="truncate text-sm font-medium text-foreground">

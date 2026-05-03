@@ -19,21 +19,21 @@ export function ModelsCard() {
 	return (
 		<div
 			ref={ref}
-			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8"
+			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:border-border/80 md:p-6"
 		>
-			<div className="mb-4">
-				<div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+			<div className="mb-3">
+				<div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 					Your model
 				</div>
-				<h3 className="text-xl font-semibold tracking-tight">
+				<h3 className="text-lg font-semibold tracking-tight md:text-xl">
 					Pick the model. Switch anytime.
 				</h3>
-				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-					OpenAI, Anthropic, Google, Mistral — or run your own. Per-agent.
+				<p className="mt-1.5 text-xs leading-relaxed text-muted-foreground md:text-sm">
+					OpenAI, Anthropic, Google, Mistral — or run your own.
 				</p>
 			</div>
 
-			<div className="mt-auto flex flex-wrap gap-2">
+			<div className="mt-auto flex flex-wrap gap-1.5">
 				{MODELS.map((m, i) => {
 					const isVisible = i < revealed;
 					const isActive = i === 0; // OpenAI as the visually-active default
@@ -44,7 +44,7 @@ export function ModelsCard() {
 							animate={isVisible ? { opacity: 1, y: 0 } : {}}
 							transition={{ duration: 0.25 }}
 							className={cn(
-								"rounded-full border px-3 py-1.5 text-xs font-medium",
+								"rounded-full border px-2.5 py-1 text-[11px] font-medium",
 								isActive
 									? "border-foreground/30 bg-foreground text-background"
 									: "border-border bg-secondary/30 text-muted-foreground",

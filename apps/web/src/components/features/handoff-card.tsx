@@ -8,22 +8,21 @@ export function HandoffCard() {
 	return (
 		<div
 			ref={ref}
-			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:border-border/80 md:p-8"
+			className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:border-border/80 md:p-6"
 		>
-			<div className="mb-4">
-				<div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+			<div className="mb-3">
+				<div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 					Handoff
 				</div>
-				<h3 className="text-xl font-semibold tracking-tight md:text-2xl">
+				<h3 className="text-lg font-semibold tracking-tight md:text-xl">
 					Pings you when it matters.
 				</h3>
-				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-					The agent escalates only when it should. You see the conversation
-					in your inbox, ready to take over.
+				<p className="mt-1.5 text-xs leading-relaxed text-muted-foreground md:text-sm">
+					Escalations land in your inbox, ready to take over.
 				</p>
 			</div>
 
-			<div className="relative mt-auto flex h-32 items-center justify-center">
+			<div className="relative mt-auto flex h-20 items-center justify-center">
 				{inView && (
 					<>
 						<motion.div
@@ -35,7 +34,7 @@ export function HandoffCard() {
 								repeat: 2,
 								repeatDelay: 0.4,
 							}}
-							className="absolute h-16 w-16 rounded-full border border-foreground/30"
+							className="absolute h-12 w-12 rounded-full border border-foreground/30"
 						/>
 						<motion.div
 							initial={{ scale: 0.7, opacity: 0 }}
@@ -56,10 +55,10 @@ export function HandoffCard() {
 					initial={{ scale: 0.7, opacity: 0 }}
 					animate={inView ? { scale: 1, opacity: 1 } : {}}
 					transition={{ duration: 0.4, ease: "easeOut" }}
-					className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-background shadow-lg"
+					className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-foreground text-background shadow-lg"
 				>
 					<svg
-						className="h-7 w-7"
+						className="h-5 w-5"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
