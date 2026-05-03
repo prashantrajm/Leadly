@@ -6,12 +6,12 @@ async function main() {
   console.log("Seeding…");
 
   await prisma.user.upsert({
-    where: { email: "owner@leady.local" },
+    where: { email: "owner@leadly.local" },
     update: {},
     create: {
       id: "seed-owner",
-      name: "Leady Owner",
-      email: "owner@leady.local",
+      name: "Leadly Owner",
+      email: "owner@leadly.local",
       emailVerified: true,
       role: "business_owner",
       isOnboarded: true,

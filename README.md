@@ -1,4 +1,4 @@
-# Leady
+# Leadly
 
 Open-source AI support platform — embeddable chat (and later voice) widget with knowledge base, retrieval, lead capture, and a live human-takeover inbox.
 
@@ -7,7 +7,7 @@ See [`docs/v1-design.md`](./docs/v1-design.md) for the full v1 design.
 ## Structure
 
 ```
-leady/
+leadly/
 ├── apps/
 │   ├── web/      # React dashboard (Vite + TanStack Router)
 │   ├── api/      # Hono backend

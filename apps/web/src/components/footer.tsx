@@ -59,7 +59,7 @@ const Footer = () => {
 								<Zap className="h-5 w-5 text-primary-foreground" />
 							</div>
 							<span className="font-bold text-xl tracking-tight">
-								Leady
+								Leadly
 							</span>
 						</a>
 						<p className="text-sm text-muted-foreground max-w-xs pt-4 leading-relaxed">
@@ -95,7 +95,7 @@ const Footer = () => {
 				{/* Bottom Section */}
 				<div className="flex flex-col md:flex-row justify-between items-center gap-4">
 					<div className="text-sm text-muted-foreground text-center md:text-left">
-						© {new Date().getFullYear()} Leady. All rights reserved.
+						© {new Date().getFullYear()} Leadly. All rights reserved.
 					</div>
 
 					<div className="flex items-center space-x-6">

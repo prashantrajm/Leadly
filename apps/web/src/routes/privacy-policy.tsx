@@ -22,7 +22,7 @@ function PrivacyPolicy() {
 				<section className="space-y-4">
 					<h2 className="text-2xl font-semibold">1. Introduction</h2>
 					<p className="leading-relaxed text-muted-foreground">
-						At Leady, we are committed to protecting your privacy. This
+						At Leadly, we are committed to protecting your privacy. This
 						Privacy Policy explains how we collect, use, and safeguard your
 						personal information when you use our platform.
 					</p>
@@ -98,7 +98,7 @@ function PrivacyPolicy() {
 					<p className="text-muted-foreground leading-relaxed">
 						You have the right to access, correct, or request the deletion of
 						your personal information stored on our platforms. You can manage
-						these preferences through the Leady dashboard or by contacting
+						these preferences through the Leadly dashboard or by contacting
 						our support team.
 					</p>
 				</section>

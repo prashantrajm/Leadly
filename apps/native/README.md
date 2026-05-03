@@ -1,4 +1,4 @@
-# Leady — Mobile
+# Leadly — Mobile
 
 Expo Router app. Not in v1 scope; placeholder retained so the workspace builds.
 

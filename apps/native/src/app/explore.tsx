@@ -35,7 +35,7 @@ export default function TabTwoScreen() {
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Leady mobile</ThemedText>
+          <ThemedText type="subtitle">Leadly mobile</ThemedText>
           <ThemedText style={styles.centerText} themeColor="textSecondary">
             Coming soon. The mobile app is not in v1 scope.
           </ThemedText>

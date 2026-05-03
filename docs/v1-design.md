@@ -1,4 +1,4 @@
-# Leady — v1 Design Document
+# Leadly — v1 Design Document
 
 > Output of the `/grill-me` session. Every decision below is paired with the **purpose** it serves and the **alternatives rejected**, so future-you can re-open any branch with full context. Decisions marked **(deferred)** are explicitly out of v1 scope but the architecture is shaped to absorb them without rewrite.
 
@@ -10,7 +10,7 @@
 
 **Decision:** Inbound AI support, channel-agnostic. End-user picks chat or voice from the same widget; both hit the same agent, KB, and tool-call infrastructure. Open-source, SMB-targeted.
 
-**Purpose:** One agent, two transports. The agent's behaviour (system prompt + KB retrieval + tool calls + transcript) is identical regardless of channel. This positions Leady as "OSS AI support that works on the channel the visitor wants," not as another single-channel chatbot.
+**Purpose:** One agent, two transports. The agent's behaviour (system prompt + KB retrieval + tool calls + transcript) is identical regardless of channel. This positions Leadly as "OSS AI support that works on the channel the visitor wants," not as another single-channel chatbot.
 
 **Rejected:**
 - Outbound voice as the wedge (better-funded competition: Bland, Vapi, Air).
@@ -91,7 +91,7 @@ Turn
 
 **Identification order on widget load → bubble click:**
 1. Cookie / localStorage lookup → linked Lead? → done.
-2. `Leady.identify({email, name, ...})` already called by host site? → upgrade Visitor → Lead.
+2. `Leadly.identify({email, name, ...})` already called by host site? → upgrade Visitor → Lead.
 3. Otherwise, on conversation start, the **agent itself asks** for name/email naturally as part of the system prompt.
 
 **Refusal handling:** opportunistic re-ask. Agent asks once; if the visitor refuses or types garbage, the conversation proceeds anonymous, and the agent is instructed to re-ask later when natural ("…and what email should I send the quote to?").
@@ -360,8 +360,8 @@ No email in v1 at all. Handoff notifications are **in-dashboard real-time only**
 
 **Decision:** Iframe-based, single `<script>` install.
 
-- **Loader:** ~5KB vanilla JS. Injects a small DOM bubble. Lazy-loads the iframe on first bubble click. Exposes `window.Leady = { identify, open, close, on, ... }`. Loader-iframe communication via `postMessage`.
-- **Iframe doc:** hosted at `https://widget.leady.example/embed?agentId=…`. Vite app in `apps/widget/` (third app in the monorepo alongside `apps/api/` and `apps/web/`). Built and deployed to a CDN/static host independently.
+- **Loader:** ~5KB vanilla JS. Injects a small DOM bubble. Lazy-loads the iframe on first bubble click. Exposes `window.Leadly = { identify, open, close, on, ... }`. Loader-iframe communication via `postMessage`.
+- **Iframe doc:** hosted at `https://widget.leadly.example/embed?agentId=…`. Vite app in `apps/widget/` (third app in the monorepo alongside `apps/api/` and `apps/web/`). Built and deployed to a CDN/static host independently.
 - **Config:** server-fetched on iframe load (`GET /api/widget/config?agentId=…`). Customer dashboard edits are live for the next visitor — no customer-side redeploy.
 - **WebSocket:** iframe ↔ API, custom JSON envelope (`{type: 'token'|'tool_call'|'turn_end'|'typing'|'handoff_state'|...}`).
 
@@ -431,7 +431,7 @@ A phased order that respects dependencies and produces a demo-able artifact at e
 3. **Agent CRUD + dashboard skeleton.** TanStack Router shell, sign-up → org → agent flow, agents list, persona/settings page.
 4. **KB editor + retrieval.** Article CRUD, `.md`/`.txt` upload, chunk-on-write, embedding via OpenAI, pgvector index, retrieval query.
 5. **ConversationActor + chat agent loop.** WebSocket route, in-process `Map`, agent loop per §4.1, AI SDK `streamText`, system tools, custom JSON wire envelope.
-6. **Widget app + loader.** `apps/widget/`, iframe doc, vanilla loader, `Leady.identify()`, config endpoint, install snippet in dashboard.
+6. **Widget app + loader.** `apps/widget/`, iframe doc, vanilla loader, `Leadly.identify()`, config endpoint, install snippet in dashboard.
 7. **Inbox (live, with human reply).** Org-scoped WebSocket subscription, transcript view, take-over/release, paused-mode handling, in-dashboard handoff bell.
 8. **Leads + analytics.** Lead list, dedup, basic counts, simple time series.
 9. **BYOK + provider expansion.** Per-org/per-agent key storage, AES-256-GCM, AI SDK provider switch.

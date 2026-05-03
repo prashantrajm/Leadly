@@ -1,6 +1,6 @@
-# Leady — Web (Dashboard)
+# Leadly — Web (Dashboard)
 
-The Leady customer dashboard. React 19 + Vite + TanStack Router + Tailwind v4 + shadcn/ui.
+The Leadly customer dashboard. React 19 + Vite + TanStack Router + Tailwind v4 + shadcn/ui.
 
 ## Develop
 

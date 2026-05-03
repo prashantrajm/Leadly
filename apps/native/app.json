@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Leady",
-    "slug": "leady",
+    "name": "Leadly",
+    "slug": "leadly",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "leady",
+    "scheme": "leadly",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
