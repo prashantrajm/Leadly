@@ -47,7 +47,7 @@ export function LeadsCard() {
 							initial={{ scale: 0.6, opacity: 0 }}
 							animate={inView ? { scale: 1, opacity: 1 } : {}}
 							transition={{ delay: 0.5 }}
-							className="shrink-0 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-foreground"
+							className="shrink-0 rounded-full bg-accent-blue px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-accent-blue-foreground"
 						>
 							New
 						</motion.span>
