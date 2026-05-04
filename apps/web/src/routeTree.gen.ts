@@ -30,6 +30,15 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardAgentsIndexRouteImport } from './routes/dashboard/agents/index'
 import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard/settings/profile'
+import { Route as DashboardAgentsAgentIdIndexRouteImport } from './routes/dashboard/agents/$agentId/index'
+import { Route as DashboardAgentsAgentIdVisitorsRouteImport } from './routes/dashboard/agents/$agentId/visitors'
+import { Route as DashboardAgentsAgentIdSettingsRouteImport } from './routes/dashboard/agents/$agentId/settings'
+import { Route as DashboardAgentsAgentIdPlaygroundRouteImport } from './routes/dashboard/agents/$agentId/playground'
+import { Route as DashboardAgentsAgentIdLeadsRouteImport } from './routes/dashboard/agents/$agentId/leads'
+import { Route as DashboardAgentsAgentIdKnowledgeRouteImport } from './routes/dashboard/agents/$agentId/knowledge'
+import { Route as DashboardAgentsAgentIdInstallRouteImport } from './routes/dashboard/agents/$agentId/install'
+import { Route as DashboardAgentsAgentIdInboxRouteImport } from './routes/dashboard/agents/$agentId/inbox'
+import { Route as DashboardAgentsAgentIdAnalyticsRouteImport } from './routes/dashboard/agents/$agentId/analytics'
 
 const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
   id: '/terms-and-conditions',
@@ -137,6 +146,60 @@ const DashboardSettingsProfileRoute =
     path: '/settings/profile',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardAgentsAgentIdIndexRoute =
+  DashboardAgentsAgentIdIndexRouteImport.update({
+    id: '/agents/$agentId/',
+    path: '/agents/$agentId/',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAgentsAgentIdVisitorsRoute =
+  DashboardAgentsAgentIdVisitorsRouteImport.update({
+    id: '/agents/$agentId/visitors',
+    path: '/agents/$agentId/visitors',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAgentsAgentIdSettingsRoute =
+  DashboardAgentsAgentIdSettingsRouteImport.update({
+    id: '/agents/$agentId/settings',
+    path: '/agents/$agentId/settings',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAgentsAgentIdPlaygroundRoute =
+  DashboardAgentsAgentIdPlaygroundRouteImport.update({
+    id: '/agents/$agentId/playground',
+    path: '/agents/$agentId/playground',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAgentsAgentIdLeadsRoute =
+  DashboardAgentsAgentIdLeadsRouteImport.update({
+    id: '/agents/$agentId/leads',
+    path: '/agents/$agentId/leads',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAgentsAgentIdKnowledgeRoute =
+  DashboardAgentsAgentIdKnowledgeRouteImport.update({
+    id: '/agents/$agentId/knowledge',
+    path: '/agents/$agentId/knowledge',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAgentsAgentIdInstallRoute =
+  DashboardAgentsAgentIdInstallRouteImport.update({
+    id: '/agents/$agentId/install',
+    path: '/agents/$agentId/install',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAgentsAgentIdInboxRoute =
+  DashboardAgentsAgentIdInboxRouteImport.update({
+    id: '/agents/$agentId/inbox',
+    path: '/agents/$agentId/inbox',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAgentsAgentIdAnalyticsRoute =
+  DashboardAgentsAgentIdAnalyticsRouteImport.update({
+    id: '/agents/$agentId/analytics',
+    path: '/agents/$agentId/analytics',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -160,6 +223,15 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/agents/': typeof DashboardAgentsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/dashboard/agents/$agentId/analytics': typeof DashboardAgentsAgentIdAnalyticsRoute
+  '/dashboard/agents/$agentId/inbox': typeof DashboardAgentsAgentIdInboxRoute
+  '/dashboard/agents/$agentId/install': typeof DashboardAgentsAgentIdInstallRoute
+  '/dashboard/agents/$agentId/knowledge': typeof DashboardAgentsAgentIdKnowledgeRoute
+  '/dashboard/agents/$agentId/leads': typeof DashboardAgentsAgentIdLeadsRoute
+  '/dashboard/agents/$agentId/playground': typeof DashboardAgentsAgentIdPlaygroundRoute
+  '/dashboard/agents/$agentId/settings': typeof DashboardAgentsAgentIdSettingsRoute
+  '/dashboard/agents/$agentId/visitors': typeof DashboardAgentsAgentIdVisitorsRoute
+  '/dashboard/agents/$agentId/': typeof DashboardAgentsAgentIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +254,15 @@ export interface FileRoutesByTo {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/agents': typeof DashboardAgentsIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
+  '/dashboard/agents/$agentId/analytics': typeof DashboardAgentsAgentIdAnalyticsRoute
+  '/dashboard/agents/$agentId/inbox': typeof DashboardAgentsAgentIdInboxRoute
+  '/dashboard/agents/$agentId/install': typeof DashboardAgentsAgentIdInstallRoute
+  '/dashboard/agents/$agentId/knowledge': typeof DashboardAgentsAgentIdKnowledgeRoute
+  '/dashboard/agents/$agentId/leads': typeof DashboardAgentsAgentIdLeadsRoute
+  '/dashboard/agents/$agentId/playground': typeof DashboardAgentsAgentIdPlaygroundRoute
+  '/dashboard/agents/$agentId/settings': typeof DashboardAgentsAgentIdSettingsRoute
+  '/dashboard/agents/$agentId/visitors': typeof DashboardAgentsAgentIdVisitorsRoute
+  '/dashboard/agents/$agentId': typeof DashboardAgentsAgentIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +287,15 @@ export interface FileRoutesById {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/agents/': typeof DashboardAgentsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/dashboard/agents/$agentId/analytics': typeof DashboardAgentsAgentIdAnalyticsRoute
+  '/dashboard/agents/$agentId/inbox': typeof DashboardAgentsAgentIdInboxRoute
+  '/dashboard/agents/$agentId/install': typeof DashboardAgentsAgentIdInstallRoute
+  '/dashboard/agents/$agentId/knowledge': typeof DashboardAgentsAgentIdKnowledgeRoute
+  '/dashboard/agents/$agentId/leads': typeof DashboardAgentsAgentIdLeadsRoute
+  '/dashboard/agents/$agentId/playground': typeof DashboardAgentsAgentIdPlaygroundRoute
+  '/dashboard/agents/$agentId/settings': typeof DashboardAgentsAgentIdSettingsRoute
+  '/dashboard/agents/$agentId/visitors': typeof DashboardAgentsAgentIdVisitorsRoute
+  '/dashboard/agents/$agentId/': typeof DashboardAgentsAgentIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -231,6 +321,15 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/agents/'
     | '/dashboard/settings/'
+    | '/dashboard/agents/$agentId/analytics'
+    | '/dashboard/agents/$agentId/inbox'
+    | '/dashboard/agents/$agentId/install'
+    | '/dashboard/agents/$agentId/knowledge'
+    | '/dashboard/agents/$agentId/leads'
+    | '/dashboard/agents/$agentId/playground'
+    | '/dashboard/agents/$agentId/settings'
+    | '/dashboard/agents/$agentId/visitors'
+    | '/dashboard/agents/$agentId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -253,6 +352,15 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/agents'
     | '/dashboard/settings'
+    | '/dashboard/agents/$agentId/analytics'
+    | '/dashboard/agents/$agentId/inbox'
+    | '/dashboard/agents/$agentId/install'
+    | '/dashboard/agents/$agentId/knowledge'
+    | '/dashboard/agents/$agentId/leads'
+    | '/dashboard/agents/$agentId/playground'
+    | '/dashboard/agents/$agentId/settings'
+    | '/dashboard/agents/$agentId/visitors'
+    | '/dashboard/agents/$agentId'
   id:
     | '__root__'
     | '/'
@@ -276,6 +384,15 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/agents/'
     | '/dashboard/settings/'
+    | '/dashboard/agents/$agentId/analytics'
+    | '/dashboard/agents/$agentId/inbox'
+    | '/dashboard/agents/$agentId/install'
+    | '/dashboard/agents/$agentId/knowledge'
+    | '/dashboard/agents/$agentId/leads'
+    | '/dashboard/agents/$agentId/playground'
+    | '/dashboard/agents/$agentId/settings'
+    | '/dashboard/agents/$agentId/visitors'
+    | '/dashboard/agents/$agentId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -447,6 +564,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/agents/$agentId/': {
+      id: '/dashboard/agents/$agentId/'
+      path: '/agents/$agentId'
+      fullPath: '/dashboard/agents/$agentId/'
+      preLoaderRoute: typeof DashboardAgentsAgentIdIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agents/$agentId/visitors': {
+      id: '/dashboard/agents/$agentId/visitors'
+      path: '/agents/$agentId/visitors'
+      fullPath: '/dashboard/agents/$agentId/visitors'
+      preLoaderRoute: typeof DashboardAgentsAgentIdVisitorsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agents/$agentId/settings': {
+      id: '/dashboard/agents/$agentId/settings'
+      path: '/agents/$agentId/settings'
+      fullPath: '/dashboard/agents/$agentId/settings'
+      preLoaderRoute: typeof DashboardAgentsAgentIdSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agents/$agentId/playground': {
+      id: '/dashboard/agents/$agentId/playground'
+      path: '/agents/$agentId/playground'
+      fullPath: '/dashboard/agents/$agentId/playground'
+      preLoaderRoute: typeof DashboardAgentsAgentIdPlaygroundRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agents/$agentId/leads': {
+      id: '/dashboard/agents/$agentId/leads'
+      path: '/agents/$agentId/leads'
+      fullPath: '/dashboard/agents/$agentId/leads'
+      preLoaderRoute: typeof DashboardAgentsAgentIdLeadsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agents/$agentId/knowledge': {
+      id: '/dashboard/agents/$agentId/knowledge'
+      path: '/agents/$agentId/knowledge'
+      fullPath: '/dashboard/agents/$agentId/knowledge'
+      preLoaderRoute: typeof DashboardAgentsAgentIdKnowledgeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agents/$agentId/install': {
+      id: '/dashboard/agents/$agentId/install'
+      path: '/agents/$agentId/install'
+      fullPath: '/dashboard/agents/$agentId/install'
+      preLoaderRoute: typeof DashboardAgentsAgentIdInstallRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agents/$agentId/inbox': {
+      id: '/dashboard/agents/$agentId/inbox'
+      path: '/agents/$agentId/inbox'
+      fullPath: '/dashboard/agents/$agentId/inbox'
+      preLoaderRoute: typeof DashboardAgentsAgentIdInboxRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agents/$agentId/analytics': {
+      id: '/dashboard/agents/$agentId/analytics'
+      path: '/agents/$agentId/analytics'
+      fullPath: '/dashboard/agents/$agentId/analytics'
+      preLoaderRoute: typeof DashboardAgentsAgentIdAnalyticsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
@@ -455,6 +635,15 @@ interface DashboardRouteChildren {
   DashboardSettingsProfileRoute: typeof DashboardSettingsProfileRoute
   DashboardAgentsIndexRoute: typeof DashboardAgentsIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+  DashboardAgentsAgentIdAnalyticsRoute: typeof DashboardAgentsAgentIdAnalyticsRoute
+  DashboardAgentsAgentIdInboxRoute: typeof DashboardAgentsAgentIdInboxRoute
+  DashboardAgentsAgentIdInstallRoute: typeof DashboardAgentsAgentIdInstallRoute
+  DashboardAgentsAgentIdKnowledgeRoute: typeof DashboardAgentsAgentIdKnowledgeRoute
+  DashboardAgentsAgentIdLeadsRoute: typeof DashboardAgentsAgentIdLeadsRoute
+  DashboardAgentsAgentIdPlaygroundRoute: typeof DashboardAgentsAgentIdPlaygroundRoute
+  DashboardAgentsAgentIdSettingsRoute: typeof DashboardAgentsAgentIdSettingsRoute
+  DashboardAgentsAgentIdVisitorsRoute: typeof DashboardAgentsAgentIdVisitorsRoute
+  DashboardAgentsAgentIdIndexRoute: typeof DashboardAgentsAgentIdIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -462,6 +651,15 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardSettingsProfileRoute: DashboardSettingsProfileRoute,
   DashboardAgentsIndexRoute: DashboardAgentsIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+  DashboardAgentsAgentIdAnalyticsRoute: DashboardAgentsAgentIdAnalyticsRoute,
+  DashboardAgentsAgentIdInboxRoute: DashboardAgentsAgentIdInboxRoute,
+  DashboardAgentsAgentIdInstallRoute: DashboardAgentsAgentIdInstallRoute,
+  DashboardAgentsAgentIdKnowledgeRoute: DashboardAgentsAgentIdKnowledgeRoute,
+  DashboardAgentsAgentIdLeadsRoute: DashboardAgentsAgentIdLeadsRoute,
+  DashboardAgentsAgentIdPlaygroundRoute: DashboardAgentsAgentIdPlaygroundRoute,
+  DashboardAgentsAgentIdSettingsRoute: DashboardAgentsAgentIdSettingsRoute,
+  DashboardAgentsAgentIdVisitorsRoute: DashboardAgentsAgentIdVisitorsRoute,
+  DashboardAgentsAgentIdIndexRoute: DashboardAgentsAgentIdIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
