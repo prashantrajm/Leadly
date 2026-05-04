@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UpdateAgentSchema, type UpdateAgent } from "@leadly/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader2, Save } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,9 +23,19 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useCurrentOrg } from "@/hooks/use-current-org";
 import { api, LeadlyApiError } from "@/lib/api";
 import type { Agent } from "@leadly/api-client";
 
@@ -98,24 +108,15 @@ function AgentSettingsBody({
 				</TabsContent>
 
 				<TabsContent value="persona" className="mt-6">
-					<StubTab
-						title="Persona"
-						description="System prompt overlay, fallback message, max turns. Lands in a later phase."
-					/>
+					<PersonaTab agent={agent} agentId={agentId} />
 				</TabsContent>
 
 				<TabsContent value="model" className="mt-6">
-					<StubTab
-						title="Model"
-						description="Provider, default model, BYOK override. Lands in a later phase."
-					/>
+					<ModelTab agent={agent} agentId={agentId} />
 				</TabsContent>
 
 				<TabsContent value="identity" className="mt-6">
-					<StubTab
-						title="Identity"
-						description="Anonymous / optional / required visitor identification policy. Lands in a later phase."
-					/>
+					<IdentityTab agent={agent} agentId={agentId} />
 				</TabsContent>
 			</Tabs>
 		</div>
@@ -333,19 +334,503 @@ function GeneralTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 	);
 }
 
-function StubTab({
-	title,
-	description,
-}: {
-	title: string;
-	description: string;
-}) {
+// ---------------------------------------------------------------------------
+// Persona — system prompt overlay + max turns
+// ---------------------------------------------------------------------------
+
+function PersonaTab({ agent, agentId }: { agent: Agent; agentId: string }) {
+	const queryClient = useQueryClient();
+
+	const form = useForm<UpdateAgent>({
+		resolver: zodResolver(UpdateAgentSchema),
+		defaultValues: {
+			systemPromptOverlay: agent.systemPromptOverlay ?? "",
+			maxTurns: agent.maxTurns,
+		},
+	});
+
+	useEffect(() => {
+		form.reset({
+			systemPromptOverlay: agent.systemPromptOverlay ?? "",
+			maxTurns: agent.maxTurns,
+		});
+	}, [agent, form]);
+
+	const mutation = useMutation({
+		mutationFn: (body: UpdateAgent) => api.agents.update(agentId, body),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
+			form.reset(form.getValues());
+		},
+	});
+
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">{title}</CardTitle>
-				<CardDescription>{description}</CardDescription>
+				<CardTitle className="text-base">Persona</CardTitle>
+				<CardDescription>
+					What the agent sounds like and how long it'll keep talking.
+				</CardDescription>
 			</CardHeader>
+			<CardContent>
+				<Form {...form}>
+					<form
+						onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+						className="space-y-5"
+					>
+						<FormField
+							control={form.control}
+							name="systemPromptOverlay"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>System prompt overlay</FormLabel>
+									<FormControl>
+										<Textarea
+											rows={8}
+											placeholder="Be terse. Cite the source article inline. Don't apologize. If you don't know, say 'I'm not sure — let me get a teammate.'"
+											className="font-mono text-xs"
+											{...field}
+											value={field.value ?? ""}
+										/>
+									</FormControl>
+									<FormDescription>
+										Appended to the base system prompt on every turn. Empty
+										falls back to the library default.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							control={form.control}
+							name="maxTurns"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Max turns</FormLabel>
+									<FormControl>
+										<Input
+											type="number"
+											min={1}
+											max={500}
+											className="max-w-[140px]"
+											{...field}
+											value={field.value ?? ""}
+											onChange={(e) =>
+												field.onChange(
+													e.target.value ? Number(e.target.value) : undefined,
+												)
+											}
+										/>
+									</FormControl>
+									<FormDescription>
+										Hard limit before the agent ends the conversation.
+										Defaults around 40 — bump up for long support flows.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						{mutation.isError && <ErrorRow err={mutation.error} />}
+
+						<div className="flex justify-end border-t border-border/60 pt-5">
+							<SaveButton
+								pending={mutation.isPending}
+								disabled={!form.formState.isDirty}
+							/>
+						</div>
+					</form>
+				</Form>
+			</CardContent>
 		</Card>
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Model — provider + model + BYOK override
+// ---------------------------------------------------------------------------
+
+const PROVIDER_OPTIONS = [
+	{ value: "openai", label: "OpenAI" },
+	{ value: "anthropic", label: "Anthropic" },
+	{ value: "google", label: "Google" },
+	{ value: "mistral", label: "Mistral" },
+	{ value: "groq", label: "Groq" },
+	{ value: "openrouter", label: "OpenRouter" },
+	{ value: "other", label: "Other" },
+] as const;
+
+function ModelTab({ agent, agentId }: { agent: Agent; agentId: string }) {
+	const queryClient = useQueryClient();
+	const { currentOrg } = useCurrentOrg();
+	const orgId = currentOrg?.id;
+
+	const form = useForm<UpdateAgent>({
+		resolver: zodResolver(UpdateAgentSchema),
+		defaultValues: {
+			defaultProvider: agent.defaultProvider,
+			defaultModel: agent.defaultModel,
+		},
+	});
+
+	useEffect(() => {
+		form.reset({
+			defaultProvider: agent.defaultProvider,
+			defaultModel: agent.defaultModel,
+		});
+	}, [agent, form]);
+
+	const mutation = useMutation({
+		mutationFn: (body: UpdateAgent) => api.agents.update(agentId, body),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
+			form.reset(form.getValues());
+		},
+	});
+
+	const credentialsQuery = useQuery({
+		queryKey: ["byok", orgId],
+		queryFn: () => (orgId ? api.byok.list(orgId) : Promise.resolve([])),
+		enabled: Boolean(orgId),
+	});
+
+	const [selectedCredentialId, setSelectedCredentialId] = useState<string>("");
+
+	const setOverrideMutation = useMutation({
+		mutationFn: () =>
+			api.byok.setAgentOverride(agentId, {
+				credentialId: selectedCredentialId,
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
+		},
+	});
+
+	const clearOverrideMutation = useMutation({
+		mutationFn: () => api.byok.clearAgentOverride(agentId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
+		},
+	});
+
+	return (
+		<div className="space-y-6">
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-base">Default model</CardTitle>
+					<CardDescription>
+						Provider + model id used for every turn unless overridden below.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<Form {...form}>
+						<form
+							onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+							className="space-y-5"
+						>
+							<FormField
+								control={form.control}
+								name="defaultProvider"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Provider</FormLabel>
+										<Select
+											value={field.value ?? agent.defaultProvider}
+											onValueChange={field.onChange}
+										>
+											<FormControl>
+												<SelectTrigger className="max-w-xs">
+													<SelectValue />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												{PROVIDER_OPTIONS.map((p) => (
+													<SelectItem key={p.value} value={p.value}>
+														{p.label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="defaultModel"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Model id</FormLabel>
+										<FormControl>
+											<Input
+												className="font-mono"
+												placeholder="tencent/hy3-preview:free"
+												{...field}
+												value={field.value ?? ""}
+											/>
+										</FormControl>
+										<FormDescription>
+											Provider-specific model id. For OpenRouter use the
+											full id (org/model:variant).
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							{mutation.isError && <ErrorRow err={mutation.error} />}
+
+							<div className="flex justify-end border-t border-border/60 pt-5">
+								<SaveButton
+									pending={mutation.isPending}
+									disabled={!form.formState.isDirty}
+								/>
+							</div>
+						</form>
+					</Form>
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-base">BYOK override</CardTitle>
+					<CardDescription>
+						Run this agent on a specific bring-your-own-key credential
+						instead of the org default. Add credentials in{" "}
+						<Link
+							to="/dashboard/settings"
+							className="font-medium text-accent-blue underline-offset-4 hover:underline"
+						>
+							Org settings → API keys
+						</Link>
+						.
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					{credentialsQuery.isLoading ? (
+						<Skeleton className="h-10 w-full max-w-sm rounded-md" />
+					) : !credentialsQuery.data ||
+					  credentialsQuery.data.length === 0 ? (
+						<p className="text-sm text-muted-foreground">
+							No credentials in this org yet.
+						</p>
+					) : (
+						<>
+							<div className="space-y-1.5">
+								<Label className="text-xs">Use credential</Label>
+								<Select
+									value={selectedCredentialId}
+									onValueChange={setSelectedCredentialId}
+								>
+									<SelectTrigger className="max-w-sm">
+										<SelectValue placeholder="Pick a credential…" />
+									</SelectTrigger>
+									<SelectContent>
+										{credentialsQuery.data.map((c) => (
+											<SelectItem key={c.id} value={c.id}>
+												{c.label} ·{" "}
+												<span className="font-mono text-xs">
+													{c.provider}
+												</span>
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+
+							{(setOverrideMutation.isError ||
+								clearOverrideMutation.isError) && (
+								<ErrorRow
+									err={
+										setOverrideMutation.error ?? clearOverrideMutation.error
+									}
+								/>
+							)}
+
+							<div className="flex flex-wrap gap-2">
+								<Button
+									onClick={() => setOverrideMutation.mutate()}
+									disabled={
+										!selectedCredentialId || setOverrideMutation.isPending
+									}
+									className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+								>
+									{setOverrideMutation.isPending && (
+										<Loader2 className="mr-2 size-4 animate-spin" />
+									)}
+									Set override
+								</Button>
+								<Button
+									variant="outline"
+									onClick={() => clearOverrideMutation.mutate()}
+									disabled={clearOverrideMutation.isPending}
+								>
+									{clearOverrideMutation.isPending && (
+										<Loader2 className="mr-2 size-4 animate-spin" />
+									)}
+									Clear override
+								</Button>
+							</div>
+						</>
+					)}
+				</CardContent>
+			</Card>
+		</div>
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Identity — visitor identification policy
+// ---------------------------------------------------------------------------
+
+const IDENTITY_OPTIONS = [
+	{
+		value: "optional" as const,
+		label: "Optional",
+		description:
+			"Anyone can chat. The agent will ask for contact info naturally if it needs to follow up.",
+	},
+	{
+		value: "required_before_chat" as const,
+		label: "Required before chat",
+		description:
+			"Visitor must enter name + email before the widget opens. Higher capture rate, more friction.",
+	},
+	{
+		value: "identified_only" as const,
+		label: "Identified only",
+		description:
+			"Widget only renders for users your site has already identified via the JS API. For logged-in apps.",
+	},
+];
+
+function IdentityTab({ agent, agentId }: { agent: Agent; agentId: string }) {
+	const queryClient = useQueryClient();
+
+	const form = useForm<UpdateAgent>({
+		resolver: zodResolver(UpdateAgentSchema),
+		defaultValues: {
+			identityPolicy: agent.identityPolicy,
+		},
+	});
+
+	useEffect(() => {
+		form.reset({ identityPolicy: agent.identityPolicy });
+	}, [agent, form]);
+
+	const mutation = useMutation({
+		mutationFn: (body: UpdateAgent) => api.agents.update(agentId, body),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
+			form.reset(form.getValues());
+		},
+	});
+
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle className="text-base">Identity policy</CardTitle>
+				<CardDescription>
+					When the widget asks visitors to identify themselves.
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<Form {...form}>
+					<form
+						onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+						className="space-y-5"
+					>
+						<FormField
+							control={form.control}
+							name="identityPolicy"
+							render={({ field }) => (
+								<FormItem>
+									<FormControl>
+										<RadioGroup
+											value={field.value ?? agent.identityPolicy}
+											onValueChange={field.onChange}
+											className="space-y-2"
+										>
+											{IDENTITY_OPTIONS.map((opt) => (
+												<label
+													key={opt.value}
+													htmlFor={`policy-${opt.value}`}
+													className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:border-accent-blue/30"
+												>
+													<RadioGroupItem
+														value={opt.value}
+														id={`policy-${opt.value}`}
+														className="mt-0.5"
+													/>
+													<div className="min-w-0 flex-1">
+														<div className="text-sm font-medium tracking-tight">
+															{opt.label}
+														</div>
+														<p className="mt-1 text-xs text-muted-foreground">
+															{opt.description}
+														</p>
+													</div>
+												</label>
+											))}
+										</RadioGroup>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						{mutation.isError && <ErrorRow err={mutation.error} />}
+
+						<div className="flex justify-end border-t border-border/60 pt-5">
+							<SaveButton
+								pending={mutation.isPending}
+								disabled={!form.formState.isDirty}
+							/>
+						</div>
+					</form>
+				</Form>
+			</CardContent>
+		</Card>
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Shared bits
+// ---------------------------------------------------------------------------
+
+function SaveButton({
+	pending,
+	disabled,
+}: {
+	pending: boolean;
+	disabled?: boolean;
+}) {
+	return (
+		<Button
+			type="submit"
+			disabled={disabled || pending}
+			className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+		>
+			{pending ? (
+				<Loader2 className="mr-2 size-4 animate-spin" />
+			) : (
+				<Save className="mr-2 size-4" />
+			)}
+			Save changes
+		</Button>
+	);
+}
+
+function ErrorRow({ err }: { err: unknown }) {
+	return (
+		<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+			{err instanceof LeadlyApiError
+				? `API ${err.status}: ${err.bodyText.slice(0, 200) || err.message}`
+				: err instanceof Error
+					? err.message
+					: "Save failed."}
+		</div>
 	);
 }
