@@ -1,7 +1,8 @@
-// Phase 7 end-to-end smoke. Hits a *running* wrangler dev (port 8787) with
-// a freshly-seeded org/agent/visitor/conversation, opens a WebSocket, sends
-// widget_hello + user_msg, and asserts the agent streams tokens back via
-// the ConversationDO + OpenRouter.
+// End-to-end smoke. Phase 7 + Phase 10 combined: drives the full widget
+// handshake (visitor upsert → conversation create → token-authenticated
+// WS upgrade) against a running wrangler dev (port 8787), sends a user
+// message, and asserts the agent streams tokens back via the
+// ConversationDO + OpenRouter.
 //
 // Run sequence:
 //
@@ -46,20 +47,46 @@ async function main() {
 	const agent = await prisma.agent.create({
 		data: { organizationId: org.id, name: `Agent ${tag}`, slug: `a-${tag}` },
 	});
-	const visitor = await prisma.visitor.create({
-		data: {
-			organizationId: org.id,
-			agentId: agent.id,
-			externalId: `ext-${tag}`,
-		},
-	});
-	const conv = await prisma.conversation.create({
-		data: { organizationId: org.id, agentId: agent.id, visitorId: visitor.id },
-	});
-	console.log(`[smoke] seeded conversation ${conv.id}`);
+	console.log(`[smoke] seeded org + agent (${agent.id})`);
 
-	// 3. Open the WS and drive a turn.
-	const url = `${WS}/api/conversations/${conv.id}/ws`;
+	// 3. Drive the widget handshake exactly as a real iframe would.
+	//    POST /api/widget/visitor — upsert + token
+	const visitorRes = await fetch(
+		`${HTTP}/api/widget/visitor?agentId=${agent.id}`,
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ externalId: `ext-${tag}`, userAgent: "smoke" }),
+		},
+	);
+	if (!visitorRes.ok) {
+		console.error("[smoke] /widget/visitor failed:", visitorRes.status, await visitorRes.text());
+		process.exit(1);
+	}
+	const { token } = (await visitorRes.json()) as { visitorId: string; token: string };
+
+	//    POST /api/widget/conversation — create conv + ws url
+	const convRes = await fetch(`${HTTP}/api/widget/conversation`, {
+		method: "POST",
+		headers: {
+			"content-type": "application/json",
+			authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify({}),
+	});
+	if (!convRes.ok) {
+		console.error("[smoke] /widget/conversation failed:", convRes.status, await convRes.text());
+		process.exit(1);
+	}
+	const { conversationId } = (await convRes.json()) as {
+		conversationId: string;
+		wsUrl: string;
+	};
+	console.log(`[smoke] handshake done, conversationId=${conversationId}`);
+
+	// 4. Open the WS and drive a turn. Token goes in the query string —
+	//    browsers can't set headers on Upgrade.
+	const url = `${WS}/api/conversations/${conversationId}/ws?token=${encodeURIComponent(token)}`;
 	const ws = new WebSocket(url);
 	const events: string[] = [];
 	let done = false;

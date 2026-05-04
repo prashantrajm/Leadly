@@ -25,6 +25,7 @@ import {
 } from "@leadly/schemas";
 import { decodeCursor, encodeCursor } from "../lib/cursor";
 import { getPrisma } from "../lib/prisma";
+import { verifyWidgetToken } from "../lib/widget-token";
 import { requireAgentAccess } from "../middleware/org";
 import type { AppEnv } from "../types";
 
@@ -34,17 +35,46 @@ export const agentConversationsApp = new OpenAPIHono<AppEnv>();
 
 // GET /api/conversations/:id/ws
 //
-// Two roles share this path. The `?role=observer` query param + observer
-// token (Phase 8) puts the WS on the dashboard side. Default is the
-// visitor side — the widget never passes ?role.
+// Two roles share this path. ?role=observer puts the WS on the dashboard
+// side (validated against the observer token from /take-over — Phase 10
+// scope). Default visitor role requires ?token=<widgetToken>.
 //
-// Authentication for visitors lives in Phase 10's widgetTokenMiddleware
-// (a short-lived signed token). Until that ships, the route is open in
-// dev — Phase 10 wires the middleware here.
+// We accept the token via query string because browsers' WebSocket API
+// can't attach arbitrary headers on Upgrade. The token is short-lived
+// and bound to (visitorId, agentId, exp), so leaking it in a URL log
+// has minimal blast radius.
 conversationsApp.get("/:id/ws", async (c) => {
 	const conversationId = c.req.param("id");
 	if (request_is_not_websocket(c.req.raw)) {
 		return c.text("WebSocket upgrade required", 426);
+	}
+
+	const url = new URL(c.req.url);
+	const role = url.searchParams.get("role") === "observer" ? "observer" : "visitor";
+
+	if (role === "visitor") {
+		const token = url.searchParams.get("token");
+		if (!token) return c.text("Missing widget token", 401);
+
+		const verified = await verifyWidgetToken(c.env.BETTER_AUTH_SECRET, token);
+		if (!verified.ok) {
+			return c.text(`Invalid widget token (${verified.reason})`, 401);
+		}
+		// Confirm the token actually belongs to this conversation. A leaked
+		// token from agent A must not be usable to attach to a conversation
+		// hosted on agent B even if conversationIds collide unpredictably.
+		const prisma = getPrisma(c.env.DATABASE_URL);
+		const conv = await prisma.conversation.findUnique({
+			where: { id: conversationId },
+			select: { agentId: true, visitorId: true },
+		});
+		if (
+			!conv ||
+			conv.agentId !== verified.payload.a ||
+			conv.visitorId !== verified.payload.v
+		) {
+			return c.text("Token does not match conversation", 403);
+		}
 	}
 
 	// All instances for the same conversationId share the same DO. The id
@@ -54,9 +84,8 @@ conversationsApp.get("/:id/ws", async (c) => {
 		c.env.CONVERSATION.idFromName(conversationId),
 	);
 
-	// We forward the original Request object — the DO's fetch handler reads
-	// the role from the query string and the Upgrade header from there.
-	const url = new URL(c.req.url);
+	// Forward the original Request — the DO's fetch reads role + the
+	// Upgrade header from there.
 	url.searchParams.set("conversationId", conversationId);
 	const forwarded = new Request(url.toString(), c.req.raw);
 	return stub.fetch(forwarded);
