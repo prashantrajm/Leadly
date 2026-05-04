@@ -18,9 +18,9 @@ export const getAuth = (env: {
     }),
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
-    trustedOrigins: [
-      env.CORS_ORIGIN || "",
-    ],
+    trustedOrigins: env.CORS_ORIGIN
+      ? env.CORS_ORIGIN.split(",").map((o) => o.trim()).filter(Boolean)
+      : [],
     user: {
       additionalFields: {
         isOnboarded: {
