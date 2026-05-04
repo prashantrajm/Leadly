@@ -60,7 +60,7 @@ function VisualPane() {
 					to="/"
 					className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight transition-opacity hover:opacity-80"
 				>
-					<span className="inline-block h-2 w-2 rounded-full bg-foreground" />
+					<span className="inline-block h-2 w-2 rounded-full bg-accent-blue" />
 					Leadly
 				</Link>
 
@@ -117,7 +117,7 @@ function ChatBubble({
 			>
 				{children}
 				{human && (
-					<span className="pointer-events-none absolute -top-2 -right-2 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-foreground">
+					<span className="pointer-events-none absolute -top-2 -right-2 rounded-full bg-accent-blue px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-accent-blue-foreground">
 						human
 					</span>
 				)}
@@ -335,7 +335,11 @@ function SignInForm() {
 						</FormItem>
 					)}
 				/>
-				<Button type="submit" className="h-11 w-full" disabled={submitting}>
+				<Button
+					type="submit"
+					className="h-11 w-full bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+					disabled={submitting}
+				>
 					{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
 					Sign in
 				</Button>
@@ -433,7 +437,11 @@ function SignUpForm() {
 						</FormItem>
 					)}
 				/>
-				<Button type="submit" className="h-11 w-full" disabled={submitting}>
+				<Button
+					type="submit"
+					className="h-11 w-full bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+					disabled={submitting}
+				>
 					{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
 					Create account
 				</Button>
