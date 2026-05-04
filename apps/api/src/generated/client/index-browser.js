@@ -24,12 +24,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.5.0
- * Query Engine version: 280c870be64f457428992c43c1f6d557fab6e29e
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 Prisma.prismaVersion = {
-  client: "7.5.0",
-  engine: "280c870be64f457428992c43c1f6d557fab6e29e"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -167,9 +167,181 @@ exports.Prisma.VerificationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.OrgLlmCredentialScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  provider: 'provider',
+  label: 'label',
+  ciphertext: 'ciphertext',
+  iv: 'iv',
+  tag: 'tag',
+  maskedSuffix: 'maskedSuffix',
+  isDefault: 'isDefault',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgentLlmOverrideScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  credentialId: 'credentialId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.OrganizationScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MembershipScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AgentScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  name: 'name',
+  slug: 'slug',
+  greeting: 'greeting',
+  accentColor: 'accentColor',
+  identityPolicy: 'identityPolicy',
+  defaultProvider: 'defaultProvider',
+  defaultModel: 'defaultModel',
+  systemPromptOverlay: 'systemPromptOverlay',
+  fallbackMessage: 'fallbackMessage',
+  maxTurns: 'maxTurns',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.KbArticleScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  agentId: 'agentId',
+  title: 'title',
+  contentMarkdown: 'contentMarkdown',
+  source: 'source',
+  uploadKey: 'uploadKey',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.KbChunkScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  agentId: 'agentId',
+  articleId: 'articleId',
+  ord: 'ord',
+  text: 'text',
+  tokens: 'tokens',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ToolScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  agentId: 'agentId',
+  name: 'name',
+  scope: 'scope',
+  description: 'description',
+  inputSchema: 'inputSchema',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.VisitorScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  agentId: 'agentId',
+  externalId: 'externalId',
+  firstSeenAt: 'firstSeenAt',
+  lastSeenAt: 'lastSeenAt',
+  userAgent: 'userAgent',
+  ipHash: 'ipHash',
+  leadId: 'leadId'
+};
+
+exports.Prisma.LeadScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  agentId: 'agentId',
+  email: 'email',
+  phone: 'phone',
+  name: 'name',
+  customFields: 'customFields',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  agentId: 'agentId',
+  visitorId: 'visitorId',
+  leadId: 'leadId',
+  channel: 'channel',
+  mode: 'mode',
+  status: 'status',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  summary: 'summary',
+  sentiment: 'sentiment',
+  tags: 'tags',
+  lastActivityAt: 'lastActivityAt'
+};
+
+exports.Prisma.TurnScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  role: 'role',
+  text: 'text',
+  audioUrl: 'audioUrl',
+  durationMs: 'durationMs',
+  asrConfidence: 'asrConfidence',
+  toolName: 'toolName',
+  toolArgs: 'toolArgs',
+  toolResult: 'toolResult',
+  llmProvider: 'llmProvider',
+  model: 'model',
+  latencyMs: 'latencyMs',
+  tokensIn: 'tokensIn',
+  tokensOut: 'tokensOut',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DailyStatScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  agentId: 'agentId',
+  date: 'date',
+  conversations: 'conversations',
+  leadsCaptured: 'leadsCaptured',
+  handoffs: 'handoffs',
+  avgTurnsPerConv: 'avgTurnsPerConv',
+  topCitedArticleIds: 'topCitedArticleIds',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -182,12 +354,85 @@ exports.Prisma.NullsOrder = {
   last: 'last'
 };
 
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+exports.LlmProvider = exports.$Enums.LlmProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  google: 'google',
+  mistral: 'mistral',
+  groq: 'groq',
+  openrouter: 'openrouter',
+  other: 'other'
+};
+
+exports.MembershipRole = exports.$Enums.MembershipRole = {
+  owner: 'owner',
+  admin: 'admin',
+  member: 'member'
+};
+
+exports.AgentIdentityPolicy = exports.$Enums.AgentIdentityPolicy = {
+  optional: 'optional',
+  required_before_chat: 'required_before_chat',
+  identified_only: 'identified_only'
+};
+
+exports.KbArticleSource = exports.$Enums.KbArticleSource = {
+  manual: 'manual',
+  upload: 'upload'
+};
+
+exports.ToolScope = exports.$Enums.ToolScope = {
+  system: 'system',
+  customer: 'customer'
+};
+
+exports.ConversationChannel = exports.$Enums.ConversationChannel = {
+  chat: 'chat',
+  voice: 'voice'
+};
+
+exports.ConversationMode = exports.$Enums.ConversationMode = {
+  auto: 'auto',
+  paused: 'paused'
+};
+
+exports.ConversationStatus = exports.$Enums.ConversationStatus = {
+  active: 'active',
+  ended: 'ended',
+  abandoned: 'abandoned'
+};
+
+exports.TurnRole = exports.$Enums.TurnRole = {
+  user: 'user',
+  agent: 'agent',
+  human: 'human',
+  tool: 'tool',
+  system: 'system'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  OrgLlmCredential: 'OrgLlmCredential',
+  AgentLlmOverride: 'AgentLlmOverride',
+  Organization: 'Organization',
+  Membership: 'Membership',
+  Agent: 'Agent',
+  KbArticle: 'KbArticle',
+  KbChunk: 'KbChunk',
+  Tool: 'Tool',
+  Visitor: 'Visitor',
+  Lead: 'Lead',
+  Conversation: 'Conversation',
+  Turn: 'Turn',
+  DailyStat: 'DailyStat'
 };
 
 /**

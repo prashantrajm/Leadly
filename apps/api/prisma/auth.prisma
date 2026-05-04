@@ -9,6 +9,7 @@ model User {
   isOnboarded   Boolean   @default(false)
   sessions      Session[]
   accounts      Account[]
+  memberships   Membership[]
 
   @@unique([email])
   @@map("user")

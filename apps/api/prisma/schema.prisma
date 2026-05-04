@@ -1,10 +1,73 @@
 generator client {
-  provider = "prisma-client-js"
-  runtime  = "cloudflare"
-  output   = "../src/generated/client"
-  moduleFormat = "esm"
+  provider        = "prisma-client-js"
+  runtime         = "cloudflare"
+  output          = "../src/generated/client"
+  moduleFormat    = "esm"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
+}
+
+// ---------------------------------------------------------------------------
+// Enums (shared across auth.prisma / domain.prisma / byok.prisma)
+// ---------------------------------------------------------------------------
+
+enum MembershipRole {
+  owner
+  admin
+  member
+}
+
+enum AgentIdentityPolicy {
+  optional
+  required_before_chat
+  identified_only
+}
+
+enum KbArticleSource {
+  manual
+  upload
+  // notion / gdrive / web_crawl reserved for v2 connectors
+}
+
+enum ToolScope {
+  system
+  customer
+}
+
+enum ConversationChannel {
+  chat
+  voice
+}
+
+enum ConversationMode {
+  auto
+  paused
+}
+
+enum ConversationStatus {
+  active
+  ended
+  abandoned
+}
+
+enum TurnRole {
+  user
+  agent
+  human
+  tool
+  system
+}
+
+enum LlmProvider {
+  openai
+  anthropic
+  google
+  mistral
+  groq
+  openrouter
+  other
 }

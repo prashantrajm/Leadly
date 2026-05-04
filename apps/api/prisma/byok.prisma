@@ -1,0 +1,41 @@
+// ---------------------------------------------------------------------------
+// BYOK (Bring Your Own Key) credential storage.
+//
+// LLM provider keys are encrypted with AES-256-GCM using a per-org KEK
+// derived from the env-configured root key. The plaintext is never stored,
+// never logged, never returned over the API.
+// ---------------------------------------------------------------------------
+
+model OrgLlmCredential {
+  id             String       @id @default(cuid())
+  organizationId String
+  provider       LlmProvider
+  label          String       // e.g. "Production OpenAI"
+  // Encrypted blob shape: { ciphertext, iv, tag } as base64 strings.
+  ciphertext     String
+  iv             String
+  tag            String
+  // Last 4 chars of the original key for UI display ("sk-...XYZ").
+  maskedSuffix   String
+  isDefault      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentOverrides AgentLlmOverride[]
+
+  @@index([organizationId])
+  @@map("org_llm_credential")
+}
+
+model AgentLlmOverride {
+  id           String           @id @default(cuid())
+  agentId      String           @unique
+  credentialId String
+  createdAt    DateTime         @default(now())
+
+  agent        Agent            @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  credential   OrgLlmCredential @relation(fields: [credentialId], references: [id], onDelete: Cascade)
+
+  @@map("agent_llm_override")
+}
