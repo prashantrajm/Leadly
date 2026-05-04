@@ -11,6 +11,13 @@ import { requireAgentAccess } from "../middleware/org";
 import { getPrisma } from "../lib/prisma";
 import type { AppEnv } from "../types";
 
+// Upload limits — kept in sync with packages/schemas/src/kb.ts.
+// 50KB ceiling lets us run uploads through the Worker rather than the
+// pre-signed URL dance (see design §5.5 for what we're deferring and why
+// the simpler path is fine for v1).
+const MAX_UPLOAD_BYTES = 50_000;
+const ALLOWED_UPLOAD_MIME = new Set(["text/markdown", "text/plain"]);
+
 // Mounted under /api/agents/:agentId/kb in routes/index.ts. Every operation
 // sits behind requireAgentAccess so the caller is always confirmed to belong
 // to the org that owns the article.
@@ -297,7 +304,127 @@ kbApp.openapi(deleteArticleRoute, async (c) => {
 	return c.json({ success: true as const }, 200);
 });
 
+// ---------- upload (.md / .txt → R2 + create article) ----------
+
+const uploadArticleRoute = createRoute({
+	method: "post",
+	path: "/articles/upload",
+	tags: ["KB"],
+	request: {
+		params: z.object({ agentId: z.string() }),
+		body: {
+			content: {
+				"multipart/form-data": {
+					schema: z.object({
+						file: z.any().openapi({ type: "string", format: "binary" }),
+						title: z.string().min(2).max(200),
+					}),
+				},
+			},
+		},
+	},
+	middleware: [requireAgentAccess] as const,
+	responses: {
+		201: {
+			content: { "application/json": { schema: KbArticleSchema } },
+			description: "Article created from upload",
+		},
+		400: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Invalid file (size, type, or missing fields)",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+kbApp.openapi(uploadArticleRoute, async (c) => {
+	const { agentId } = c.req.valid("param");
+	const agent = c.get("agent");
+
+	const form = await c.req.parseBody();
+	const file = form["file"];
+	const title = typeof form["title"] === "string" ? form["title"] : "";
+
+	if (!(file instanceof File)) {
+		return c.json({ error: "No file uploaded" }, 400);
+	}
+	if (title.length < 2 || title.length > 200) {
+		return c.json({ error: "Title must be 2-200 chars" }, 400);
+	}
+	// File.type can include parameters (e.g. "text/plain;charset=utf-8") when
+	// the browser/Blob serializer attaches an encoding. Strip parameters so
+	// the comparison stays robust to that.
+	const mime = (file.type || "").split(";")[0].trim().toLowerCase();
+	if (!ALLOWED_UPLOAD_MIME.has(mime)) {
+		return c.json(
+			{
+				error: "Unsupported file type",
+				message: `Got ${file.type || "unknown"}; allowed: text/markdown, text/plain`,
+			},
+			400,
+		);
+	}
+	if (file.size > MAX_UPLOAD_BYTES) {
+		return c.json(
+			{
+				error: "File too large",
+				message: `Max ${MAX_UPLOAD_BYTES} bytes; got ${file.size}`,
+			},
+			400,
+		);
+	}
+
+	const text = await file.text();
+	if (text.trim().length === 0) {
+		return c.json({ error: "File is empty" }, 400);
+	}
+
+	// Deterministic key: org-scoped path + cuid filename. The .md/.txt suffix
+	// preserves intent for anyone poking at the bucket directly.
+	const cuid = newCuid();
+	const ext = mime === "text/markdown" ? "md" : "txt";
+	const uploadKey = `org/${agent.organizationId}/agent/${agentId}/kb/${cuid}.${ext}`;
+
+	await c.env.MEDIA_BUCKET.put(uploadKey, text, {
+		httpMetadata: { contentType: mime },
+	});
+
+	const prisma = getPrisma(c.env.DATABASE_URL);
+	const article = await prisma.kbArticle.create({
+		data: {
+			organizationId: agent.organizationId,
+			agentId,
+			title,
+			contentMarkdown: text,
+			source: "upload",
+			uploadKey,
+		},
+	});
+
+	// Phase 5: trigger KB_REEMBED here.
+
+	return c.json(toWire(article), 201);
+});
+
 // ---------- helpers ----------
+
+// Lightweight cuid-ish generator. Workers don't ship Node's crypto by default,
+// so we lean on Web Crypto's getRandomValues. Output is 22 chars of base36
+// — collision-resistant for our scale (per-org bucket of articles).
+function newCuid() {
+	const bytes = new Uint8Array(16);
+	crypto.getRandomValues(bytes);
+	let out = "";
+	for (const b of bytes) out += b.toString(36).padStart(2, "0");
+	return out.slice(0, 22);
+}
 
 function toWire(a: {
 	id: string;

@@ -10,11 +10,32 @@ if (!DATABASE_URL) throw new Error("DATABASE_URL not set");
 
 const prisma = getPrisma(DATABASE_URL);
 
+// In-memory R2 stand-in for the upload tests. The real binding is only
+// available inside wrangler dev / production; here we only assert that .put
+// was called with the right key + content.
+type StoredObject = { body: string; contentType: string };
+const fakeBucket: {
+	store: Map<string, StoredObject>;
+	put: (
+		key: string,
+		body: string,
+		opts?: { httpMetadata?: { contentType?: string } },
+	) => Promise<void>;
+} = {
+	store: new Map(),
+	put: async (key, body, opts) => {
+		fakeBucket.store.set(key, {
+			body,
+			contentType: opts?.httpMetadata?.contentType ?? "application/octet-stream",
+		});
+	},
+};
+
 function makeApp(user: AuthUser | null) {
 	const app = new OpenAPIHono<AppEnv>();
 	app.use("*", async (c, next) => {
 		// biome-ignore lint/suspicious/noExplicitAny: shoehorning a partial env for the test
-		(c as any).env = { DATABASE_URL };
+		(c as any).env = { DATABASE_URL, MEDIA_BUCKET: fakeBucket };
 		if (user) c.set("user", user);
 		else return c.json({ error: "Unauthorized" }, 401);
 		return next();
@@ -226,6 +247,91 @@ describe("DELETE /agents/:agentId/kb/articles/:articleId", () => {
 			{ method: "DELETE" },
 		);
 		expect(res.status).toBe(404);
+	});
+});
+
+// ---------- upload ----------
+
+describe("POST /agents/:agentId/kb/articles/upload", () => {
+	function uploadForm(filename: string, type: string, body: string, title: string) {
+		const form = new FormData();
+		form.append("file", new Blob([body], { type }), filename);
+		form.append("title", title);
+		return form;
+	}
+
+	it("creates an article from a markdown upload and stores the original in R2", async () => {
+		const md = "# Pricing\n\nFree tier: 100 conversations/mo.\n";
+		const res = await makeApp(owner).request(
+			`/agents/${agentId}/kb/articles/upload`,
+			{ method: "POST", body: uploadForm("pricing.md", "text/markdown", md, "Pricing") },
+		);
+		expect(res.status).toBe(201);
+		const body = (await res.json()) as {
+			id: string;
+			source: string;
+			uploadKey: string | null;
+			contentMarkdown: string;
+		};
+		expect(body.source).toBe("upload");
+		expect(body.uploadKey).toMatch(
+			new RegExp(`^org/${orgId}/agent/${agentId}/kb/.+\\.md$`),
+		);
+		expect(body.contentMarkdown).toBe(md);
+
+		const stored = fakeBucket.store.get(body.uploadKey ?? "");
+		expect(stored?.body).toBe(md);
+		expect(stored?.contentType).toBe("text/markdown");
+	});
+
+	it("accepts text/plain too", async () => {
+		const txt = "Returns: 30 days, no questions asked.";
+		const res = await makeApp(owner).request(
+			`/agents/${agentId}/kb/articles/upload`,
+			{ method: "POST", body: uploadForm("returns.txt", "text/plain", txt, "Returns Policy 2") },
+		);
+		expect(res.status).toBe(201);
+		const body = (await res.json()) as { uploadKey: string | null };
+		expect(body.uploadKey).toMatch(/\.txt$/);
+	});
+
+	it("rejects unsupported content type with 400", async () => {
+		const res = await makeApp(owner).request(
+			`/agents/${agentId}/kb/articles/upload`,
+			{
+				method: "POST",
+				body: uploadForm("doc.pdf", "application/pdf", "fake pdf", "Doc"),
+			},
+		);
+		expect(res.status).toBe(400);
+	});
+
+	it("rejects empty file with 400", async () => {
+		const res = await makeApp(owner).request(
+			`/agents/${agentId}/kb/articles/upload`,
+			{ method: "POST", body: uploadForm("empty.md", "text/markdown", "   ", "Empty") },
+		);
+		expect(res.status).toBe(400);
+	});
+
+	it("rejects file over 50KB with 400", async () => {
+		const big = "x".repeat(50_001);
+		const res = await makeApp(owner).request(
+			`/agents/${agentId}/kb/articles/upload`,
+			{ method: "POST", body: uploadForm("big.md", "text/markdown", big, "Big") },
+		);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 403 for outsider", async () => {
+		const res = await makeApp(outsider).request(
+			`/agents/${agentId}/kb/articles/upload`,
+			{
+				method: "POST",
+				body: uploadForm("hacked.md", "text/markdown", "# Hacked", "Hacked"),
+			},
+		);
+		expect(res.status).toBe(403);
 	});
 });
 
