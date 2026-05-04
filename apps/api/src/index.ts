@@ -1,5 +1,4 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { HealthSchema } from "@leadly/schemas";
 import { cors } from "hono/cors";
 import { getAuth } from "./lib/auth";
 import { apiApp } from "./routes";
@@ -41,14 +40,11 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
 // Mount API routes
 app.route("/api", apiApp);
 
-// Health check — validated against the shared @leadly/schemas Health shape
-// so any contract drift breaks at typecheck time, not at runtime.
 app.get("/health", (c) => {
-  const payload = HealthSchema.parse({
+  return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
   });
-  return c.json(payload);
 });
 
 // OpenAPI documentation endpoint
