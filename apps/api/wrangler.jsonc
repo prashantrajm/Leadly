@@ -23,6 +23,8 @@
   // `npx wrangler secret put GOOGLE_CLIENT_SECRET`
   // `npx wrangler secret put DATABASE_URL`
   // `npx wrangler secret put GOOGLE_CLIENT_ID` (already exists as secret)
+  // `npx wrangler secret put OPENROUTER_API_KEY`
+  // `npx wrangler secret put SECRETS_ENCRYPTION_KEY`  (openssl rand -base64 32)
   "observability": {
     "logs": {
       "enabled": true,
@@ -34,18 +36,62 @@
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
+  // KV: widget config cache (60s TTL) + per-visitor rate-limit counters.
+  // The `id` is the production namespace from `wrangler kv namespace create`;
+  // wrangler dev uses an in-memory miniflare emulation so dev needs no real id.
+  "kv_namespaces": [
+    {
+      "binding": "WIDGET_CACHE",
+      "id": "leadly-widget-cache"
+    }
+  ],
   "r2_buckets": [
     {
       "binding": "MEDIA_BUCKET",
       "bucket_name": "your-app-media"
     }
   ],
+  // KB re-embedding pipeline. KbReembedWorkflow is exported from src/index.ts;
+  // env.KB_REEMBED.create({ params: { articleId } }) kicks off a durable run.
+  "workflows": [
+    {
+      "name": "kb-reembed",
+      "binding": "KB_REEMBED",
+      "class_name": "KbReembedWorkflow"
+    },
+    {
+      "name": "conversation-summarize",
+      "binding": "CONVERSATION_SUMMARIZE",
+      "class_name": "ConversationSummarizeWorkflow"
+    }
+  ],
+  // Durable Object: one instance per conversationId. The DO holds the live
+  // WebSocket(s), runs the agent loop, persists turns. Hibernation keeps
+  // idle conversations free per design §5.3.
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CONVERSATION",
+        "class_name": "ConversationDO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-conversation-do",
+      "new_sqlite_classes": ["ConversationDO"]
+    }
+  ],
+  // Cron triggers (Phase 12). Two schedules:
+  //   • "*/5 * * * *" — idle-reaper sweep, safety net for stuck DO alarms
+  //   • "5 0 * * *"   — analytics rollup, 5 min past midnight UTC
+  // The scheduled() handler in src/index.ts dispatches by event.cron.
+  "triggers": {
+    "crons": [
+      "*/5 * * * *",
+      "5 0 * * *"
+    ]
+  },
   // "d1_databases": [
   //   {
   //     "binding": "MY_DB",

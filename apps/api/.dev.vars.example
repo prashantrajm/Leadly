@@ -4,3 +4,11 @@ GOOGLE_CLIENT_ID="your_google_client_id_here"
 GOOGLE_CLIENT_SECRET="your_google_client_secret_here"
 CORS_ORIGIN="http://localhost:3000"
 BETTER_AUTH_URL="http://localhost:8787"
+
+# OpenRouter — single LLM provider for chat + embeddings.
+# Get one at https://openrouter.ai/keys
+OPENROUTER_API_KEY="sk-or-..."
+
+# Root key for AES-256-GCM envelope encryption of BYOK provider keys.
+# 32 raw bytes, base64-encoded. Generate with: `openssl rand -base64 32`
+SECRETS_ENCRYPTION_KEY="generate-me-with-openssl-rand-base64-32"

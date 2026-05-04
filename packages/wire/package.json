@@ -1,0 +1,20 @@
+{
+	"name": "@leadly/wire",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"test": "bun test",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"zod": "^4.2.1"
+	},
+	"devDependencies": {
+		"@leadly/config": "workspace:*",
+		"@types/bun": "latest"
+	}
+}

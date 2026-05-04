@@ -17,6 +17,7 @@ import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GuidesRouteImport } from './routes/guides'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactUsRouteImport } from './routes/contact-us'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChangelogRouteImport } from './routes/changelog'
@@ -64,6 +65,11 @@ const GuidesRoute = GuidesRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactUsRoute = ContactUsRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/changelog': typeof ChangelogRoute
   '/community': typeof CommunityRoute
   '/contact-us': typeof ContactUsRoute
+  '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/changelog': typeof ChangelogRoute
   '/community': typeof CommunityRoute
   '/contact-us': typeof ContactUsRoute
+  '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/changelog': typeof ChangelogRoute
   '/community': typeof CommunityRoute
   '/contact-us': typeof ContactUsRoute
+  '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/community'
     | '/contact-us'
+    | '/dashboard'
     | '/docs'
     | '/guides'
     | '/help'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/community'
     | '/contact-us'
+    | '/dashboard'
     | '/docs'
     | '/guides'
     | '/help'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/community'
     | '/contact-us'
+    | '/dashboard'
     | '/docs'
     | '/guides'
     | '/help'
@@ -228,6 +240,7 @@ export interface RootRouteChildren {
   ChangelogRoute: typeof ChangelogRoute
   CommunityRoute: typeof CommunityRoute
   ContactUsRoute: typeof ContactUsRoute
+  DashboardRoute: typeof DashboardRoute
   DocsRoute: typeof DocsRoute
   GuidesRoute: typeof GuidesRoute
   HelpRoute: typeof HelpRoute
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact-us': {
@@ -364,6 +384,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChangelogRoute: ChangelogRoute,
   CommunityRoute: CommunityRoute,
   ContactUsRoute: ContactUsRoute,
+  DashboardRoute: DashboardRoute,
   DocsRoute: DocsRoute,
   GuidesRoute: GuidesRoute,
   HelpRoute: HelpRoute,

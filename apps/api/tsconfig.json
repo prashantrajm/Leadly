@@ -1,17 +1,11 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "skipLibCheck": true,
-    "lib": [
-      "ESNext"
-    ],
-    "types": [
-      "@cloudflare/workers-types"
-    ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
-  },
+	"extends": "@leadly/config/tsconfig.base.json",
+	"include": ["src/**/*.ts", "src/**/*.tsx"],
+	"compilerOptions": {
+		"target": "ESNext",
+		"lib": ["ESNext"],
+		"types": ["@cloudflare/workers-types", "bun-types"],
+		"jsx": "react-jsx",
+		"jsxImportSource": "hono/jsx"
+	}
 }

@@ -215,13 +215,13 @@ The `Tool` table has a `scope` enum (`system` | `customer`). v1 only uses `syste
 
 ### 5.1 Cloudflare-only — committed
 
-**Decision:** Leadly runs on **Cloudflare**, end-to-end. Workers, Durable Objects, R2, KV, Workflows, Cron Triggers, and Hyperdrive in front of Postgres. Self-hosters use Cloudflare too — there is no second runtime, no portability layer, no abstraction over Cloudflare primitives.
+**Decision:** Leadly runs on **Cloudflare**, end-to-end. Workers, Durable Objects, R2, KV, Workflows, and Cron Triggers, with **Prisma Accelerate** in front of Postgres for connection pooling. Self-hosters use Cloudflare too — there is no second runtime, no portability layer, no abstraction over Cloudflare primitives.
 
 **Why we committed instead of staying portable:**
 
 1. **The economics are absurd.** Cloudflare's free tier covers 100k Worker requests/day, 1M Durable Object invocations/month, 10 GB R2, 100k KV reads/day, 1k DO storage requests/day. Workers Paid is **$5/month** and effectively removes those caps for SMB-scale usage. A portable VPS-deployed equivalent (server + managed Postgres + S3-compatible blob + Redis for pub/sub) is realistically $40–100/month at the same load. Five dollars beats forty.
 2. **DO Hibernation makes idle WebSockets free.** A `Conversation` DO with an open WebSocket but no traffic costs nothing — no compute, no memory billing while hibernating. For a chat product where most conversations have long quiet stretches between turns, this is the correct economic model. No VPS does this.
-3. **Workers + DO + Hyperdrive + R2 is one bill, one auth, one config.** Operational simplicity is real; portability that we'd have to maintain on every release is real overhead.
+3. **Workers + DO + R2 is one bill, one auth, one config.** Operational simplicity is real; portability that we'd have to maintain on every release is real overhead.
 4. **The v1.5 voice work depends on long-lived stateful WebSockets.** DOs with Hibernation are *built for* this exact pattern. Replicating it on a VPS means picking a stateful actor framework or rolling our own.
 5. **Self-host on Cloudflare is a clean install path.** "Create a Cloudflare account, install wrangler, set env vars, `wrangler deploy`" is no harder than "install Docker, configure Postgres, configure MinIO, set up reverse proxy, configure TLS." The friction we feared earlier was overstated; the tooling story is good.
 
@@ -285,16 +285,18 @@ export class ConversationDO implements DurableObject {
 
 **Rejected:** In-process `Map` on a long-lived server (can't run on Workers; loses Hibernation). Stateless re-hydrate from Postgres per turn (rehydrating per audio frame in v2 voice would blow the latency budget). Workers KV for session state (eventually-consistent — wrong tool; reads of a key right after a write can return stale data, causing split-brain on reconnects).
 
-### 5.4 Database — Postgres + pgvector via Hyperdrive
+### 5.4 Database — Postgres + pgvector + Prisma Accelerate
 
-**Decision:** A managed **Postgres** instance (Neon / Supabase / Railway — choice is the operator's, not Leadly's) with the **pgvector** extension. Workers connect through **Hyperdrive** for connection pooling and edge-side query caching.
+**Decision:** A managed **Postgres** instance (Neon / Supabase / Railway — choice is the operator's, not Leadly's) with the **pgvector** extension. Workers reach Postgres through **Prisma Accelerate**, which handles connection pooling and edge-side query caching. This is the same pattern used in the existing `apps/api/` scaffold and on prior Cloudflare projects.
 
-**Why Postgres + Hyperdrive instead of D1 or Vectorize:**
+**Why Postgres + Accelerate instead of D1 or Vectorize:**
 - **D1** is SQLite-on-edge. Wrong shape for our workload — no vector extension, weaker for transactional joins across the schema.
 - **Vectorize** would split the KB across two stores (vectors in Vectorize, KB metadata in Postgres) and require dual-write logic. pgvector keeps retrieval as a single SQL join with `WHERE agentId = ?` — trivial isolation, trivial filtering.
-- **Hyperdrive** solves the Workers-can't-pool-TCP problem. From the Worker's perspective, it's a fast pooled Postgres connection; from Postgres's perspective, it's a small number of long-lived clients regardless of how many Worker invocations are in flight.
+- **Accelerate** solves the Workers-can't-pool-TCP problem the way Prisma's Cloudflare path is documented to. From the Worker's perspective, it's a single HTTP-backed client; from Postgres's perspective, it's a small number of pooled connections regardless of how many Worker invocations are in flight. Battle-tested on prior projects.
 
-**Prisma:** `runtime = "cloudflare"` stays in `prisma/schema.prisma` (already there). The `@prisma/extension-accelerate` dep that's currently in `apps/api/package.json` will be **swapped for the Hyperdrive driver adapter** when we wire DB access — Accelerate and Hyperdrive solve the same problem; Hyperdrive is the Cloudflare-native answer and avoids paying Accelerate's per-query fee on top of our existing infra.
+**Prisma:** `runtime = "cloudflare"` and `@prisma/extension-accelerate` are already wired in `apps/api/`. `lib/prisma.ts` builds the client with `withAccelerate()` from the env-supplied `DATABASE_URL` (the Accelerate connection string).
+
+**Hyperdrive (rejected for v1):** Cloudflare's native answer to the same problem. Functionally equivalent here. We're sticking with Accelerate because it's already in the repo and proven on past projects — switching would cost engineering time for no v1-relevant benefit. Hyperdrive remains a deferred swap if Accelerate's pricing or behavior becomes a problem.
 
 ### 5.5 Blob storage — R2
 
@@ -447,8 +449,8 @@ No email in v1 at all. Handoff notifications are **in-dashboard real-time only**
 |---|---|
 | Runtime | Cloudflare Workers + Hono |
 | API typing | `@hono/zod-openapi` (already wired) |
-| DB | Managed Postgres + pgvector via Hyperdrive |
-| ORM | Prisma with `runtime = "cloudflare"` (Hyperdrive driver adapter; not Accelerate) |
+| DB | Managed Postgres + pgvector |
+| ORM | Prisma with `runtime = "cloudflare"` + `@prisma/extension-accelerate` |
 | Stateful primitive | Durable Object per `Conversation` with WebSocket Hibernation |
 | Cache | Workers KV (widget config, rate-limit counters) |
 | Async / scheduled | Cloudflare Workflows + Cron Triggers |
@@ -472,7 +474,7 @@ No email in v1 at all. Handoff notifications are **in-dashboard real-time only**
 
 A phased order that respects dependencies and produces a demo-able artifact at each milestone.
 
-1. **Wire Postgres + Hyperdrive.** Provision managed Postgres with pgvector enabled. Configure Hyperdrive binding in `wrangler.jsonc`. Swap Prisma's Accelerate extension for the Hyperdrive driver adapter.
+1. **Wire Postgres.** Provision managed Postgres with pgvector enabled. Set `DATABASE_URL` to a Prisma Accelerate connection string via `wrangler secret put DATABASE_URL`. The Prisma + Accelerate setup in `apps/api/` is already correctly wired.
 2. **Domain schema.** Org, User, Agent, Visitor, Lead, Conversation, Turn, KbArticle, KbChunk, Tool. Migrate with `prisma migrate deploy` against the managed instance.
 3. **Agent CRUD + dashboard skeleton.** TanStack Router shell, sign-up → org → agent flow, agents list, persona/settings page.
 4. **KB editor + retrieval.** Article CRUD, `.md`/`.txt` upload via R2 pre-signed URL, chunk-on-write, embedding via OpenAI in a Workflow, pgvector index, retrieval query.

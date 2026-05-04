@@ -1,0 +1,11 @@
+{
+	"name": "@leadly/config",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./tsconfig.base.json": "./tsconfig.base.json",
+		"./biome.base.json": "./biome.base.json"
+	},
+	"files": ["tsconfig.base.json", "biome.base.json"]
+}

@@ -1,0 +1,260 @@
+// ---------------------------------------------------------------------------
+// Tenancy: Organization → Membership → User
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id             String             @id @default(cuid())
+  name           String
+  slug           String             @unique
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  memberships    Membership[]
+  agents         Agent[]
+  llmCredentials OrgLlmCredential[]
+
+  @@map("organization")
+}
+
+model Membership {
+  id             String         @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MembershipRole @default(member)
+  createdAt      DateTime       @default(now())
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("membership")
+}
+
+// ---------------------------------------------------------------------------
+// Agent: one per website/brand under an Organization
+// ---------------------------------------------------------------------------
+
+model Agent {
+  id                  String              @id @default(cuid())
+  organizationId      String
+  name                String
+  slug                String
+  greeting            String              @default("Hi! How can I help?")
+  accentColor         String              @default("#0F172A")
+  identityPolicy      AgentIdentityPolicy @default(optional)
+  defaultProvider     LlmProvider         @default(openrouter)
+  defaultModel        String              @default("tencent/hy3-preview:free")
+  systemPromptOverlay String?
+  fallbackMessage     String              @default("I don't have that information yet.")
+  maxTurns            Int                 @default(50)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  kbArticles          KbArticle[]
+  kbChunks            KbChunk[]
+  tools               Tool[]
+  visitors            Visitor[]
+  leads               Lead[]
+  conversations       Conversation[]
+  llmOverride         AgentLlmOverride?
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("agent")
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge base
+// ---------------------------------------------------------------------------
+
+model KbArticle {
+  id              String          @id @default(cuid())
+  organizationId  String
+  agentId         String
+  title           String
+  contentMarkdown String
+  source          KbArticleSource @default(manual)
+  uploadKey       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  agent           Agent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  chunks          KbChunk[]
+
+  @@index([agentId])
+  @@index([organizationId])
+  @@map("kb_article")
+}
+
+model KbChunk {
+  id              String                      @id @default(cuid())
+  organizationId  String
+  agentId         String
+  articleId       String
+  ord             Int
+  text            String
+  tokens          Int
+  embedding       Unsupported("vector(1536)")
+  createdAt       DateTime                    @default(now())
+
+  article         KbArticle                   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  agent           Agent                       @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  // HNSW index on `embedding` is added via raw SQL in the init migration —
+  // Prisma can't express vector indexes in the schema language yet.
+  @@index([agentId])
+  @@index([articleId])
+  @@map("kb_chunk")
+}
+
+// ---------------------------------------------------------------------------
+// Tools (system tools in v1; customer scope reserved for v2)
+// ---------------------------------------------------------------------------
+
+model Tool {
+  id             String    @id @default(cuid())
+  organizationId String
+  agentId        String
+  name           String
+  scope          ToolScope @default(system)
+  description    String
+  inputSchema    Json
+  enabled        Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  agent          Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, name])
+  @@map("tool")
+}
+
+// ---------------------------------------------------------------------------
+// Identity: Visitor (browser-scoped) → Lead (identified person)
+// ---------------------------------------------------------------------------
+
+model Visitor {
+  id              String         @id @default(cuid())
+  organizationId  String
+  agentId         String
+  externalId      String         // signed cookie value persisted in widget
+  firstSeenAt     DateTime       @default(now())
+  lastSeenAt      DateTime       @default(now())
+  userAgent       String?
+  ipHash          String?        // hashed at ingest; never store raw IP
+  leadId          String?
+
+  agent           Agent          @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  lead            Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  conversations   Conversation[]
+
+  @@unique([agentId, externalId])
+  @@index([agentId])
+  @@index([leadId])
+  @@map("visitor")
+}
+
+model Lead {
+  id              String         @id @default(cuid())
+  organizationId  String
+  agentId         String
+  email           String?
+  phone           String?
+  name            String?
+  customFields    Json           @default("{}")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  agent           Agent          @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  visitors        Visitor[]
+  conversations   Conversation[]
+
+  // Partial unique indexes (agentId, email) and (agentId, phone) live in the
+  // init migration — Prisma can't express partial indexes natively.
+  @@index([agentId])
+  @@map("lead")
+}
+
+// ---------------------------------------------------------------------------
+// Conversation + Turn (single table for chat now, voice later)
+// ---------------------------------------------------------------------------
+
+model Conversation {
+  id             String              @id @default(cuid())
+  organizationId String
+  agentId        String
+  visitorId      String
+  leadId         String?
+  channel        ConversationChannel @default(chat)
+  mode           ConversationMode    @default(auto)
+  status         ConversationStatus  @default(active)
+  startedAt      DateTime            @default(now())
+  endedAt        DateTime?
+  summary        String?
+  sentiment      String?
+  tags           Json?
+  lastActivityAt DateTime            @default(now())
+
+  agent          Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  visitor        Visitor             @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  lead           Lead?               @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  turns          Turn[]
+
+  @@index([agentId, startedAt])
+  @@index([agentId, status])
+  @@index([visitorId])
+  @@index([leadId])
+  @@map("conversation")
+}
+
+model Turn {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           TurnRole
+  text           String
+
+  // Voice columns — null in v1
+  audioUrl       String?
+  durationMs     Int?
+  asrConfidence  Float?
+
+  // Tool execution metadata
+  toolName       String?
+  toolArgs       Json?
+  toolResult     Json?
+
+  // LLM telemetry
+  llmProvider    String?
+  model          String?
+  latencyMs      Int?
+  tokensIn       Int?
+  tokensOut      Int?
+
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("turn")
+}
+
+// ---------------------------------------------------------------------------
+// Daily analytics rollup (filled by cron in Phase 12)
+// ---------------------------------------------------------------------------
+
+model DailyStat {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  agentId            String
+  date               DateTime @db.Date
+  conversations      Int      @default(0)
+  leadsCaptured      Int      @default(0)
+  handoffs           Int      @default(0)
+  avgTurnsPerConv    Float    @default(0)
+  topCitedArticleIds Json     @default("[]")
+  createdAt          DateTime @default(now())
+
+  @@unique([agentId, date])
+  @@index([organizationId, date])
+  @@map("daily_stat")
+}

@@ -1,19 +1,23 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
+import { rollupYesterdayAllAgents } from "./crons/analytics-rollup";
+import { reapIdleConversations } from "./crons/idle-reaper";
 import { getAuth } from "./lib/auth";
 import { apiApp } from "./routes";
+import type { AppEnv, Bindings } from "./types";
 
-type Bindings = {
-  DATABASE_URL: string;
-  BETTER_AUTH_SECRET: string;
-  BETTER_AUTH_URL?: string;
-  GOOGLE_CLIENT_ID?: string;
-  GOOGLE_CLIENT_SECRET?: string;
-  CORS_ORIGIN?: string;
-  MEDIA_BUCKET: R2Bucket;
-};
+// Cloudflare Workflows must be exported from the worker entrypoint so wrangler
+// can wire the `class_name` declared in wrangler.jsonc. They run as a separate
+// invocation from the fetch handler — env.KB_REEMBED.create({ params }) hands
+// off to a fresh, durable execution context.
+export { KbReembedWorkflow } from "./workflows/kb-reembed";
+export { ConversationSummarizeWorkflow } from "./workflows/conversation-summarize";
 
-const app = new OpenAPIHono<{ Bindings: Bindings }>();
+// Durable Object class export — same wrangler-registers-by-name story.
+// One instance per conversationId, addressed via env.CONVERSATION.idFromName.
+export { ConversationDO } from "./durable/conversation";
+
+const app = new OpenAPIHono<AppEnv>();
 
 // CORS configuration
 app.use("*", async (c, next) => {
@@ -40,12 +44,10 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
 // Mount API routes
 app.route("/api", apiApp);
 
-// Health check
 app.get("/health", (c) => {
   return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    environment: c.env.CORS_ORIGIN?.includes("localhost") ? "development" : "production",
   });
 });
 
@@ -64,4 +66,47 @@ app.doc("/doc", (c) => ({
   ],
 }))
 
-export default app;
+// The Worker exports both `fetch` (Hono's app) AND `scheduled` (cron
+// triggers). Wrangler routes by event type — fetch handles HTTP + WS,
+// scheduled fires per the crons[] in wrangler.jsonc. Workers will reuse
+// the same export shape both in dev and prod.
+export default {
+	fetch: app.fetch.bind(app),
+
+	async scheduled(
+		event: ScheduledEvent,
+		env: Bindings,
+		ctx: ExecutionContext,
+	): Promise<void> {
+		// Dispatch by cron string. wrangler.jsonc declares two:
+		//   "*/5 * * * *"  → idle reaper
+		//   "5 0 * * *"    → analytics rollup at 00:05 UTC
+		// Anything else falls through to a logged warning.
+		switch (event.cron) {
+			case "*/5 * * * *": {
+				ctx.waitUntil(
+					reapIdleConversations(env)
+						.then((r) =>
+							console.log(`[cron:idle-reaper] reaped=${r.reaped}`),
+						)
+						.catch((err) =>
+							console.error("[cron:idle-reaper] failed", err),
+						),
+				);
+				return;
+			}
+			case "5 0 * * *": {
+				ctx.waitUntil(
+					rollupYesterdayAllAgents(env)
+						.then((rs) =>
+							console.log(`[cron:rollup] agents=${rs.length}`),
+						)
+						.catch((err) => console.error("[cron:rollup] failed", err)),
+				);
+				return;
+			}
+			default:
+				console.warn(`[cron] unknown schedule: ${event.cron}`);
+		}
+	},
+};
