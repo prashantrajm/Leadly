@@ -54,8 +54,8 @@ const Footer = () => {
 					{/* Brand & Outline */}
 					<div className="lg:col-span-2 space-y-4">
 						<a href="/" className="inline-flex items-center space-x-2">
-							<div className="bg-primary p-2 rounded-lg">
-								<Zap className="h-5 w-5 text-primary-foreground" />
+							<div className="bg-accent-blue p-2 rounded-lg">
+								<Zap className="h-5 w-5 text-accent-blue-foreground" />
 							</div>
 							<span className="font-bold text-xl tracking-tight">
 								Leadly
@@ -107,7 +107,7 @@ const Footer = () => {
 									target="_blank"
 									rel="noreferrer"
 									aria-label={social.label}
-									className="text-muted-foreground hover:text-primary transition-colors"
+									className="text-muted-foreground hover:text-accent-blue transition-colors"
 								>
 									<social.icon className="h-5 w-5" />
 								</a>
