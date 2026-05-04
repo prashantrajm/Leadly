@@ -41,8 +41,8 @@ model Agent {
   greeting            String              @default("Hi! How can I help?")
   accentColor         String              @default("#0F172A")
   identityPolicy      AgentIdentityPolicy @default(optional)
-  defaultProvider     LlmProvider         @default(openai)
-  defaultModel        String              @default("gpt-4o-mini")
+  defaultProvider     LlmProvider         @default(openrouter)
+  defaultModel        String              @default("openai/gpt-4o-mini")
   systemPromptOverlay String?
   fallbackMessage     String              @default("I don't have that information yet.")
   maxTurns            Int                 @default(50)

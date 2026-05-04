@@ -15,6 +15,7 @@ export type Bindings = {
 	GOOGLE_CLIENT_ID?: string;
 	GOOGLE_CLIENT_SECRET?: string;
 	CORS_ORIGIN?: string;
+	OPENROUTER_API_KEY: string;
 	MEDIA_BUCKET: R2Bucket;
 };
 
