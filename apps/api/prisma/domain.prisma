@@ -42,7 +42,7 @@ model Agent {
   accentColor         String              @default("#0F172A")
   identityPolicy      AgentIdentityPolicy @default(optional)
   defaultProvider     LlmProvider         @default(openrouter)
-  defaultModel        String              @default("openai/gpt-4o-mini")
+  defaultModel        String              @default("tencent/hy3-preview:free")
   systemPromptOverlay String?
   fallbackMessage     String              @default("I don't have that information yet.")
   maxTurns            Int                 @default(50)
