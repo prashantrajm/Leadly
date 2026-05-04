@@ -7,6 +7,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
     "typecheck": "tsc --noEmit",
+    "test": "dotenv -e .dev.vars -- bun test src",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "prisma:dev": "dotenv -e .dev.vars -- bunx prisma generate --watch",
     "db:push": "dotenv -e .dev.vars -- bunx prisma db push",
@@ -32,6 +33,7 @@
     "@cloudflare/workers-types": "^4.20260303.0",
     "@leadly/config": "workspace:*",
     "@prisma/config": "latest",
+    "@types/bun": "latest",
     "dotenv-cli": "latest",
     "prisma": "latest",
     "wrangler": "^4.4.0"

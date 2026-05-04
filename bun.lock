@@ -28,6 +28,7 @@
         "@cloudflare/workers-types": "^4.20260303.0",
         "@leadly/config": "workspace:*",
         "@prisma/config": "latest",
+        "@types/bun": "latest",
         "dotenv-cli": "latest",
         "prisma": "latest",
         "wrangler": "^4.4.0",

@@ -1,19 +1,8 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
+import type { AppEnv } from "../types";
 import { uploadsApp } from "./uploads";
 
-type Env = {
-  Bindings: {
-    DATABASE_URL: string;
-    BETTER_AUTH_SECRET: string;
-    BETTER_AUTH_URL?: string;
-    GOOGLE_CLIENT_ID?: string;
-    GOOGLE_CLIENT_SECRET?: string;
-    CORS_ORIGIN?: string;
-    MEDIA_BUCKET: R2Bucket;
-  };
-};
-
-export const apiApp = new OpenAPIHono<Env>();
+export const apiApp = new OpenAPIHono<AppEnv>();
 
 // Health check endpoint
 apiApp.get("/health", (c) => {

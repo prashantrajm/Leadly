@@ -1,23 +1,12 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { authMiddleware, type AuthUser } from "../middleware/auth";
+import { authMiddleware } from "../middleware/auth";
 import { ErrorSchema } from "../schemas";
-
-type Env = {
-  Bindings: {
-    DATABASE_URL: string;
-    BETTER_AUTH_SECRET: string;
-    MEDIA_BUCKET: R2Bucket;
-  };
-  Variables: {
-    user: AuthUser;
-    session: unknown;
-  };
-};
+import type { AppEnv } from "../types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
 
-export const uploadsApp = new OpenAPIHono<Env>();
+export const uploadsApp = new OpenAPIHono<AppEnv>();
 
 // ============================================
 // Schemas

@@ -2,18 +2,9 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { getAuth } from "./lib/auth";
 import { apiApp } from "./routes";
+import type { AppEnv } from "./types";
 
-type Bindings = {
-  DATABASE_URL: string;
-  BETTER_AUTH_SECRET: string;
-  BETTER_AUTH_URL?: string;
-  GOOGLE_CLIENT_ID?: string;
-  GOOGLE_CLIENT_SECRET?: string;
-  CORS_ORIGIN?: string;
-  MEDIA_BUCKET: R2Bucket;
-};
-
-const app = new OpenAPIHono<{ Bindings: Bindings }>();
+const app = new OpenAPIHono<AppEnv>();
 
 // CORS configuration
 app.use("*", async (c, next) => {
