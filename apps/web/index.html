@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbfbfb" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
     <meta
       name="description"
       content="Leadly — open-source AI support platform with embeddable chat widget, knowledge base, and lead capture."
@@ -12,6 +13,28 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>Leadly</title>
+    <!--
+      Theme bootstrap — sets the .dark class on <html> before React mounts so
+      we don't paint the wrong theme for a frame. Mirrors next-themes' own
+      logic (storage key "theme", values "light" | "dark" | "system").
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var theme = stored || "system";
+          var resolved =
+            theme === "system"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : theme;
+          if (resolved === "dark") document.documentElement.classList.add("dark");
+        } catch (e) {
+          /* private mode / SSR — fall back to default */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

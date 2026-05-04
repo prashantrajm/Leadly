@@ -18,6 +18,7 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import { authClient, useSession } from "@/lib/auth-client";
+import { ModeToggle } from "./mode-toggle";
 import { Button } from "./ui/button";
 
 type NavItem = { title: string; href: string };
@@ -62,6 +63,7 @@ export function Header() {
 
 				{/* Right cluster */}
 				<div className="hidden items-center gap-2 md:flex">
+					<ModeToggle />
 					<Button
 						variant="ghost"
 						size="icon"
@@ -149,6 +151,7 @@ export function Header() {
 
 				{/* Mobile cluster */}
 				<div className="flex items-center gap-2 md:hidden">
+					<ModeToggle />
 					{session?.user && (
 						<Avatar className="h-8 w-8">
 							<AvatarImage
