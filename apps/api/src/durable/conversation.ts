@@ -43,6 +43,15 @@ export class ConversationDO extends DurableObject<Bindings> {
 	override async fetch(request: Request): Promise<Response> {
 		const url = new URL(request.url);
 
+		// Internal control endpoint — mounted on the same DO so REST inbox
+		// routes can broadcast to attached WebSockets without holding a WS
+		// themselves. Requests come from the same Worker (no auth here; the
+		// HTTP route in front already enforced membership), so we just
+		// dispatch by url.pathname.
+		if (url.pathname.endsWith("/control")) {
+			return this.handleControl(request);
+		}
+
 		if (request.headers.get("Upgrade") !== "websocket") {
 			return new Response("WebSocket upgrade required", { status: 426 });
 		}
@@ -121,6 +130,63 @@ export class ConversationDO extends DurableObject<Bindings> {
 		// Don't end the conversation on close — visitors disconnect briefly
 		// (page navigation, network blip) all the time. The 5-min grace alarm
 		// is what eventually marks a stale conversation dead.
+	}
+
+	// ---------- internal control endpoint ----------
+
+	// Inbox HTTP routes call POST /control with a JSON body describing the
+	// action. This is the DO's only way to broadcast to attached WebSockets
+	// from outside the WS itself (e.g. when an admin clicks "take over"
+	// from the dashboard but the visitor's WS is hibernated).
+	private async handleControl(request: Request): Promise<Response> {
+		if (request.method !== "POST") {
+			return new Response("Method not allowed", { status: 405 });
+		}
+		const body = (await request.json().catch(() => null)) as
+			| { action: string; conversationId?: string; text?: string }
+			| null;
+		if (!body || typeof body.action !== "string") {
+			return new Response("Bad request", { status: 400 });
+		}
+
+		const prisma = getPrisma(this.env.DATABASE_URL);
+		const conversationId = body.conversationId;
+		if (!conversationId) {
+			return new Response("conversationId required", { status: 400 });
+		}
+
+		switch (body.action) {
+			case "take_over":
+				await prisma.conversation.update({
+					where: { id: conversationId },
+					data: { mode: "paused" },
+				});
+				this.broadcast({ type: "mode_change", mode: "paused" });
+				return Response.json({ ok: true });
+
+			case "release":
+				await prisma.conversation.update({
+					where: { id: conversationId },
+					data: { mode: "auto" },
+				});
+				this.broadcast({ type: "mode_change", mode: "auto" });
+				return Response.json({ ok: true });
+
+			case "human_message": {
+				const text = body.text;
+				if (!text || text.length === 0 || text.length > 4000) {
+					return new Response("Invalid text", { status: 400 });
+				}
+				const turn = await prisma.turn.create({
+					data: { conversationId, role: "human", text },
+				});
+				this.broadcast({ type: "human_msg", turnId: turn.id, text });
+				return Response.json({ ok: true, turnId: turn.id });
+			}
+
+			default:
+				return new Response("Unknown action", { status: 400 });
+		}
 	}
 
 	override async alarm(): Promise<void> {
@@ -400,6 +466,23 @@ export class ConversationDO extends DurableObject<Bindings> {
 						name: "end_conversation",
 						result,
 					});
+
+					// Fire the deterministic summarization workflow. We don't
+					// await its completion — the workflow is durable and
+					// retries on its own; the agent's reply must not block
+					// on it. Failure to schedule is logged but ignored
+					// because the conversation is already correctly marked
+					// `ended` by the executor above.
+					try {
+						await this.env.CONVERSATION_SUMMARIZE.create({
+							params: { conversationId },
+						});
+					} catch (err) {
+						console.error(
+							"[do] failed to schedule conversation summarize",
+							err,
+						);
+					}
 					return result;
 				},
 			},
