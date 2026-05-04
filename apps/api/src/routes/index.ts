@@ -4,7 +4,6 @@ import type { AppEnv } from "../types";
 import { agentsApp, orgAgentsApp } from "./agents";
 import { kbApp } from "./kb";
 import { orgsApp } from "./orgs";
-import { uploadsApp } from "./uploads";
 
 export const apiApp = new OpenAPIHono<AppEnv>();
 
@@ -25,7 +24,6 @@ authed.route("/orgs", orgsApp);
 authed.route("/orgs/:orgId/agents", orgAgentsApp);
 authed.route("/agents", agentsApp);
 authed.route("/agents/:agentId/kb", kbApp);
-authed.route("/uploads", uploadsApp);
 apiApp.route("/", authed);
 
 // OpenAPI documentation endpoint
