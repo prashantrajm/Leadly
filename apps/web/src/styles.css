@@ -71,6 +71,10 @@ code {
   --shadow-2xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.25);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+
+  /* Single accent — used sparingly on landing (hero keyword, primary CTAs, highlighted pricing tier) */
+  --accent-blue: #2a59da;
+  --accent-blue-foreground: oklch(0.9800 0 0);
 }
 
 .dark {
@@ -125,6 +129,10 @@ code {
   --shadow-lg: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 4px 6px -2px hsl(0 0% 0% / 0.10);
   --shadow-xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 8px 10px -2px hsl(0 0% 0% / 0.10);
   --shadow-2xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.25);
+
+  /* Accent retained at the same hex in dark mode — it reads well on near-black */
+  --accent-blue: #2a59da;
+  --accent-blue-foreground: oklch(0.9800 0 0);
 }
 
 @theme inline {
@@ -160,6 +168,8 @@ code {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-blue-foreground: var(--accent-blue-foreground);
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);

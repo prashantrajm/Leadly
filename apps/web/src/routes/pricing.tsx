@@ -328,7 +328,11 @@ function PricingPage() {
 								on.
 							</p>
 							<div className="mt-8 flex justify-center">
-								<Button size="lg" asChild>
+								<Button
+									size="lg"
+									asChild
+									className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+								>
 									<Link to="/auth">
 										Start free
 										<ArrowRight className="ml-2 h-4 w-4" />
@@ -355,12 +359,12 @@ function TierCard({ tier, cycle }: { tier: Tier; cycle: Cycle }) {
 		<div
 			className={`relative flex flex-col rounded-2xl border bg-card p-6 ${
 				tier.highlighted
-					? "border-foreground/40 shadow-[0_0_0_1px_var(--color-foreground)] shadow-foreground/5"
+					? "border-accent-blue/50 shadow-[0_0_0_1px_var(--accent-blue)] shadow-accent-blue/10"
 					: "border-border"
 			}`}
 		>
 			{tier.highlighted && (
-				<span className="absolute -top-3 left-6 rounded-full border border-foreground/30 bg-background px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground">
+				<span className="absolute -top-3 left-6 rounded-full bg-accent-blue px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-accent-blue-foreground">
 					Most popular
 				</span>
 			)}
@@ -404,7 +408,11 @@ function TierCard({ tier, cycle }: { tier: Tier; cycle: Cycle }) {
 			<Button
 				asChild
 				variant={tier.highlighted ? "default" : "outline"}
-				className="mt-5 w-full"
+				className={
+					tier.highlighted
+						? "mt-5 w-full bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+						: "mt-5 w-full"
+				}
 			>
 				<Link to={tier.cta.href}>{tier.cta.label}</Link>
 			</Button>
@@ -427,7 +435,11 @@ function TierCard({ tier, cycle }: { tier: Tier; cycle: Cycle }) {
 						key={f.label}
 						className="flex items-start gap-2 text-muted-foreground"
 					>
-						<Check className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
+						<Check
+							className={`mt-0.5 h-4 w-4 shrink-0 ${
+								f.premium ? "text-accent-blue" : "text-foreground"
+							}`}
+						/>
 						<span className={f.premium ? "font-medium text-foreground" : ""}>
 							{f.label}
 						</span>
