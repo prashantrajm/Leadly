@@ -12,7 +12,10 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import type { AuthUser } from "../middleware/auth";
 import { getPrisma } from "../lib/prisma";
 import type { AppEnv } from "../types";
-import { conversationsInboxApp } from "./conversations";
+import {
+	agentConversationsApp,
+	conversationsInboxApp,
+} from "./conversations";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("DATABASE_URL not set");
@@ -54,6 +57,7 @@ function makeApp(user: AuthUser | null, doNs: ReturnType<typeof makeFakeDoNamesp
 		return next();
 	});
 	app.route("/conversations", conversationsInboxApp);
+	app.route("/agents/:agentId/conversations", agentConversationsApp);
 	return app;
 }
 
@@ -61,6 +65,8 @@ const tag = `i${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)
 let owner: AuthUser;
 let outsider: AuthUser;
 let orgId: string;
+let agentId: string;
+let visitorId: string;
 let conversationId: string;
 
 beforeAll(async () => {
@@ -89,19 +95,17 @@ beforeAll(async () => {
 	const agent = await prisma.agent.create({
 		data: { organizationId: orgId, name: `Agent ${tag}`, slug: `a-${tag}` },
 	});
+	agentId = agent.id;
 	const visitor = await prisma.visitor.create({
 		data: {
 			organizationId: orgId,
-			agentId: agent.id,
+			agentId,
 			externalId: `ext-${tag}`,
 		},
 	});
+	visitorId = visitor.id;
 	const conv = await prisma.conversation.create({
-		data: {
-			organizationId: orgId,
-			agentId: agent.id,
-			visitorId: visitor.id,
-		},
+		data: { organizationId: orgId, agentId, visitorId },
 	});
 	conversationId = conv.id;
 });
@@ -242,6 +246,148 @@ describe("POST /conversations/:id/human-message", () => {
 			},
 		);
 		expect(res.status).toBe(403);
+	});
+});
+
+// ---------- list (cursor-paginated) + detail ----------
+
+describe("GET /agents/:agentId/conversations", () => {
+	it("returns the seed conversation with turnCount", async () => {
+		const fake = makeFakeDoNamespace({ okOnControl: true });
+		const res = await makeApp(owner, fake.namespace).request(
+			`/agents/${agentId}/conversations`,
+		);
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as {
+			items: Array<{ id: string; turnCount: number }>;
+			nextCursor: string | null;
+		};
+		expect(body.items.some((c) => c.id === conversationId)).toBe(true);
+	});
+
+	it("paginates with cursor — page 1 then page 2 are disjoint and complete", async () => {
+		// Seed 5 extra conversations to force pagination.
+		const created: string[] = [];
+		for (let i = 0; i < 5; i++) {
+			const c = await prisma.conversation.create({
+				data: { organizationId: orgId, agentId, visitorId },
+			});
+			created.push(c.id);
+		}
+
+		const fake = makeFakeDoNamespace({ okOnControl: true });
+		const a = await makeApp(owner, fake.namespace).request(
+			`/agents/${agentId}/conversations?limit=3`,
+		);
+		const aBody = (await a.json()) as {
+			items: Array<{ id: string }>;
+			nextCursor: string | null;
+		};
+		expect(aBody.items).toHaveLength(3);
+		expect(aBody.nextCursor).not.toBeNull();
+
+		const b = await makeApp(owner, fake.namespace).request(
+			`/agents/${agentId}/conversations?limit=3&cursor=${encodeURIComponent(aBody.nextCursor as string)}`,
+		);
+		const bBody = (await b.json()) as {
+			items: Array<{ id: string }>;
+			nextCursor: string | null;
+		};
+		expect(bBody.items.length).toBeGreaterThan(0);
+
+		// No overlap between the two pages.
+		const aIds = new Set(aBody.items.map((c) => c.id));
+		for (const item of bBody.items) {
+			expect(aIds.has(item.id)).toBe(false);
+		}
+
+		// Cleanup.
+		await prisma.conversation
+			.deleteMany({ where: { id: { in: created } } })
+			.catch(() => {});
+	});
+
+	it("filters by status", async () => {
+		const ended = await prisma.conversation.create({
+			data: {
+				organizationId: orgId,
+				agentId,
+				visitorId,
+				status: "ended",
+				endedAt: new Date(),
+			},
+		});
+
+		const fake = makeFakeDoNamespace({ okOnControl: true });
+		const res = await makeApp(owner, fake.namespace).request(
+			`/agents/${agentId}/conversations?status=ended`,
+		);
+		const body = (await res.json()) as {
+			items: Array<{ id: string; status: string }>;
+		};
+		expect(body.items.every((c) => c.status === "ended")).toBe(true);
+		expect(body.items.some((c) => c.id === ended.id)).toBe(true);
+
+		await prisma.conversation.delete({ where: { id: ended.id } });
+	});
+
+	it("returns 400 on bad cursor", async () => {
+		const fake = makeFakeDoNamespace({ okOnControl: true });
+		const res = await makeApp(owner, fake.namespace).request(
+			`/agents/${agentId}/conversations?cursor=not-base64`,
+		);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 403 for outsider", async () => {
+		const fake = makeFakeDoNamespace({ okOnControl: true });
+		const res = await makeApp(outsider, fake.namespace).request(
+			`/agents/${agentId}/conversations`,
+		);
+		expect(res.status).toBe(403);
+	});
+});
+
+describe("GET /conversations/:id", () => {
+	it("returns conversation with turns inline", async () => {
+		await prisma.turn.create({
+			data: { conversationId, role: "user", text: "first user msg" },
+		});
+		await prisma.turn.create({
+			data: { conversationId, role: "agent", text: "first agent reply" },
+		});
+
+		const fake = makeFakeDoNamespace({ okOnControl: true });
+		const res = await makeApp(owner, fake.namespace).request(
+			`/conversations/${conversationId}`,
+		);
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as {
+			id: string;
+			turns: Array<{ role: string; text: string }>;
+		};
+		expect(body.id).toBe(conversationId);
+		expect(body.turns.length).toBeGreaterThanOrEqual(2);
+		// Turns are ordered ascending by createdAt.
+		const userIdx = body.turns.findIndex((t) => t.role === "user");
+		const agentIdx = body.turns.findIndex((t) => t.role === "agent");
+		expect(userIdx).toBeLessThan(agentIdx);
+	});
+
+	it("returns 403 for outsider", async () => {
+		const fake = makeFakeDoNamespace({ okOnControl: true });
+		const res = await makeApp(outsider, fake.namespace).request(
+			`/conversations/${conversationId}`,
+		);
+		expect(res.status).toBe(403);
+	});
+
+	it("returns 404 for unknown id", async () => {
+		const fake = makeFakeDoNamespace({ okOnControl: true });
+		const res = await makeApp(owner, fake.namespace).request(
+			"/conversations/does-not-exist",
+		);
+		expect(res.status).toBe(404);
 	});
 });
 

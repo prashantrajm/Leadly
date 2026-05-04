@@ -14,17 +14,23 @@
 
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import {
+	ConversationListItemSchema,
+	ConversationStatus,
+	ConversationMode,
+	ConversationWithTurnsSchema,
 	ErrorSchema,
 	HumanMessageSchema,
 	SuccessSchema,
 	TakeOverResponseSchema,
 } from "@leadly/schemas";
+import { decodeCursor, encodeCursor } from "../lib/cursor";
 import { getPrisma } from "../lib/prisma";
 import { requireAgentAccess } from "../middleware/org";
 import type { AppEnv } from "../types";
 
 export const conversationsApp = new OpenAPIHono<AppEnv>();
 export const conversationsInboxApp = new OpenAPIHono<AppEnv>();
+export const agentConversationsApp = new OpenAPIHono<AppEnv>();
 
 // GET /api/conversations/:id/ws
 //
@@ -201,6 +207,269 @@ conversationsInboxApp.openapi(humanMessageRoute, async (c) => {
 	return c.json({ success: true as const }, 200);
 });
 
-// requireAgentAccess re-exported for downstream use; not currently consumed
-// here but Phase 9's listing routes will need it.
-void requireAgentAccess;
+// ---------- list (per-agent, cursor-paginated) ----------
+
+const listConversationsRoute = createRoute({
+	method: "get",
+	path: "/",
+	tags: ["Conversations"],
+	request: {
+		params: z.object({ agentId: z.string() }),
+		query: z.object({
+			cursor: z.string().optional(),
+			limit: z.coerce.number().int().min(1).max(100).default(20),
+			status: ConversationStatus.optional(),
+			mode: ConversationMode.optional(),
+			leadId: z.string().optional(),
+		}),
+	},
+	middleware: [requireAgentAccess] as const,
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						items: z.array(ConversationListItemSchema),
+						nextCursor: z.string().nullable(),
+					}),
+				},
+			},
+			description: "Conversations page (newest first)",
+		},
+		400: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Bad cursor",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+agentConversationsApp.openapi(listConversationsRoute, async (c) => {
+	const { agentId } = c.req.valid("param");
+	const { cursor, limit, status, mode, leadId } = c.req.valid("query");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+
+	// Cursor decodes to (createdAt, id). We page on (startedAt DESC, id DESC)
+	// so newer conversations always appear first; the id tiebreak keeps the
+	// page stable when many rows share the same startedAt timestamp.
+	let after: { startedAt: Date; id: string } | null = null;
+	if (cursor) {
+		try {
+			const decoded = decodeCursor(cursor);
+			after = { startedAt: new Date(decoded.createdAt), id: decoded.id };
+		} catch {
+			return c.json({ error: "Invalid cursor" }, 400);
+		}
+	}
+
+	const where = {
+		agentId,
+		...(status ? { status } : {}),
+		...(mode ? { mode } : {}),
+		...(leadId ? { leadId } : {}),
+		...(after
+			? {
+					OR: [
+						{ startedAt: { lt: after.startedAt } },
+						{
+							startedAt: after.startedAt,
+							id: { lt: after.id },
+						},
+					],
+				}
+			: {}),
+	};
+
+	// Pull `limit + 1` so we can tell whether there's a next page without
+	// a separate count query.
+	const rows = await prisma.conversation.findMany({
+		where,
+		orderBy: [{ startedAt: "desc" }, { id: "desc" }],
+		take: limit + 1,
+		include: {
+			visitor: { select: { id: true, externalId: true } },
+			lead: { select: { id: true, email: true, name: true } },
+			_count: { select: { turns: true } },
+		},
+	});
+
+	type Row = {
+		id: string;
+		organizationId: string;
+		agentId: string;
+		visitorId: string;
+		leadId: string | null;
+		channel: "chat" | "voice";
+		mode: "auto" | "paused";
+		status: "active" | "ended" | "abandoned";
+		startedAt: Date;
+		endedAt: Date | null;
+		summary: string | null;
+		sentiment: string | null;
+		tags: unknown;
+		lastActivityAt: Date;
+		visitor: { id: string; externalId: string };
+		lead: { id: string; email: string | null; name: string | null } | null;
+		_count: { turns: number };
+	};
+	const typed = rows as unknown as Row[];
+
+	const hasMore = typed.length > limit;
+	const items = typed.slice(0, limit);
+
+	const nextCursor = hasMore
+		? encodeCursor({
+				createdAt: items[items.length - 1].startedAt.toISOString(),
+				id: items[items.length - 1].id,
+			})
+		: null;
+
+	return c.json(
+		{
+			items: items.map((r) => ({
+				id: r.id,
+				organizationId: r.organizationId,
+				agentId: r.agentId,
+				visitorId: r.visitorId,
+				leadId: r.leadId,
+				channel: r.channel,
+				mode: r.mode,
+				status: r.status,
+				startedAt: r.startedAt.toISOString(),
+				endedAt: r.endedAt ? r.endedAt.toISOString() : null,
+				summary: r.summary,
+				sentiment: r.sentiment,
+				tags: (r.tags as string[] | null) ?? null,
+				lastActivityAt: r.lastActivityAt.toISOString(),
+				visitor: r.visitor,
+				lead: r.lead,
+				turnCount: r._count.turns,
+			})),
+			nextCursor,
+		},
+		200,
+	);
+});
+
+// ---------- detail (with turns inline) ----------
+
+const getConversationRoute = createRoute({
+	method: "get",
+	path: "/{id}",
+	tags: ["Conversations"],
+	request: { params: z.object({ id: z.string() }) },
+	responses: {
+		200: {
+			content: {
+				"application/json": { schema: ConversationWithTurnsSchema },
+			},
+			description: "Conversation with turn history",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+		404: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Not found",
+		},
+	},
+});
+
+conversationsInboxApp.openapi(getConversationRoute, async (c) => {
+	const { id } = c.req.valid("param");
+	const access = await loadConversationAndCheckAccess(c, id);
+	if (!access.ok) return c.json(access.body, access.status);
+
+	const prisma = getPrisma(c.env.DATABASE_URL);
+	type Loaded = {
+		id: string;
+		organizationId: string;
+		agentId: string;
+		visitorId: string;
+		leadId: string | null;
+		channel: "chat" | "voice";
+		mode: "auto" | "paused";
+		status: "active" | "ended" | "abandoned";
+		startedAt: Date;
+		endedAt: Date | null;
+		summary: string | null;
+		sentiment: string | null;
+		tags: unknown;
+		lastActivityAt: Date;
+		turns: Array<{
+			id: string;
+			conversationId: string;
+			role: "user" | "agent" | "human" | "tool" | "system";
+			text: string;
+			audioUrl: string | null;
+			durationMs: number | null;
+			asrConfidence: number | null;
+			toolName: string | null;
+			toolArgs: unknown;
+			toolResult: unknown;
+			llmProvider: string | null;
+			model: string | null;
+			latencyMs: number | null;
+			tokensIn: number | null;
+			tokensOut: number | null;
+			createdAt: Date;
+		}>;
+	};
+
+	const conv = (await prisma.conversation.findUnique({
+		where: { id },
+		include: {
+			turns: { orderBy: { createdAt: "asc" } },
+		},
+	})) as unknown as Loaded;
+
+	return c.json(
+		{
+			id: conv.id,
+			organizationId: conv.organizationId,
+			agentId: conv.agentId,
+			visitorId: conv.visitorId,
+			leadId: conv.leadId,
+			channel: conv.channel,
+			mode: conv.mode,
+			status: conv.status,
+			startedAt: conv.startedAt.toISOString(),
+			endedAt: conv.endedAt ? conv.endedAt.toISOString() : null,
+			summary: conv.summary,
+			sentiment: conv.sentiment,
+			tags: (conv.tags as string[] | null) ?? null,
+			lastActivityAt: conv.lastActivityAt.toISOString(),
+			turns: conv.turns.map((t) => ({
+				id: t.id,
+				conversationId: t.conversationId,
+				role: t.role,
+				text: t.text,
+				audioUrl: t.audioUrl,
+				durationMs: t.durationMs,
+				asrConfidence: t.asrConfidence,
+				toolName: t.toolName,
+				toolArgs: t.toolArgs ?? null,
+				toolResult: t.toolResult ?? null,
+				llmProvider: t.llmProvider,
+				model: t.model,
+				latencyMs: t.latencyMs,
+				tokensIn: t.tokensIn,
+				tokensOut: t.tokensOut,
+				createdAt: t.createdAt.toISOString(),
+			})),
+		},
+		200,
+	);
+});
