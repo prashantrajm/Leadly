@@ -1,0 +1,4 @@
+{
+	"extends": "@leadly/config/tsconfig.base.json",
+	"include": ["src/**/*.ts"]
+}
