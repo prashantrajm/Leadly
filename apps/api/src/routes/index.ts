@@ -2,6 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { authMiddleware } from "../middleware/auth";
 import type { AppEnv } from "../types";
 import { agentsApp, orgAgentsApp } from "./agents";
+import { kbApp } from "./kb";
 import { orgsApp } from "./orgs";
 import { uploadsApp } from "./uploads";
 
@@ -23,6 +24,7 @@ authed.use("*", authMiddleware);
 authed.route("/orgs", orgsApp);
 authed.route("/orgs/:orgId/agents", orgAgentsApp);
 authed.route("/agents", agentsApp);
+authed.route("/agents/:agentId/kb", kbApp);
 authed.route("/uploads", uploadsApp);
 apiApp.route("/", authed);
 

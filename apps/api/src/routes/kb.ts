@@ -1,0 +1,324 @@
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import {
+	CreateKbArticleSchema,
+	ErrorSchema,
+	KbArticleListItemSchema,
+	KbArticleSchema,
+	SuccessSchema,
+	UpdateKbArticleSchema,
+} from "@leadly/schemas";
+import { requireAgentAccess } from "../middleware/org";
+import { getPrisma } from "../lib/prisma";
+import type { AppEnv } from "../types";
+
+// Mounted under /api/agents/:agentId/kb in routes/index.ts. Every operation
+// sits behind requireAgentAccess so the caller is always confirmed to belong
+// to the org that owns the article.
+
+export const kbApp = new OpenAPIHono<AppEnv>();
+
+// ---------- list ----------
+
+const listArticlesRoute = createRoute({
+	method: "get",
+	path: "/articles",
+	tags: ["KB"],
+	request: { params: z.object({ agentId: z.string() }) },
+	middleware: [requireAgentAccess] as const,
+	responses: {
+		200: {
+			content: {
+				"application/json": { schema: z.array(KbArticleListItemSchema) },
+			},
+			description: "Articles for the agent (no full markdown)",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+kbApp.openapi(listArticlesRoute, async (c) => {
+	const { agentId } = c.req.valid("param");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+
+	// We omit `contentMarkdown` from the list view because the dashboard's
+	// list page only needs metadata. Loading every article body for an org
+	// with hundreds of KB pages would blow the response size for no reason.
+	const articles = await prisma.kbArticle.findMany({
+		where: { agentId },
+		orderBy: { updatedAt: "desc" },
+		select: {
+			id: true,
+			organizationId: true,
+			agentId: true,
+			title: true,
+			source: true,
+			uploadKey: true,
+			createdAt: true,
+			updatedAt: true,
+		},
+	});
+
+	// groupBy types are flattened by extension-accelerate (prisma/prisma#28703-adjacent),
+	// so cast through unknown to the known shape.
+	type ChunkGroup = { articleId: string; _count: { _all: number } };
+	const counts = (await prisma.kbChunk.groupBy({
+		by: ["articleId"],
+		where: { agentId },
+		_count: { _all: true },
+	})) as unknown as ChunkGroup[];
+	const countByArticle = new Map(
+		counts.map((c) => [c.articleId, c._count._all]),
+	);
+
+	return c.json(
+		articles.map((a) => ({
+			id: a.id,
+			organizationId: a.organizationId,
+			agentId: a.agentId,
+			title: a.title,
+			source: a.source,
+			uploadKey: a.uploadKey,
+			createdAt: a.createdAt.toISOString(),
+			updatedAt: a.updatedAt.toISOString(),
+			chunkCount: countByArticle.get(a.id) ?? 0,
+		})),
+		200,
+	);
+});
+
+// ---------- get ----------
+
+const getArticleRoute = createRoute({
+	method: "get",
+	path: "/articles/{articleId}",
+	tags: ["KB"],
+	request: {
+		params: z.object({ agentId: z.string(), articleId: z.string() }),
+	},
+	middleware: [requireAgentAccess] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: KbArticleSchema } },
+			description: "Article including markdown",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+		404: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Not found",
+		},
+	},
+});
+
+kbApp.openapi(getArticleRoute, async (c) => {
+	const { agentId, articleId } = c.req.valid("param");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+	const article = await prisma.kbArticle.findUnique({
+		where: { id: articleId },
+	});
+	// Cross-agent reads must 404 (not 403) so we don't leak whether the
+	// article exists at all in another org's KB.
+	if (!article || article.agentId !== agentId) {
+		return c.json({ error: "Article not found" }, 404);
+	}
+	return c.json(toWire(article), 200);
+});
+
+// ---------- create ----------
+
+const createArticleRoute = createRoute({
+	method: "post",
+	path: "/articles",
+	tags: ["KB"],
+	request: {
+		params: z.object({ agentId: z.string() }),
+		body: { content: { "application/json": { schema: CreateKbArticleSchema } } },
+	},
+	middleware: [requireAgentAccess] as const,
+	responses: {
+		201: {
+			content: { "application/json": { schema: KbArticleSchema } },
+			description: "Created",
+		},
+		400: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Invalid input",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+kbApp.openapi(createArticleRoute, async (c) => {
+	const { agentId } = c.req.valid("param");
+	const input = c.req.valid("json");
+	const agent = c.get("agent");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+
+	const article = await prisma.kbArticle.create({
+		data: {
+			organizationId: agent.organizationId,
+			agentId,
+			title: input.title,
+			contentMarkdown: input.contentMarkdown,
+			source: input.source,
+			uploadKey: input.uploadKey ?? null,
+		},
+	});
+
+	// Re-embedding fires here in Phase 5 — c.env.KB_REEMBED.create({...}).
+	// For now the article exists with no chunks; retrieval just won't return
+	// any results until Phase 5 is wired.
+
+	return c.json(toWire(article), 201);
+});
+
+// ---------- patch ----------
+
+const patchArticleRoute = createRoute({
+	method: "patch",
+	path: "/articles/{articleId}",
+	tags: ["KB"],
+	request: {
+		params: z.object({ agentId: z.string(), articleId: z.string() }),
+		body: { content: { "application/json": { schema: UpdateKbArticleSchema } } },
+	},
+	middleware: [requireAgentAccess] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: KbArticleSchema } },
+			description: "Updated",
+		},
+		400: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Invalid input",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+		404: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Not found",
+		},
+	},
+});
+
+kbApp.openapi(patchArticleRoute, async (c) => {
+	const { agentId, articleId } = c.req.valid("param");
+	const patch = c.req.valid("json");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+
+	const existing = await prisma.kbArticle.findUnique({
+		where: { id: articleId },
+	});
+	if (!existing || existing.agentId !== agentId) {
+		return c.json({ error: "Article not found" }, 404);
+	}
+
+	const updated = await prisma.kbArticle.update({
+		where: { id: articleId },
+		data: patch,
+	});
+
+	// Phase 5: trigger KB_REEMBED here when contentMarkdown changes.
+
+	return c.json(toWire(updated), 200);
+});
+
+// ---------- delete ----------
+
+const deleteArticleRoute = createRoute({
+	method: "delete",
+	path: "/articles/{articleId}",
+	tags: ["KB"],
+	request: {
+		params: z.object({ agentId: z.string(), articleId: z.string() }),
+	},
+	middleware: [requireAgentAccess] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: SuccessSchema } },
+			description: "Deleted",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+		404: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Not found",
+		},
+	},
+});
+
+kbApp.openapi(deleteArticleRoute, async (c) => {
+	const { agentId, articleId } = c.req.valid("param");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+
+	const existing = await prisma.kbArticle.findUnique({
+		where: { id: articleId },
+	});
+	if (!existing || existing.agentId !== agentId) {
+		return c.json({ error: "Article not found" }, 404);
+	}
+
+	// Chunks cascade via onDelete: Cascade in the schema, so a single delete
+	// here clears retrieval for this article too. No orphaned vectors.
+	await prisma.kbArticle.delete({ where: { id: articleId } });
+
+	return c.json({ success: true as const }, 200);
+});
+
+// ---------- helpers ----------
+
+function toWire(a: {
+	id: string;
+	organizationId: string;
+	agentId: string;
+	title: string;
+	contentMarkdown: string;
+	source: "manual" | "upload";
+	uploadKey: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+}) {
+	return {
+		id: a.id,
+		organizationId: a.organizationId,
+		agentId: a.agentId,
+		title: a.title,
+		contentMarkdown: a.contentMarkdown,
+		source: a.source,
+		uploadKey: a.uploadKey,
+		createdAt: a.createdAt.toISOString(),
+		updatedAt: a.updatedAt.toISOString(),
+	};
+}
