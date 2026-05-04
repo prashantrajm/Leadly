@@ -1,5 +1,6 @@
 {
 	"extends": "@leadly/config/tsconfig.base.json",
+	"include": ["src/**/*.ts", "src/**/*.tsx"],
 	"compilerOptions": {
 		"target": "ESNext",
 		"lib": ["ESNext"],

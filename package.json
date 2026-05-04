@@ -14,12 +14,14 @@
     "build:web": "bun run --filter=web build",
     "build:api": "bun run --filter=api deploy",
     "test": "bun run --filter='*' test",
+    "typecheck": "bun run --filter='*' typecheck",
     "lint": "bun run --filter='*' lint",
     "format": "bun run --filter='*' format",
     "check": "bun run --filter='*' check"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260303.0",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^5.7.2"
   }
 }
