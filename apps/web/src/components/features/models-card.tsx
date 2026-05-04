@@ -46,7 +46,7 @@ export function ModelsCard() {
 							className={cn(
 								"rounded-full border px-2.5 py-1 text-[11px] font-medium",
 								isActive
-									? "border-foreground/30 bg-foreground text-background"
+									? "border-accent-blue bg-accent-blue text-accent-blue-foreground"
 									: "border-border bg-secondary/30 text-muted-foreground",
 							)}
 						>

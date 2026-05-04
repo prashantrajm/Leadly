@@ -34,7 +34,7 @@ export function HandoffCard() {
 								repeat: 2,
 								repeatDelay: 0.4,
 							}}
-							className="absolute h-12 w-12 rounded-full border border-foreground/30"
+							className="absolute h-12 w-12 rounded-full border border-accent-blue/40"
 						/>
 						<motion.div
 							initial={{ scale: 0.7, opacity: 0 }}
@@ -46,7 +46,7 @@ export function HandoffCard() {
 								repeat: 2,
 								repeatDelay: 0.4,
 							}}
-							className="absolute h-16 w-16 rounded-full border border-foreground/20"
+							className="absolute h-16 w-16 rounded-full border border-accent-blue/25"
 						/>
 					</>
 				)}
@@ -55,7 +55,7 @@ export function HandoffCard() {
 					initial={{ scale: 0.7, opacity: 0 }}
 					animate={inView ? { scale: 1, opacity: 1 } : {}}
 					transition={{ duration: 0.4, ease: "easeOut" }}
-					className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-foreground text-background shadow-lg"
+					className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-accent-blue text-accent-blue-foreground shadow-lg shadow-accent-blue/20"
 				>
 					<svg
 						className="h-5 w-5"

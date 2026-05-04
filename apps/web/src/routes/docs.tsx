@@ -73,9 +73,9 @@ function DocsPage() {
 								<li key={l}>
 									<a
 										href="#"
-										className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+										className="group/link inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
 									>
-										<ArrowRight className="h-3.5 w-3.5" />
+										<ArrowRight className="h-3.5 w-3.5 text-accent-blue transition-transform group-hover/link:translate-x-0.5" />
 										{l}
 									</a>
 								</li>

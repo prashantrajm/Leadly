@@ -59,7 +59,13 @@ function GuidesPage() {
 						className="group flex flex-col rounded-2xl border border-border bg-card p-6 transition-colors hover:border-border/80"
 					>
 						<div className="mb-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-							<span>{g.level}</span>
+							<span
+								className={
+									g.level === "Advanced" ? "text-accent-blue" : undefined
+								}
+							>
+								{g.level}
+							</span>
 							<span>{g.minutes} min</span>
 						</div>
 						<h3 className="text-base font-semibold tracking-tight transition-colors group-hover:text-foreground md:text-lg">

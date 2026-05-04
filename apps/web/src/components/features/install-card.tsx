@@ -50,7 +50,11 @@ export function InstallCard() {
 						<button
 							type="button"
 							onClick={onCopy}
-							className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+							className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+								copied
+									? "text-accent-blue"
+									: "text-muted-foreground hover:bg-secondary hover:text-foreground"
+							}`}
 						>
 							{copied ? (
 								<>

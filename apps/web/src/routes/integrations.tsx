@@ -48,7 +48,7 @@ function IntegrationsPage() {
 						<span
 							className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] ${
 								it.status === "Available"
-									? "border-foreground/30 bg-secondary text-foreground"
+									? "border-accent-blue/30 bg-accent-blue/10 text-accent-blue"
 									: "border-border bg-card text-muted-foreground"
 							}`}
 						>

@@ -41,14 +41,14 @@ function BlogPage() {
 					<a
 						key={post.title}
 						href="#"
-						className="group block rounded-2xl border border-border bg-card p-6 transition-colors hover:border-border/80 md:p-8"
+						className="group block rounded-2xl border border-border bg-card p-6 transition-colors hover:border-accent-blue/30 md:p-8"
 					>
 						<div className="mb-3 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
 							<span>{post.date}</span>
 							<span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
 							<span>{post.readTime}</span>
 						</div>
-						<h3 className="text-xl font-semibold tracking-tight transition-colors group-hover:text-foreground md:text-2xl">
+						<h3 className="text-xl font-semibold tracking-tight transition-colors group-hover:text-accent-blue md:text-2xl">
 							{post.title}
 						</h3>
 						<p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">

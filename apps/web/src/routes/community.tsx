@@ -44,16 +44,16 @@ function CommunityPage() {
 						href={c.href}
 						target={c.href.startsWith("http") ? "_blank" : undefined}
 						rel="noreferrer"
-						className="group flex flex-col rounded-2xl border border-border bg-card p-6 transition-colors hover:border-border/80"
+						className="group flex flex-col rounded-2xl border border-border bg-card p-6 transition-colors hover:border-accent-blue/30"
 					>
-						<div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-secondary/40">
-							<c.icon className="h-5 w-5 text-foreground" />
+						<div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-accent-blue/20 bg-accent-blue/5">
+							<c.icon className="h-5 w-5 text-accent-blue" />
 						</div>
 						<h3 className="text-lg font-semibold tracking-tight">{c.title}</h3>
 						<p className="mt-2 flex-1 text-sm text-muted-foreground">
 							{c.blurb}
 						</p>
-						<span className="mt-5 text-sm font-medium text-foreground transition-opacity group-hover:opacity-80">
+						<span className="mt-5 text-sm font-medium text-accent-blue transition-opacity group-hover:opacity-80">
 							{c.cta} →
 						</span>
 					</a>

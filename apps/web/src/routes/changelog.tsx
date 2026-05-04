@@ -45,7 +45,7 @@ function ChangelogPage() {
 			description="A reverse-chronological log of meaningful changes. Smaller fixes ship without an entry."
 		>
 			<div className="space-y-10">
-				{ENTRIES.map((entry) => (
+				{ENTRIES.map((entry, i) => (
 					<article
 						key={entry.version}
 						className="rounded-2xl border border-border bg-card p-6 md:p-8"
@@ -54,9 +54,20 @@ function ChangelogPage() {
 							<span className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
 								{entry.date}
 							</span>
-							<span className="rounded-full border border-border bg-secondary/40 px-2 py-0.5 font-mono text-[11px] tracking-wider text-foreground">
+							<span
+								className={
+									i === 0
+										? "rounded-full bg-accent-blue px-2 py-0.5 font-mono text-[11px] tracking-wider text-accent-blue-foreground"
+										: "rounded-full border border-border bg-secondary/40 px-2 py-0.5 font-mono text-[11px] tracking-wider text-foreground"
+								}
+							>
 								{entry.version}
 							</span>
+							{i === 0 && (
+								<span className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-blue">
+									Latest
+								</span>
+							)}
 						</div>
 						<h3 className="text-lg font-semibold tracking-tight md:text-xl">
 							{entry.title}

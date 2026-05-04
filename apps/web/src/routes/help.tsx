@@ -74,7 +74,7 @@ function HelpPage() {
 				<div className="pt-3">
 					<Link
 						to="/contact-us"
-						className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:underline"
+						className="inline-flex items-center gap-2 text-sm font-medium text-accent-blue hover:underline"
 					>
 						Contact support
 						<ArrowRight className="h-4 w-4" />

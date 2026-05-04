@@ -84,7 +84,7 @@ export function TakeoverCard() {
 										initial={{ opacity: 0, scale: 0.6 }}
 										animate={{ opacity: 1, scale: 1 }}
 										transition={{ delay: 0.2 }}
-										className="pointer-events-none absolute -top-2 -right-2 rounded-full border border-border bg-card px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.15em] text-foreground"
+										className="pointer-events-none absolute -top-2 -right-2 rounded-full bg-accent-blue px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.15em] text-accent-blue-foreground"
 										title="Visitor sees no difference. Only your dashboard knows."
 									>
 										you

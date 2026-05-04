@@ -32,7 +32,7 @@ export function KnowledgeCard() {
 			<div className="relative z-10 flex h-full flex-col">
 				<div className="mb-5 max-w-md">
 					<div className="mb-2 inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-						<span className="h-1.5 w-1.5 rounded-full bg-foreground" />
+						<span className="h-1.5 w-1.5 rounded-full bg-accent-blue" />
 						Knowledge base
 					</div>
 					<h3 className="text-xl font-semibold tracking-tight md:text-2xl">
@@ -76,7 +76,7 @@ export function KnowledgeCard() {
 								className={cn(
 									"flex items-center justify-between rounded-lg border px-3 py-2 text-xs md:text-sm",
 									isMatch
-										? "border-foreground/20 bg-secondary/60 text-foreground"
+										? "border-accent-blue/30 bg-accent-blue/5 text-foreground"
 										: "border-border bg-secondary/20 text-muted-foreground",
 								)}
 							>
@@ -86,7 +86,7 @@ export function KnowledgeCard() {
 										initial={{ scale: 0.6, opacity: 0 }}
 										animate={{ scale: 1, opacity: 1 }}
 										transition={{ delay: 0.2 }}
-										className="ml-3 shrink-0 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] tracking-[0.15em] text-foreground"
+										className="ml-3 shrink-0 rounded-full bg-accent-blue px-2 py-0.5 font-mono text-[10px] tracking-[0.15em] text-accent-blue-foreground"
 									>
 										{article.score.toFixed(2)}
 									</motion.span>

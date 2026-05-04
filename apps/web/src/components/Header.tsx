@@ -43,7 +43,7 @@ export function Header() {
 					className="flex items-center gap-2 text-base font-semibold tracking-tight transition-opacity hover:opacity-80"
 					aria-label="Leadly home"
 				>
-					<span className="inline-block h-2 w-2 rounded-full bg-foreground" />
+					<span className="inline-block h-2 w-2 rounded-full bg-accent-blue" />
 					Leadly
 				</Link>
 
@@ -136,7 +136,11 @@ export function Header() {
 							>
 								<Link to="/auth">Sign in</Link>
 							</Button>
-							<Button size="sm" asChild>
+							<Button
+								size="sm"
+								asChild
+								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+							>
 								<Link to="/auth">Get started</Link>
 							</Button>
 						</>
@@ -212,7 +216,10 @@ export function Header() {
 												Sign in
 											</Link>
 										</Button>
-										<Button asChild>
+										<Button
+											asChild
+											className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+										>
 											<Link to="/auth" onClick={() => setIsOpen(false)}>
 												Get started
 											</Link>

@@ -47,7 +47,7 @@ function CareersPage() {
 					<a
 						key={r.title}
 						href="#"
-						className="group flex items-center justify-between rounded-2xl border border-border bg-card p-6 transition-colors hover:border-border/80"
+						className="group flex items-center justify-between rounded-2xl border border-border bg-card p-6 transition-colors hover:border-accent-blue/30"
 					>
 						<div className="min-w-0">
 							<h3 className="text-base font-semibold tracking-tight md:text-lg">
@@ -60,7 +60,7 @@ function CareersPage() {
 								{r.blurb}
 							</p>
 						</div>
-						<ArrowRight className="ml-4 h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+						<ArrowRight className="ml-4 h-5 w-5 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-accent-blue" />
 					</a>
 				))}
 			</div>

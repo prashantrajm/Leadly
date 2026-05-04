@@ -48,17 +48,15 @@ function Hero() {
 				>
 					<div className="mb-7 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
 						<span className="relative flex h-1.5 w-1.5">
-							<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground opacity-60" />
-							<span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-foreground" />
+							<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-blue opacity-60" />
+							<span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent-blue" />
 						</span>
 						Grounded in your content, every answer cited
 					</div>
 
 					<h1 className="text-balance text-5xl font-semibold tracking-tighter md:text-6xl lg:text-7xl">
 						AI customer support{" "}
-						<span className="bg-gradient-to-b from-foreground to-foreground/55 bg-clip-text text-transparent">
-							that handles it.
-						</span>
+						<span className="text-accent-blue">that handles it.</span>
 					</h1>
 
 					<p className="mx-auto mt-7 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
@@ -68,7 +66,11 @@ function Hero() {
 					</p>
 
 					<div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-						<Button size="lg" asChild>
+						<Button
+							size="lg"
+							asChild
+							className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+						>
 							<Link to="/auth">
 								Get started
 								<ArrowRight className="ml-2 h-4 w-4" />
@@ -177,7 +179,7 @@ function ProductShot() {
 										<div className="flex items-center justify-between">
 											<div className="text-sm font-medium">{c.name}</div>
 											{c.active && (
-												<span className="h-1.5 w-1.5 rounded-full bg-foreground" />
+												<span className="h-1.5 w-1.5 rounded-full bg-accent-blue" />
 											)}
 										</div>
 										<div className="mt-0.5 truncate text-xs text-muted-foreground">
@@ -207,7 +209,7 @@ function ProductShot() {
 										</span>
 										<button
 											type="button"
-											className="rounded-full bg-foreground px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-background transition-opacity hover:opacity-90"
+											className="rounded-full bg-accent-blue px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-accent-blue-foreground transition-opacity hover:opacity-90"
 										>
 											Take over
 										</button>
@@ -266,7 +268,7 @@ function ChatBubble({
 			>
 				{children}
 				{human && (
-					<span className="pointer-events-none absolute -top-2 -right-2 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-foreground">
+					<span className="pointer-events-none absolute -top-2 -right-2 rounded-full bg-accent-blue px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-accent-blue-foreground">
 						human
 					</span>
 				)}
@@ -368,7 +370,11 @@ function ClosingCta() {
 							answers — without rebuilding your stack.
 						</p>
 						<div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-							<Button size="lg" asChild>
+							<Button
+								size="lg"
+								asChild
+								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+							>
 								<Link to="/auth">
 									Start free
 									<ArrowRight className="ml-2 h-4 w-4" />
