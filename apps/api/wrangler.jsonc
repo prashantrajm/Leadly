@@ -82,6 +82,16 @@
       "new_sqlite_classes": ["ConversationDO"]
     }
   ],
+  // Cron triggers (Phase 12). Two schedules:
+  //   • "*/5 * * * *" — idle-reaper sweep, safety net for stuck DO alarms
+  //   • "5 0 * * *"   — analytics rollup, 5 min past midnight UTC
+  // The scheduled() handler in src/index.ts dispatches by event.cron.
+  "triggers": {
+    "crons": [
+      "*/5 * * * *",
+      "5 0 * * *"
+    ]
+  },
   // "d1_databases": [
   //   {
   //     "binding": "MY_DB",
