@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260303.0",
+    "@leadly/config": "workspace:*",
     "@prisma/config": "latest",
     "dotenv-cli": "latest",
     "prisma": "latest",
