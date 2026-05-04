@@ -6,6 +6,7 @@
     "build": "wrangler deploy --dry-run",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
+    "typecheck": "tsc --noEmit",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "prisma:dev": "dotenv -e .dev.vars -- bunx prisma generate --watch",
     "db:push": "dotenv -e .dev.vars -- bunx prisma db push",
@@ -13,14 +14,13 @@
     "migrate": "dotenv -e .dev.vars -- bunx prisma migrate dev",
     "reset": "dotenv -e .dev.vars -- bunx prisma migrate reset --force",
     "generate": "dotenv -e .dev.vars -- bunx prisma generate",
-    "studio": "dotenv -e .dev.vars -- bunx prisma studio",
-    "db:seed": "dotenv -e .dev.vars -- bun prisma/seed.ts"
-  },
-  "prisma": {
-    "seed": "bun prisma/seed.ts"
+    "studio": "dotenv -e .dev.vars -- bunx prisma studio"
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.2.0",
+    "@leadly/schemas": "workspace:*",
+    "@leadly/utils": "workspace:*",
+    "@leadly/wire": "workspace:*",
     "@prisma/client": "latest",
     "@prisma/client-runtime-utils": "^7.2.0",
     "@prisma/extension-accelerate": "latest",
