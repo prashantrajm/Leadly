@@ -13,7 +13,7 @@ const ComingSoon = ({ serviceName }: ComingSoonProps) => {
 				transition={{ duration: 0.8, ease: "easeOut" }}
 				className="text-center"
 			>
-				<h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-4 text-primary">
+				<h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-4 text-accent-blue">
 					Coming Soon
 				</h1>
 				<motion.p
@@ -30,7 +30,7 @@ const ComingSoon = ({ serviceName }: ComingSoonProps) => {
 				initial={{ scaleX: 0 }}
 				animate={{ scaleX: 1 }}
 				transition={{ delay: 0.8, duration: 1, ease: "easeInOut" }}
-				className="w-24 h-1 bg-primary mt-8 rounded-full"
+				className="w-24 h-1 bg-accent-blue mt-8 rounded-full"
 			/>
 		</div>
 	);
