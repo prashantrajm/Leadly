@@ -1,14 +1,17 @@
-// Real domain schemas land in Phase 2 (alongside the prisma-zod-generator
-// output and hand-written Create*/Update* contract schemas). For Phase 1 we
-// just prove the package imports across the workspace.
+// Single source of truth for Leadly's API contract. Every Zod schema here
+// is consumed both by the API (`@hono/zod-openapi` route definitions) and
+// the dashboard / widget (form validation, typed clients). Types come from
+// `z.infer<typeof X>` next to each schema — no separate types package.
 
-import { z } from "@hono/zod-openapi";
-
-export const HealthSchema = z
-	.object({
-		status: z.literal("ok"),
-		timestamp: z.string(),
-	})
-	.openapi("Health");
-
-export type Health = z.infer<typeof HealthSchema>;
+export * from "./agent.ts";
+export * from "./analytics.ts";
+export * from "./byok.ts";
+export * from "./common.ts";
+export * from "./conversation.ts";
+export * from "./enums.ts";
+export * from "./kb.ts";
+export * from "./lead.ts";
+export * from "./org.ts";
+export * from "./tool.ts";
+export * from "./visitor.ts";
+export * from "./widget.ts";

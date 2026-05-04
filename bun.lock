@@ -173,6 +173,7 @@
       },
       "devDependencies": {
         "@leadly/config": "workspace:*",
+        "@types/bun": "latest",
       },
     },
     "packages/utils": {
