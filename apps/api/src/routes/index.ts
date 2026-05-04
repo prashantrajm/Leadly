@@ -1,6 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { authMiddleware } from "../middleware/auth";
 import type { AppEnv } from "../types";
+import { agentsApp, orgAgentsApp } from "./agents";
 import { orgsApp } from "./orgs";
 import { uploadsApp } from "./uploads";
 
@@ -20,6 +21,8 @@ apiApp.get("/health", (c) => {
 const authed = new OpenAPIHono<AppEnv>();
 authed.use("*", authMiddleware);
 authed.route("/orgs", orgsApp);
+authed.route("/orgs/:orgId/agents", orgAgentsApp);
+authed.route("/agents", agentsApp);
 authed.route("/uploads", uploadsApp);
 apiApp.route("/", authed);
 
