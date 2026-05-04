@@ -7,7 +7,6 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   isOnboarded   Boolean   @default(false)
-  role          String    @default("user") // "user" | "business_owner" | "admin"
   sessions      Session[]
   accounts      Account[]
 

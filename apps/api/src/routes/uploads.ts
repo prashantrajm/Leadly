@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { authMiddleware, requireBusinessOwner, type AuthUser } from "../middleware/auth";
+import { authMiddleware, type AuthUser } from "../middleware/auth";
 import { ErrorSchema } from "../schemas";
 
 type Env = {
@@ -122,8 +122,6 @@ uploadsApp.get("/file/*", async (c) => {
 uploadsApp.openapi(uploadFileRoute, async (c) => {
   const authResult = await authMiddleware(c, async () => {});
   if (authResult) return authResult;
-  const roleResult = await requireBusinessOwner(c, async () => {});
-  if (roleResult) return roleResult;
 
   const body = await c.req.parseBody();
   const file = body["file"];
@@ -167,8 +165,6 @@ uploadsApp.openapi(uploadFileRoute, async (c) => {
 uploadsApp.openapi(deleteFileRoute, async (c) => {
   const authResult = await authMiddleware(c, async () => {});
   if (authResult) return authResult;
-  const roleResult = await requireBusinessOwner(c, async () => {});
-  if (roleResult) return roleResult;
 
   const { key } = c.req.valid("json");
 

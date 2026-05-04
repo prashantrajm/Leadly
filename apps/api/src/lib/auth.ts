@@ -29,12 +29,6 @@ export const getAuth = (env: {
           defaultValue: false,
           input: false,
         },
-        role: {
-          type: "string",
-          required: false,
-          defaultValue: "user",
-          input: false,
-        },
       },
     },
     emailAndPassword: {
