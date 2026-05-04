@@ -7,12 +7,14 @@
 		".": "./src/index.ts"
 	},
 	"scripts": {
+		"test": "bun test",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"zod": "^4.2.1"
 	},
 	"devDependencies": {
-		"@leadly/config": "workspace:*"
+		"@leadly/config": "workspace:*",
+		"@types/bun": "latest"
 	}
 }

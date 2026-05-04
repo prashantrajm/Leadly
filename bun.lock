@@ -195,6 +195,7 @@
       },
       "devDependencies": {
         "@leadly/config": "workspace:*",
+        "@types/bun": "latest",
       },
     },
   },
