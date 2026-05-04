@@ -63,7 +63,7 @@ bun check
 React 19, Vite, TanStack Router, TanStack Query, Tailwind v4, Radix UI, Biome.
 
 ### API (`apps/api`)
-Hono, TypeScript. Runtime is migrating to Bun on a VPS (see `docs/v1-design.md` §5).
+Hono on Cloudflare Workers + Durable Objects. See `docs/v1-design.md` §5.
 
 ### Native (`apps/native`)
 Expo Router. Not in v1 scope.

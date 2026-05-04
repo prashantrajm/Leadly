@@ -1,6 +1,6 @@
 # Leadly — API
 
-The Leadly backend. Hono + TypeScript. Currently scaffolded on Cloudflare Workers; migrating to Bun-on-VPS per `docs/v1-design.md` §5.
+The Leadly backend. Hono on Cloudflare Workers + Durable Objects. See `docs/v1-design.md` §5 for the full stack.
 
 ## Develop
 

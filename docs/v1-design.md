@@ -203,7 +203,7 @@ The `Tool` table has a `scope` enum (`system` | `customer`). v1 only uses `syste
 | Tool | Purpose |
 |---|---|
 | `capture_contact(name?, email?, phone?)` | Creates/updates Lead, links Visitor → Lead. Format-validates email. |
-| `request_handoff(reason, urgency)` | Sets `Conversation.mode = 'paused'`, raises in-dashboard real-time event. (No email in v1 — see §5.4.) |
+| `request_handoff(reason, urgency)` | Sets `Conversation.mode = 'paused'`, raises in-dashboard real-time event. (No email in v1 — see §6.5.) |
 | `set_conversation_summary(summary, sentiment, tags[])` | Populates inbox card. Called deterministically by the actor post-`end_conversation`, not by the model. Tool exists so the schema is consistent. |
 | `end_conversation(resolution)` | Closes the WS, evicts the actor, fires summarization. |
 
@@ -213,94 +213,139 @@ The `Tool` table has a `scope` enum (`system` | `customer`). v1 only uses `syste
 
 ## 5. Runtime & Infrastructure
 
-### 5.1 Why we ditched Cloudflare entirely (and when we changed our minds)
+### 5.1 Cloudflare-only — committed
 
-Originally locked: Cloudflare Workers + Hono + Durable Objects + R2 + Prisma-Accelerate. Mid-grilling, the stance reversed: **self-host on a VPS, no Cloudflare anywhere.**
+**Decision:** Leadly runs on **Cloudflare**, end-to-end. Workers, Durable Objects, R2, KV, Workflows, Cron Triggers, and Hyperdrive in front of Postgres. Self-hosters use Cloudflare too — there is no second runtime, no portability layer, no abstraction over Cloudflare primitives.
 
-**Reasons for the reversal:**
-1. **OSS distribution story.** "git clone, docker compose up, point at a Postgres" is a clean self-host pitch. "Sign up for Cloudflare, configure Wrangler, provision Workers + DOs + R2 + Vectorize" is friction that kills OSS adoption.
-2. **Vendor lock-in.** Durable Objects, R2 SDK bindings, Vectorize, Workers KV — every Cloudflare primitive we used would have been load-bearing. Self-hosters either replicate Cloudflare's stack or fork the project. Both are bad.
-3. **Runtime constraints.** Workers' 30s CPU limit and lack of long-lived state forced Durable Objects for what is, on a normal server, just an in-process `Map`. The simpler topology was being avoided only because Workers couldn't host it.
-4. **Production debugging.** A long-lived stateful Bun process with a debugger attached is a more familiar target than a DO with edge-distributed state.
-5. **Cost and scale realism.** A $20 VPS handling hundreds of concurrent SMB conversations is fine. Edge distribution wasn't earning its keep.
+**Why we committed instead of staying portable:**
 
-**What we kept from the original Cloudflare-era plan because it was orthogonal:** Hono, Prisma, Postgres, Better Auth, AI SDK, the entire domain model. None of those care about runtime.
+1. **The economics are absurd.** Cloudflare's free tier covers 100k Worker requests/day, 1M Durable Object invocations/month, 10 GB R2, 100k KV reads/day, 1k DO storage requests/day. Workers Paid is **$5/month** and effectively removes those caps for SMB-scale usage. A portable VPS-deployed equivalent (server + managed Postgres + S3-compatible blob + Redis for pub/sub) is realistically $40–100/month at the same load. Five dollars beats forty.
+2. **DO Hibernation makes idle WebSockets free.** A `Conversation` DO with an open WebSocket but no traffic costs nothing — no compute, no memory billing while hibernating. For a chat product where most conversations have long quiet stretches between turns, this is the correct economic model. No VPS does this.
+3. **Workers + DO + Hyperdrive + R2 is one bill, one auth, one config.** Operational simplicity is real; portability that we'd have to maintain on every release is real overhead.
+4. **The v1.5 voice work depends on long-lived stateful WebSockets.** DOs with Hibernation are *built for* this exact pattern. Replicating it on a VPS means picking a stateful actor framework or rolling our own.
+5. **Self-host on Cloudflare is a clean install path.** "Create a Cloudflare account, install wrangler, set env vars, `wrangler deploy`" is no harder than "install Docker, configure Postgres, configure MinIO, set up reverse proxy, configure TLS." The friction we feared earlier was overstated; the tooling story is good.
 
-**What R2 *survives as*:** a possible **S3-compatible** target for the hosted instance. Our code talks `@aws-sdk/client-s3` against an env-configured endpoint. The hosted instance can point at R2's S3 API; nothing in our code knows it's R2. Self-hosters point at MinIO or whatever they prefer.
+**Trade-off we accept:** Self-hosters who want to avoid Cloudflare cannot run Leadly. We've decided that's fine — the OSS audience that *does* want to run it can use Cloudflare's free tier at zero cost up to meaningful scale, and the audience that won't touch Cloudflare isn't large enough to design for.
+
+**What this restores from earlier turns of the design process:** every Cloudflare primitive we previously walked away from. The relevant code in `apps/api/` was never actually migrated off Cloudflare — `runtime = "cloudflare"` is still in the Prisma schema, `wrangler.jsonc` exists, the R2 binding is wired in `src/index.ts`. The earlier reversal was on paper only; this section just realigns the doc with the code.
 
 ### 5.2 Runtime
 
-**Decision:** **Hono on Bun.** Single binary, deployed to a VPS. Self-hosters use docker-compose.
+**Decision:** **Hono on Cloudflare Workers.** Already wired in `apps/api/` with `@hono/zod-openapi` for typed routes.
 
-**Purpose:** Hono is already in the codebase with `@hono/zod-openapi` for typed routes. Bun is already the package manager. Bun's native WebSocket is genuinely good and is exactly what we need for long-lived stateful conversation connections. Single binary + Postgres + S3-compatible blob store is a 3-line docker-compose.
+**Compatibility flags:** `nodejs_compat` (already set in `wrangler.jsonc`) for libraries that need a small Node API surface (Better Auth, Prisma client glue).
 
-**Migration from the Cloudflare scaffold:**
-- Drop `runtime = "cloudflare"` from `prisma/schema.prisma`.
-- Drop `@prisma/extension-accelerate`.
-- Drop `wrangler.jsonc`, `.dev.vars` (replace with `.env`).
-- Replace entry from `wrangler dev` to `bun --hot src/index.ts` using `Bun.serve` + Hono adapter.
-- API routes themselves are unchanged.
+**Local dev:** `wrangler dev` (already wired as `bun dev:api`).
 
-**Rejected:** Hono on Node (slightly slower; Bun is fine for VPS deploy). Switching frameworks (Hono already works).
+**Deploy:** `wrangler deploy` (already wired as `bun build:api`).
 
-### 5.3 Stateful primitive (DO replacement)
+**Rejected:** Bun on a VPS (loses DO Hibernation, costs more, fights the rest of the Cloudflare stack). Workers + a separate long-lived service (two deploys, no longer Cloudflare-native).
 
-**Decision:** In-process `Map<conversationId, ConversationActor>` on a single Bun process. Idle actors evict after N minutes; rehydrate from Postgres on reconnect.
+### 5.3 Stateful primitive — Durable Objects
+
+**Decision:** One **Durable Object per `Conversation`**, addressed by `conversationId`. Uses the **WebSocket Hibernation API** so idle conversations cost nothing. DO storage holds the live history buffer; finalized turns are flushed to Postgres at turn boundaries.
 
 ```ts
-class ConversationActor {
-  ws: ServerWebSocket | null = null;
-  history: Turn[] = [];
-  pendingTurn: TurnBuilder | null = null;
-  async handleUserMessage(text: string) { /* loop in §4.1 */ }
-  async handleReconnect(ws: ServerWebSocket) { /* re-bind */ }
-  async persist() { /* flush finalized turns */ }
-  async hibernate() { /* serialize to Postgres, clear from Map */ }
+// Sketch — actual class lives in apps/api/src/durable/conversation.ts
+export class ConversationDO implements DurableObject {
+  constructor(
+    private state: DurableObjectState,
+    private env: Env,
+  ) {
+    this.state.setHibernatableWebSocketEventTimeout(/* ms */);
+  }
+
+  async fetch(req: Request): Promise<Response> {
+    if (req.headers.get("Upgrade") === "websocket") {
+      const pair = new WebSocketPair();
+      this.state.acceptWebSocket(pair[1]); // hibernation-friendly
+      return new Response(null, { status: 101, webSocket: pair[0] });
+    }
+    // ...
+  }
+
+  async webSocketMessage(ws: WebSocket, msg: ArrayBuffer | string) {
+    // user turn → embed → retrieve → AI SDK streamText → tool calls →
+    // stream tokens back over ws → persist finalized Turn rows
+  }
+
+  async webSocketClose() { /* mark conversation as disconnected, set alarm */ }
+  async alarm() { /* fire end_conversation + summarization on idle timeout */ }
 }
-const actors = new Map<string, ConversationActor>();
 ```
 
-**Purpose:** A single VPS comfortably holds hundreds of concurrent SMB conversations as in-memory actors with the lowest possible latency (no network hop per audio frame in v2 voice). Multi-server scale-out is a layered addition (sticky-routing by `conversationId` via Redis pub/sub or LB stickiness), not a rewrite.
+**Idle / timeout mechanics:**
+- **5-min reconnect grace** on `webSocketClose` — set a DO alarm 5 min out; reconnect cancels it.
+- **30-min hard idle cap** — second alarm fires `end_conversation` + summarization regardless.
+- **Hibernation** evicts the DO from memory between events; rehydrates on the next message. Cost during the wait: zero.
 
-**Rejected:** Redis-from-day-one (premature for SMB scale; Redis as a hard dep hurts the OSS story). Stateless re-hydrate-per-turn (rehydrating per audio frame would kill voice latency in v2).
+**Per-conversation cost:** one DO instance per active conversation. Cloudflare's DO pricing is per-request and per-stored-byte, not per-instance, so an org with 10k concurrent conversations doesn't get billed for instance-count.
 
-### 5.4 Blob storage
+**Geographic placement:** DOs are pinned to a region near their first caller. For SMB customers serving regional traffic this is fine. Multi-region replication is a v2+ concern.
 
-**Decision:** **S3-compatible**, accessed via `@aws-sdk/client-s3`. Endpoint configurable via env vars (`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`).
+**Rejected:** In-process `Map` on a long-lived server (can't run on Workers; loses Hibernation). Stateless re-hydrate from Postgres per turn (rehydrating per audio frame in v2 voice would blow the latency budget). Workers KV for session state (eventually-consistent — wrong tool; reads of a key right after a write can return stale data, causing split-brain on reconnects).
 
-Hosted instance: Cloudflare R2 (using its S3 API only — no Workers tie-in). Self-host: MinIO recipe in docker-compose.
+### 5.4 Database — Postgres + pgvector via Hyperdrive
 
-v1 uses blob storage for KB file uploads (`.md`/`.txt`) only. Voice audio storage is wired but unused until v2.
+**Decision:** A managed **Postgres** instance (Neon / Supabase / Railway — choice is the operator's, not Leadly's) with the **pgvector** extension. Workers connect through **Hyperdrive** for connection pooling and edge-side query caching.
 
-### 5.5 LLM provider layer
+**Why Postgres + Hyperdrive instead of D1 or Vectorize:**
+- **D1** is SQLite-on-edge. Wrong shape for our workload — no vector extension, weaker for transactional joins across the schema.
+- **Vectorize** would split the KB across two stores (vectors in Vectorize, KB metadata in Postgres) and require dual-write logic. pgvector keeps retrieval as a single SQL join with `WHERE agentId = ?` — trivial isolation, trivial filtering.
+- **Hyperdrive** solves the Workers-can't-pool-TCP problem. From the Worker's perspective, it's a fast pooled Postgres connection; from Postgres's perspective, it's a small number of long-lived clients regardless of how many Worker invocations are in flight.
 
-**Decision:** **Vercel AI SDK** as the abstraction.
+**Prisma:** `runtime = "cloudflare"` stays in `prisma/schema.prisma` (already there). The `@prisma/extension-accelerate` dep that's currently in `apps/api/package.json` will be **swapped for the Hyperdrive driver adapter** when we wire DB access — Accelerate and Hyperdrive solve the same problem; Hyperdrive is the Cloudflare-native answer and avoids paying Accelerate's per-query fee on top of our existing infra.
+
+### 5.5 Blob storage — R2
+
+**Decision:** **R2** with the native Workers binding (`env.MEDIA_BUCKET.put(...)`), not the S3 SDK. Already declared in `wrangler.jsonc` and used in `apps/api/src/index.ts`.
+
+**Why the binding instead of the S3 SDK:** R2 charges $0 for egress out of Cloudflare's network and the binding bypasses HTTP signing entirely — direct calls from Worker to R2 inside Cloudflare's network. Faster, simpler, and free on the egress that would otherwise be the line item that hurts.
+
+v1 uses R2 for KB file uploads (`.md`/`.txt`). v2 voice will store audio recordings here.
+
+**Pre-signed URL flow** for the dashboard's KB upload UI: Worker generates a pre-signed PUT URL using the R2 binding's signing helper; the dashboard PUTs the file directly to R2; on completion the dashboard calls back to the API to register the article and kick off chunking + embedding (see §5.7).
+
+### 5.6 Cache & ephemeral state — Workers KV
+
+**Decision:** **Workers KV** for caches that tolerate eventual consistency. Specifically:
+- **Widget config** — `GET /api/widget/config?agentId=…` is hit on every iframe load. Cached in KV with a short TTL (60s); invalidated on agent settings save.
+- **Org → keyed-rate-limit counters** for inbound visitor abuse limiting (token bucket per visitor IP per agent, 30 messages/min default).
+
+**Not for:** conversation state, lead data, anything that needs strong consistency. KV's eventual-consistency model would cause split-brain on reconnects and incorrect lead dedup. Those live in Postgres; live conversation state lives in the DO.
+
+### 5.7 Background work — Workflows & Cron
+
+**Decision:**
+- **Cloudflare Workflows** for durable, multi-step async jobs that benefit from automatic retries and persistence:
+  - **KB re-embedding** when an article is created or updated. Steps: load article → split on `##` headings → call OpenAI embeddings for each chunk → atomic replace of `KbChunk` rows. Workflows handle retries and partial failure.
+  - **Post-`end_conversation` summarization** — fires a deterministic LLM summarization call, writes `Conversation.summary / sentiment / tags`. Step-based so a transient LLM error doesn't lose the summarization.
+- **Cron Triggers** for periodic sweeps:
+  - Idle-conversation reaper backstop (in case a DO alarm misfires).
+  - Daily analytics rollup job for the dashboard's basic counts.
+- **Queues** — not used in v1. Reserved for fan-out work that emerges later (e.g., webhooks to external systems when customer-defined tools land in v2).
+
+**No setIntervals, no in-process workers, no Redis.** Cloudflare's primitives cover the surface.
+
+### 5.8 BYOK credential storage
+
+**Decision:** LLM provider keys are encrypted with **AES-256-GCM** using a per-org KEK and stored in **Postgres** alongside the org's other settings. The KEK itself is wrapped by an env-configured root key (`SECRETS_ENCRYPTION_KEY` set via `wrangler secret put`).
+
+**Rejected:** Workers KV (eventual consistency on a credential is wrong). Cloudflare Secrets Store directly per-key (no per-org isolation; doesn't scale to thousands of orgs). External secret manager (overkill for SMBs).
+
+### 5.9 LLM provider layer
+
+**Decision:** **Vercel AI SDK** as the abstraction. Runtime-agnostic — works fine on Workers.
 
 - **Tested + supported tier in v1:** OpenAI + Anthropic. Tool calls verified. Default model: `gpt-4o-mini`.
-- **Best-effort tier:** every other AI SDK provider (Google, Mistral, Groq, OpenRouter, Ollama, …). Exposed in the UI; documented as "works via AI SDK, may have provider-specific quirks." Self-hosters pointing at Ollama/local is encouraged via env config.
+- **Best-effort tier:** every other AI SDK provider (Google, Mistral, Groq, OpenRouter, …). Exposed in the dashboard; documented as "works via AI SDK, may have provider-specific quirks."
+- **Local models (Ollama / LM Studio):** dropped from v1 surface. The Cloudflare-only commitment means Workers can't reach a developer's local box, so this would only work for self-hosters running Workers + reachable local models — too narrow a slice to build UI for. Documented as "available via env override on self-host" only.
 
-**BYOK granularity:** per-org default key with per-agent override. Per-org covers solo SMBs (one key for everything); per-agent override covers small agencies running multiple clients.
+**BYOK granularity:** per-org default key with per-agent override. Per-org covers solo SMBs; per-agent override covers small agencies.
 
-**BYOK + pricing:** see §7.2. BYOK is *not* a hosted-customer cost-saver — they still pay seats + upfront. BYOK is a **marketing/positioning tool** for self-hosters and an OSS feature.
+**BYOK + pricing:** see §7.2. BYOK doesn't change the platform fee; the customer just pays their LLM provider directly for tokens.
 
 **Rejected:** A homegrown provider abstraction (AI SDK already does it well). Single-provider v1 (the abstraction is only honest with ≥2 implementations).
-
-### 5.6 BYOK credential storage
-
-**Decision:** Encrypted in Postgres with a per-org KEK, AES-256-GCM. Decrypted in the Bun process at LLM-call time. Same scheme for self-hosters (documented in OSS docs).
-
-**Rejected:** Cloudflare Secrets / Workers KV (gone with the runtime). External secret manager (overkill for SMBs).
-
-### 5.7 Background work
-
-**v1 implied async jobs:**
-1. Re-embedding on KB article save.
-2. Conversation summarization on `end_conversation` / idle timeout.
-3. Idle-actor eviction sweep.
-
-**Decision:** v1 runs these as in-process workers (background promises + `setInterval` sweepers) on the same Bun process. No external queue.
-
-**Purpose:** A single VPS process at SMB scale doesn't justify BullMQ + Redis. When usage demands it (concurrent KB re-indexing across thousands of articles, etc.), formalize into a queue then.
 
 ---
 
@@ -326,9 +371,9 @@ v1 uses blob storage for KB file uploads (`.md`/`.txt`) only. Voice audio storag
 
 `KbArticle.source` enum already supports the future shapes. v1 has only `manual` and `upload` rows.
 
-### 6.4 Multi-server scale-out
+### 6.4 Multi-region scale-out
 
-The `ConversationActor` abstraction does not change. Sticky-routing by `conversationId` (LB stickiness or Redis pub/sub) is a layered addition.
+Not a v1 concern. Durable Objects are pinned to a region near their first caller; Cloudflare handles routing globally. If a customer demands data residency or active-active replication, that's a v2+ Enterprise-tier feature using DO-to-DO replication or Smart Placement.
 
 ### 6.5 Email & richer notifications
 
@@ -400,24 +445,25 @@ No email in v1 at all. Handoff notifications are **in-dashboard real-time only**
 
 | Layer | Choice |
 |---|---|
-| Runtime | Bun + Hono |
+| Runtime | Cloudflare Workers + Hono |
 | API typing | `@hono/zod-openapi` (already wired) |
-| DB | Postgres + pgvector |
-| ORM | Prisma (without `runtime = "cloudflare"`, without Accelerate) |
+| DB | Managed Postgres + pgvector via Hyperdrive |
+| ORM | Prisma with `runtime = "cloudflare"` (Hyperdrive driver adapter; not Accelerate) |
+| Stateful primitive | Durable Object per `Conversation` with WebSocket Hibernation |
+| Cache | Workers KV (widget config, rate-limit counters) |
+| Async / scheduled | Cloudflare Workflows + Cron Triggers |
+| Blob storage | R2 with native Workers binding |
 | Auth | Better Auth (already wired) |
 | LLM abstraction | Vercel AI SDK |
 | Embeddings | OpenAI `text-embedding-3-small` (1536 dim) |
 | Default chat model | `gpt-4o-mini` |
-| Stateful primitive | In-process `Map<conversationId, ConversationActor>` |
-| Wire protocol | WebSocket, custom JSON envelope |
-| Blob storage | S3-compatible (`@aws-sdk/client-s3`); R2 (hosted) / MinIO (self-host) |
-| Background work | In-process workers, `setInterval` sweepers |
+| Wire protocol | WebSocket terminating in DO, custom JSON envelope |
 | Web dashboard | Vite + React 19 + TanStack Router (already in `apps/web/`) |
-| Widget app | Vite, new `apps/widget/`, CDN-deployed |
+| Widget app | Vite, new `apps/widget/`, deployed to Cloudflare Pages |
 | Loader script | Vanilla JS, <5KB gzipped |
 | Native | Expo (`apps/native/`, kept; not v1-scoped) |
-| Deploy (hosted) | Single Bun container on a VPS, Postgres + S3 alongside |
-| Deploy (self-host) | docker-compose: api + Postgres + MinIO |
+| Deploy (hosted) | `wrangler deploy` to Cloudflare; managed Postgres of your choice |
+| Deploy (self-host) | Same — Cloudflare account + managed Postgres |
 | License | Apache-2.0 |
 
 ---
@@ -426,15 +472,15 @@ No email in v1 at all. Handoff notifications are **in-dashboard real-time only**
 
 A phased order that respects dependencies and produces a demo-able artifact at each milestone.
 
-1. **Migrate runtime off Cloudflare.** Drop Wrangler/Workers/Accelerate; stand up Bun-Hono with the existing Better Auth + Prisma schema running.
-2. **Domain schema.** Org, User, Agent, Visitor, Lead, Conversation, Turn, KbArticle, KbChunk, Tool. Migrations applied via `prisma migrate deploy` on container start.
+1. **Wire Postgres + Hyperdrive.** Provision managed Postgres with pgvector enabled. Configure Hyperdrive binding in `wrangler.jsonc`. Swap Prisma's Accelerate extension for the Hyperdrive driver adapter.
+2. **Domain schema.** Org, User, Agent, Visitor, Lead, Conversation, Turn, KbArticle, KbChunk, Tool. Migrate with `prisma migrate deploy` against the managed instance.
 3. **Agent CRUD + dashboard skeleton.** TanStack Router shell, sign-up → org → agent flow, agents list, persona/settings page.
-4. **KB editor + retrieval.** Article CRUD, `.md`/`.txt` upload, chunk-on-write, embedding via OpenAI, pgvector index, retrieval query.
-5. **ConversationActor + chat agent loop.** WebSocket route, in-process `Map`, agent loop per §4.1, AI SDK `streamText`, system tools, custom JSON wire envelope.
-6. **Widget app + loader.** `apps/widget/`, iframe doc, vanilla loader, `Leadly.identify()`, config endpoint, install snippet in dashboard.
-7. **Inbox (live, with human reply).** Org-scoped WebSocket subscription, transcript view, take-over/release, paused-mode handling, in-dashboard handoff bell.
-8. **Leads + analytics.** Lead list, dedup, basic counts, simple time series.
-9. **BYOK + provider expansion.** Per-org/per-agent key storage, AES-256-GCM, AI SDK provider switch.
+4. **KB editor + retrieval.** Article CRUD, `.md`/`.txt` upload via R2 pre-signed URL, chunk-on-write, embedding via OpenAI in a Workflow, pgvector index, retrieval query.
+5. **`ConversationDO` + chat agent loop.** Durable Object class with WebSocket Hibernation, agent loop per §4.1, AI SDK `streamText`, system tools, custom JSON wire envelope.
+6. **Widget app + loader.** `apps/widget/`, iframe doc, vanilla loader, `Leadly.identify()`, config endpoint cached in KV, install snippet in dashboard.
+7. **Inbox (live, with human reply).** Dashboard subscribes to org-scoped DO events, transcript view, take-over/release, paused-mode handling, in-dashboard handoff bell.
+8. **Leads + analytics.** Lead list, dedup, basic counts via daily Cron rollup, simple time series.
+9. **BYOK + provider expansion.** Per-org/per-agent key storage encrypted with AES-256-GCM, AI SDK provider switch.
 10. **Polish + onboarding wizard + sandbox preview.** Final pass before public release.
 
 ---
