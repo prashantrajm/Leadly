@@ -2,6 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { authMiddleware } from "../middleware/auth";
 import type { AppEnv } from "../types";
 import { agentsApp, orgAgentsApp } from "./agents";
+import { byokAgentApp, byokOrgApp } from "./byok";
 import {
 	agentConversationsApp,
 	conversationsApp,
@@ -41,6 +42,8 @@ authed.route("/agents/:agentId/kb", kbApp);
 authed.route("/agents/:agentId/visitors", agentVisitorsApp);
 authed.route("/agents/:agentId/leads", agentLeadsApp);
 authed.route("/agents/:agentId/conversations", agentConversationsApp);
+authed.route("/agents/:agentId", byokAgentApp);
+authed.route("/orgs/:orgId/credentials", byokOrgApp);
 authed.route("/visitors", visitorsApp);
 authed.route("/leads", leadsApp);
 authed.route("/conversations", conversationsInboxApp);
