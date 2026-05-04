@@ -150,6 +150,27 @@
       "name": "@leadly/config",
       "version": "0.0.0",
     },
+    "packages/schemas": {
+      "name": "@leadly/schemas",
+      "version": "0.0.0",
+      "dependencies": {
+        "@hono/zod-openapi": "^1.2.0",
+        "zod": "^4.2.1",
+      },
+      "devDependencies": {
+        "@leadly/config": "workspace:*",
+      },
+    },
+    "packages/wire": {
+      "name": "@leadly/wire",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.2.1",
+      },
+      "devDependencies": {
+        "@leadly/config": "workspace:*",
+      },
+    },
   },
   "packages": {
     "@acemir/cssom": ["@acemir/cssom@0.9.31", "", {}, "sha512-ZnR3GSaH+/vJ0YlHau21FjfLYjMpYVIzTD8M8vIEQvIGxeOXyXdzCI140rrCY862p/C/BbzWsjc1dgnM9mkoTA=="],
@@ -631,6 +652,10 @@
     "@kurkle/color": ["@kurkle/color@0.3.4", "", {}, "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="],
 
     "@leadly/config": ["@leadly/config@workspace:packages/config"],
+
+    "@leadly/schemas": ["@leadly/schemas@workspace:packages/schemas"],
+
+    "@leadly/wire": ["@leadly/wire@workspace:packages/wire"],
 
     "@levischuck/tiny-cbor": ["@levischuck/tiny-cbor@0.2.11", "", {}, "sha512-llBRm4dT4Z89aRsm6u2oEZ8tfwL/2l6BwpZ7JcyieouniDECM5AqNgr/y08zalEIvW3RSK4upYyybDcmjXqAow=="],
 
