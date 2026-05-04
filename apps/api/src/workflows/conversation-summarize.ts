@@ -19,6 +19,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { getPrisma } from "../lib/prisma";
 import { makeOpenRouterModel } from "../services/agent-loop";
+import { resolveCredentialForAgent } from "../services/credential-resolver";
 import {
 	executeSetConversationSummary,
 	SetConversationSummaryInput,
@@ -81,8 +82,16 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 				.map((t) => `[${t.role.toUpperCase()}] ${t.text}`)
 				.join("\n\n");
 
+			// Use the same credential the conversation's agent would use for
+			// chat — keeps usage consistent in the customer's OpenRouter
+			// dashboard and respects per-agent BYOK overrides.
+			const resolved = await resolveCredentialForAgent(
+				this.env,
+				conv.agentId,
+				conv.organizationId,
+			);
 			const model = makeOpenRouterModel(
-				this.env.OPENROUTER_API_KEY,
+				resolved.apiKey,
 				conv.agent.defaultModel,
 			);
 

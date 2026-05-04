@@ -29,6 +29,7 @@ import {
 } from "../services/agent-loop";
 import { retrieveForQuery } from "../lib/retrieval";
 import { getPrisma } from "../lib/prisma";
+import { resolveCredentialForAgent } from "../services/credential-resolver";
 import { SYSTEM_TOOLS } from "../services/system-tools";
 import type { Bindings } from "../types";
 
@@ -504,8 +505,14 @@ export class ConversationDO extends DurableObject<Bindings> {
 
 		const startedAt = Date.now();
 		try {
+			// Per-agent override → org default → platform key.
+			const resolved = await resolveCredentialForAgent(
+				this.env,
+				loaded.agentId,
+				loaded.organizationId,
+			);
 			const model = makeOpenRouterModel(
-				this.env.OPENROUTER_API_KEY,
+				resolved.apiKey,
 				loaded.agent.defaultModel,
 			);
 			const result = await runTurn({
