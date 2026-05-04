@@ -14,7 +14,7 @@ interface MyRouterContext {
 	queryClient: QueryClient;
 }
 
-const BARE_ROUTES = ["/auth"];
+const BARE_ROUTES = ["/auth", "/dashboard"];
 
 function RootLayout() {
 	const pathname = useRouterState({ select: (s) => s.location.pathname });
