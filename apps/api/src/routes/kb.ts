@@ -192,9 +192,7 @@ kbApp.openapi(createArticleRoute, async (c) => {
 		},
 	});
 
-	// Re-embedding fires here in Phase 5 — c.env.KB_REEMBED.create({...}).
-	// For now the article exists with no chunks; retrieval just won't return
-	// any results until Phase 5 is wired.
+	await triggerReembed(c.env, article.id);
 
 	return c.json(toWire(article), 201);
 });
@@ -251,7 +249,11 @@ kbApp.openapi(patchArticleRoute, async (c) => {
 		data: patch,
 	});
 
-	// Phase 5: trigger KB_REEMBED here when contentMarkdown changes.
+	// Re-embed only when the body changed; title-only edits don't affect
+	// retrieval and re-embedding 25 chunks for a typo would be wasteful.
+	if (patch.contentMarkdown !== undefined) {
+		await triggerReembed(c.env, updated.id);
+	}
 
 	return c.json(toWire(updated), 200);
 });
@@ -408,12 +410,32 @@ kbApp.openapi(uploadArticleRoute, async (c) => {
 		},
 	});
 
-	// Phase 5: trigger KB_REEMBED here.
+	await triggerReembed(c.env, article.id);
 
 	return c.json(toWire(article), 201);
 });
 
 // ---------- helpers ----------
+
+// Fire-and-forget kick to the KB re-embed workflow. The workflow runs in a
+// separate execution context, so the route returns immediately while
+// chunking + embedding happen in the background. Tests run with KB_REEMBED
+// unset and silently skip — they don't exercise the workflow surface, only
+// the article persistence shape.
+async function triggerReembed(
+	env: { KB_REEMBED?: Workflow },
+	articleId: string,
+): Promise<void> {
+	if (!env.KB_REEMBED) return;
+	try {
+		await env.KB_REEMBED.create({ params: { articleId } });
+	} catch (err) {
+		// Don't fail the user-facing CRUD call because background re-embed
+		// scheduling failed; the cron reaper (Phase 12) will pick up
+		// articles whose chunks haven't been refreshed.
+		console.error("[kb] failed to schedule re-embed", articleId, err);
+	}
+}
 
 // Lightweight cuid-ish generator. Workers don't ship Node's crypto by default,
 // so we lean on Web Crypto's getRandomValues. Output is 22 chars of base36

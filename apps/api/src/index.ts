@@ -4,6 +4,12 @@ import { getAuth } from "./lib/auth";
 import { apiApp } from "./routes";
 import type { AppEnv } from "./types";
 
+// Cloudflare Workflows must be exported from the worker entrypoint so wrangler
+// can wire the `class_name` declared in wrangler.jsonc. They run as a separate
+// invocation from the fetch handler — env.KB_REEMBED.create({ params }) hands
+// off to a fresh, durable execution context.
+export { KbReembedWorkflow } from "./workflows/kb-reembed";
+
 const app = new OpenAPIHono<AppEnv>();
 
 // CORS configuration

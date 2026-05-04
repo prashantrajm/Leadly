@@ -23,6 +23,7 @@
   // `npx wrangler secret put GOOGLE_CLIENT_SECRET`
   // `npx wrangler secret put DATABASE_URL`
   // `npx wrangler secret put GOOGLE_CLIENT_ID` (already exists as secret)
+  // `npx wrangler secret put OPENROUTER_API_KEY`
   "observability": {
     "logs": {
       "enabled": true,
@@ -44,6 +45,15 @@
     {
       "binding": "MEDIA_BUCKET",
       "bucket_name": "your-app-media"
+    }
+  ],
+  // KB re-embedding pipeline. KbReembedWorkflow is exported from src/index.ts;
+  // env.KB_REEMBED.create({ params: { articleId } }) kicks off a durable run.
+  "workflows": [
+    {
+      "name": "kb-reembed",
+      "binding": "KB_REEMBED",
+      "class_name": "KbReembedWorkflow"
     }
   ],
   // "d1_databases": [
