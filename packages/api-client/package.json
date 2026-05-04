@@ -10,7 +10,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"hono": "^4.11.1"
+		"@leadly/schemas": "workspace:*"
 	},
 	"devDependencies": {
 		"@leadly/config": "workspace:*"
