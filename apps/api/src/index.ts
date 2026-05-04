@@ -10,6 +10,10 @@ import type { AppEnv } from "./types";
 // off to a fresh, durable execution context.
 export { KbReembedWorkflow } from "./workflows/kb-reembed";
 
+// Durable Object class export — same wrangler-registers-by-name story.
+// One instance per conversationId, addressed via env.CONVERSATION.idFromName.
+export { ConversationDO } from "./durable/conversation";
+
 const app = new OpenAPIHono<AppEnv>();
 
 // CORS configuration

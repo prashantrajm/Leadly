@@ -2,6 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { authMiddleware } from "../middleware/auth";
 import type { AppEnv } from "../types";
 import { agentsApp, orgAgentsApp } from "./agents";
+import { conversationsApp } from "./conversations";
 import { kbApp } from "./kb";
 import { orgsApp } from "./orgs";
 
@@ -15,6 +16,12 @@ apiApp.get("/health", (c) => {
     service: "Leadly API",
   });
 });
+
+// Conversations WS lives outside the authed sub-app — visitors don't have a
+// Better Auth session; widget-token auth comes in Phase 10. Until then the
+// upgrade endpoint is open (it's only useful with a valid conversationId
+// the visitor obtained from /api/widget/conversation, which IS authed).
+apiApp.route("/conversations", conversationsApp);
 
 // Authenticated route groups. authMiddleware runs at the mount so each child
 // router stays auth-agnostic and tests can swap in a fake guard via .use().
