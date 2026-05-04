@@ -28,6 +28,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardAgentsIndexRouteImport } from './routes/dashboard/agents/index'
 import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard/settings/profile'
 
 const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
@@ -125,6 +126,11 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAgentsIndexRoute = DashboardAgentsIndexRouteImport.update({
+  id: '/agents/',
+  path: '/agents/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSettingsProfileRoute =
   DashboardSettingsProfileRouteImport.update({
     id: '/settings/profile',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
+  '/dashboard/agents/': typeof DashboardAgentsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
+  '/dashboard/agents': typeof DashboardAgentsIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
 }
 export interface FileRoutesById {
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
+  '/dashboard/agents/': typeof DashboardAgentsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/dashboard/'
     | '/dashboard/settings/profile'
+    | '/dashboard/agents/'
     | '/dashboard/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/dashboard'
     | '/dashboard/settings/profile'
+    | '/dashboard/agents'
     | '/dashboard/settings'
   id:
     | '__root__'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/dashboard/'
     | '/dashboard/settings/profile'
+    | '/dashboard/agents/'
     | '/dashboard/settings/'
   fileRoutesById: FileRoutesById
 }
@@ -421,6 +433,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/agents/': {
+      id: '/dashboard/agents/'
+      path: '/agents'
+      fullPath: '/dashboard/agents/'
+      preLoaderRoute: typeof DashboardAgentsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/settings/profile': {
       id: '/dashboard/settings/profile'
       path: '/settings/profile'
@@ -434,12 +453,14 @@ declare module '@tanstack/react-router' {
 interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardSettingsProfileRoute: typeof DashboardSettingsProfileRoute
+  DashboardAgentsIndexRoute: typeof DashboardAgentsIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardSettingsProfileRoute: DashboardSettingsProfileRoute,
+  DashboardAgentsIndexRoute: DashboardAgentsIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }
 
