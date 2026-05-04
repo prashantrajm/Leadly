@@ -54,6 +54,11 @@
       "name": "kb-reembed",
       "binding": "KB_REEMBED",
       "class_name": "KbReembedWorkflow"
+    },
+    {
+      "name": "conversation-summarize",
+      "binding": "CONVERSATION_SUMMARIZE",
+      "class_name": "ConversationSummarizeWorkflow"
     }
   ],
   // Durable Object: one instance per conversationId. The DO holds the live

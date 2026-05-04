@@ -9,6 +9,7 @@ import type { AppEnv } from "./types";
 // invocation from the fetch handler — env.KB_REEMBED.create({ params }) hands
 // off to a fresh, durable execution context.
 export { KbReembedWorkflow } from "./workflows/kb-reembed";
+export { ConversationSummarizeWorkflow } from "./workflows/conversation-summarize";
 
 // Durable Object class export — same wrangler-registers-by-name story.
 // One instance per conversationId, addressed via env.CONVERSATION.idFromName.
