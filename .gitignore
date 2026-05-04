@@ -49,3 +49,7 @@ wrangler.toml
 
 # Bun
 bun.lockb
+
+# Local agent / Claude Code tooling (personal, not product)
+.claude/
+.agents/
