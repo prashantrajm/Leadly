@@ -11,6 +11,7 @@ import { kbApp } from "./kb";
 import { agentLeadsApp, leadsApp } from "./leads";
 import { orgsApp } from "./orgs";
 import { agentVisitorsApp, visitorsApp } from "./visitors";
+import { widgetApp } from "./widget";
 
 export const apiApp = new OpenAPIHono<AppEnv>();
 
@@ -23,10 +24,10 @@ apiApp.get("/health", (c) => {
   });
 });
 
-// Conversations WS lives outside the authed sub-app — visitors don't have a
-// Better Auth session; widget-token auth comes in Phase 10. Until then the
-// upgrade endpoint is open (it's only useful with a valid conversationId
-// the visitor obtained from /api/widget/conversation, which IS authed).
+// Public surfaces (no Better Auth session). The widget endpoints are
+// what the iframe on a customer's site calls; the conversation WS upgrade
+// is what the widget connects to after it has a conversationId.
+apiApp.route("/widget", widgetApp);
 apiApp.route("/conversations", conversationsApp);
 
 // Authenticated route groups. authMiddleware runs at the mount so each child

@@ -9,6 +9,7 @@ import {
 import { slugify } from "@leadly/utils";
 import { requireAgentAccess, requireOrgMember } from "../middleware/org";
 import { getPrisma } from "../lib/prisma";
+import { invalidateWidgetConfigCache } from "./widget";
 import type { AppEnv } from "../types";
 
 // Two routers — under /orgs/:orgId/agents (create + list) and /agents/:agentId
@@ -203,6 +204,15 @@ agentsApp.openapi(patchAgentRoute, async (c) => {
 		where: { id: agentId },
 		data: patch,
 	});
+
+	// Invalidate the widget config cache so the next /api/widget/config
+	// load reflects renamed agents / changed greeting / new accent color
+	// without waiting out the 60s TTL.
+	await invalidateWidgetConfigCache(c.env.WIDGET_CACHE, agentId).catch(() => {
+		// Cache wipe failure must not 500 the settings save — KV will
+		// expire the stale entry within 60s anyway.
+	});
+
 	return c.json(toWire(updated), 200);
 });
 

@@ -35,12 +35,15 @@
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
+  // KV: widget config cache (60s TTL) + per-visitor rate-limit counters.
+  // The `id` is the production namespace from `wrangler kv namespace create`;
+  // wrangler dev uses an in-memory miniflare emulation so dev needs no real id.
+  "kv_namespaces": [
+    {
+      "binding": "WIDGET_CACHE",
+      "id": "leadly-widget-cache"
+    }
+  ],
   "r2_buckets": [
     {
       "binding": "MEDIA_BUCKET",

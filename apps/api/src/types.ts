@@ -17,6 +17,7 @@ export type Bindings = {
 	CORS_ORIGIN?: string;
 	OPENROUTER_API_KEY: string;
 	MEDIA_BUCKET: R2Bucket;
+	WIDGET_CACHE: KVNamespace;
 	KB_REEMBED: Workflow;
 	CONVERSATION_SUMMARIZE: Workflow;
 	CONVERSATION: DurableObjectNamespace;
