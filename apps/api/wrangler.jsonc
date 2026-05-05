@@ -42,13 +42,13 @@
   "kv_namespaces": [
     {
       "binding": "WIDGET_CACHE",
-      "id": "leadly-widget-cache"
+      "id": "745d8b75cc7941938aa5596a30f17d9f"
     }
   ],
   "r2_buckets": [
     {
       "binding": "MEDIA_BUCKET",
-      "bucket_name": "your-app-media"
+      "bucket_name": "leadly-media-prod"
     }
   ],
   // KB re-embedding pipeline. KbReembedWorkflow is exported from src/index.ts;
