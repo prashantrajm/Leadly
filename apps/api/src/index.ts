@@ -19,20 +19,36 @@ export { ConversationDO } from "./durable/conversation";
 
 const app = new OpenAPIHono<AppEnv>();
 
-// CORS configuration
+// Public widget endpoints are called from customer websites. They use widget
+// tokens, not cookies, so they can accept any browser origin without
+// credentialed CORS.
+app.use(
+	"/api/widget/*",
+	cors({
+		origin: "*",
+		allowHeaders: ["Content-Type", "Authorization"],
+		allowMethods: ["POST", "GET", "OPTIONS"],
+		maxAge: 600,
+	}),
+);
+
+// Dashboard/API CORS configuration.
 app.use("*", async (c, next) => {
-  const origin = c.env.CORS_ORIGIN;
-  if (!origin) {
-    return next();
-  }
-  return cors({
-    origin: origin,
-    allowHeaders: ["Content-Type", "Authorization", "x-better-auth-session-id"],
-    allowMethods: ["POST", "GET", "PUT", "DELETE", "OPTIONS"],
-    exposeHeaders: ["Content-Length", "Set-Cookie"],
-    maxAge: 600,
-    credentials: true,
-  })(c, next);
+	if (c.req.path.startsWith("/api/widget/")) {
+		return next();
+	}
+	const origin = c.env.CORS_ORIGIN;
+	if (!origin) {
+		return next();
+	}
+	return cors({
+		origin: origin,
+		allowHeaders: ["Content-Type", "Authorization", "x-better-auth-session-id"],
+		allowMethods: ["POST", "GET", "PUT", "DELETE", "OPTIONS"],
+		exposeHeaders: ["Content-Length", "Set-Cookie"],
+		maxAge: 600,
+		credentials: true,
+	})(c, next);
 });
 
 // Authentication routes (Better Auth)
