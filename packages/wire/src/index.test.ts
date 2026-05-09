@@ -25,6 +25,12 @@ describe("ClientFrame", () => {
 		expect(parseClientFrame({ type: "ping" })).toEqual({ type: "ping" });
 	});
 
+	it("parses end_chat", () => {
+		expect(parseClientFrame({ type: "end_chat" })).toEqual({
+			type: "end_chat",
+		});
+	});
+
 	it("rejects unknown type", () => {
 		expect(() => parseClientFrame({ type: "explode" })).toThrow();
 	});
@@ -139,6 +145,16 @@ describe("ServerFrame", () => {
 		});
 		expect(f.type).toBe("human_msg");
 	});
+
+	it("parses conversation_ended", () => {
+		const f = parseServerFrame({
+			type: "conversation_ended",
+			resolution: "resolved",
+			endedBy: "operator",
+			note: "done",
+		});
+		expect(f.type).toBe("conversation_ended");
+	});
 });
 
 describe("ObserverFrame", () => {
@@ -162,6 +178,14 @@ describe("ObserverFrame", () => {
 			text: "hi from operator",
 		});
 		expect(f.type).toBe("observer_human_msg");
+	});
+
+	it("parses observer_end_conversation", () => {
+		const f = parseObserverFrame({
+			type: "observer_end_conversation",
+			note: "done",
+		});
+		expect(f.type).toBe("observer_end_conversation");
 	});
 
 	it("parses ping (shared with client)", () => {

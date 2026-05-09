@@ -30,6 +30,7 @@ import type {
 	CreateKbArticle,
 	CreateLlmCredential,
 	CreateOrganization,
+	EndConversation,
 	HumanMessage,
 	InviteMember,
 	KbArticle,
@@ -274,6 +275,12 @@ export function createLeadlyClient(opts: ClientOptions) {
 				request<{ success: true }>(
 					"POST",
 					`/api/conversations/${id}/human-message`,
+					body,
+				),
+			end: (id: string, body: EndConversation = {}) =>
+				request<{ success: true }>(
+					"POST",
+					`/api/conversations/${id}/end`,
 					body,
 				),
 		},

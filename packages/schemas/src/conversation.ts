@@ -97,6 +97,13 @@ export const HumanMessageSchema = z
 	.openapi("HumanMessage");
 export type HumanMessage = z.infer<typeof HumanMessageSchema>;
 
+export const EndConversationSchema = z
+	.object({
+		note: z.string().max(500).optional(),
+	})
+	.openapi("EndConversation");
+export type EndConversation = z.infer<typeof EndConversationSchema>;
+
 // ---------- List query filters ----------
 
 export const ConversationListQuery = z.object({
