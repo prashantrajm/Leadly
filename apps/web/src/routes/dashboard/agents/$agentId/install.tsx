@@ -1,18 +1,13 @@
+import type { Agent } from "@leadly/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Copy, ExternalLink, Play } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, LeadlyApiError } from "@/lib/api";
-import type { Agent } from "@leadly/api-client";
 
 export const Route = createFileRoute("/dashboard/agents/$agentId/install")({
 	component: InstallPage,
@@ -63,8 +58,8 @@ function InstallPage() {
 					Install the widget
 				</h1>
 				<p className="mt-1 text-sm text-muted-foreground">
-					Drop one script tag on your site and the agent shows up. No SDK,
-					no build step.
+					Drop one script tag on your site and the agent shows up. No SDK, no
+					build step.
 				</p>
 			</header>
 
@@ -144,24 +139,36 @@ function Step({
 }
 
 function SnippetTabs({ agent }: { agent: Agent }) {
+	const apiUrl = (
+		import.meta.env.VITE_API_URL || "http://localhost:8787/api"
+	).replace(/\/api\/?$/, "");
+	const loaderUrl =
+		import.meta.env.VITE_WIDGET_LOADER_URL ||
+		(typeof window === "undefined"
+			? "https://cdn.leadly.app/loader.js"
+			: `${window.location.origin}/loader.js`);
+
 	const html = `<script
-  src="https://cdn.leadly.app/loader.js"
+  src="${loaderUrl}"
   data-agent-id="${agent.id}"
+  data-api-url="${apiUrl}"
   defer
 ></script>`;
 
 	const react = `// Anywhere a layout component renders <head>
 // (e.g. _document.tsx in Next.js, root.tsx in Remix)
 <script
-  src="https://cdn.leadly.app/loader.js"
+  src="${loaderUrl}"
   data-agent-id="${agent.id}"
+  data-api-url="${apiUrl}"
   defer
 />`;
 
 	const shopify = `<!-- theme.liquid, inside <head> -->
 <script
-  src="https://cdn.leadly.app/loader.js"
+  src="${loaderUrl}"
   data-agent-id="${agent.id}"
+  data-api-url="${apiUrl}"
   defer
 ></script>`;
 
@@ -169,8 +176,9 @@ function SnippetTabs({ agent }: { agent: Agent }) {
 function leadly_widget() {
   ?>
   <script
-    src="https://cdn.leadly.app/loader.js"
+    src="${loaderUrl}"
     data-agent-id="${agent.id}"
+    data-api-url="${apiUrl}"
     defer
   ></script>
   <?php
@@ -247,9 +255,7 @@ function Snippet({ code }: { code: string }) {
 function TestStep({ agentId }: { agentId: string }) {
 	return (
 		<div className="space-y-3 text-sm text-muted-foreground">
-			<p>
-				Two ways to confirm the agent works before you ship:
-			</p>
+			<p>Two ways to confirm the agent works before you ship:</p>
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 				<Button
 					asChild
