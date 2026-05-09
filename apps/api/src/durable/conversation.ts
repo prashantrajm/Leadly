@@ -39,6 +39,8 @@ type WsAttachment = { role: WsRole; conversationId: string };
 // Idle alarms (design §4.2). 5-min reconnect grace + 30-min hard cap.
 const RECONNECT_GRACE_MS = 5 * 60 * 1000;
 const HARD_IDLE_CAP_MS = 30 * 60 * 1000;
+type EndedBy = "visitor" | "operator" | "agent" | "system";
+type EndResolution = "resolved" | "handed_off" | "abandoned" | "other";
 
 export class ConversationDO extends DurableObject<Bindings> {
 	override async fetch(request: Request): Promise<Response> {
@@ -144,7 +146,7 @@ export class ConversationDO extends DurableObject<Bindings> {
 			return new Response("Method not allowed", { status: 405 });
 		}
 		const body = (await request.json().catch(() => null)) as
-			| { action: string; conversationId?: string; text?: string }
+			| { action: string; conversationId?: string; text?: string; note?: string }
 			| null;
 		if (!body || typeof body.action !== "string") {
 			return new Response("Bad request", { status: 400 });
@@ -183,6 +185,15 @@ export class ConversationDO extends DurableObject<Bindings> {
 				});
 				this.broadcast({ type: "human_msg", turnId: turn.id, text });
 				return Response.json({ ok: true, turnId: turn.id });
+			}
+
+			case "end_conversation": {
+				await this.endConversation(conversationId, {
+					endedBy: "operator",
+					resolution: "resolved",
+					note: body.note,
+				});
+				return Response.json({ ok: true });
 			}
 
 			default:
@@ -224,6 +235,12 @@ export class ConversationDO extends DurableObject<Bindings> {
 				return;
 			case "user_msg":
 				await this.runUserTurn(ws, conversationId, frame.text);
+				return;
+			case "end_chat":
+				await this.endConversation(conversationId, {
+					endedBy: "visitor",
+					resolution: "resolved",
+				});
 				return;
 		}
 	}
@@ -272,6 +289,13 @@ export class ConversationDO extends DurableObject<Bindings> {
 				});
 				return;
 			}
+			case "observer_end_conversation":
+				await this.endConversation(conversationId, {
+					endedBy: "operator",
+					resolution: "resolved",
+					note: frame.note,
+				});
+				return;
 		}
 	}
 
@@ -290,6 +314,7 @@ export class ConversationDO extends DurableObject<Bindings> {
 		type Loaded = {
 			id: string;
 			mode: "auto" | "paused";
+			status: "active" | "ended" | "abandoned";
 			agentId: string;
 			organizationId: string;
 			visitorId: string;
@@ -336,6 +361,15 @@ export class ConversationDO extends DurableObject<Bindings> {
 				type: "error",
 				code: "internal",
 				message: "Conversation not found",
+			});
+			return;
+		}
+		if (loaded.status !== "active") {
+			send(visitorWs, {
+				type: "conversation_ended",
+				resolution: loaded.status === "abandoned" ? "abandoned" : "resolved",
+				endedBy: "system",
+				note: null,
 			});
 			return;
 		}
@@ -468,22 +502,13 @@ export class ConversationDO extends DurableObject<Bindings> {
 						result,
 					});
 
-					// Fire the deterministic summarization workflow. We don't
-					// await its completion — the workflow is durable and
-					// retries on its own; the agent's reply must not block
-					// on it. Failure to schedule is logged but ignored
-					// because the conversation is already correctly marked
-					// `ended` by the executor above.
-					try {
-						await this.env.CONVERSATION_SUMMARIZE.create({
-							params: { conversationId },
-						});
-					} catch (err) {
-						console.error(
-							"[do] failed to schedule conversation summarize",
-							err,
-						);
-					}
+					this.broadcast({
+						type: "conversation_ended",
+						resolution: args.resolution,
+						endedBy: "agent",
+						note: args.note ?? null,
+					});
+					await this.scheduleSummary(conversationId);
 					return result;
 				},
 			},
@@ -573,6 +598,42 @@ export class ConversationDO extends DurableObject<Bindings> {
 				// Closed sockets throw on send. Cloudflare cleans them up;
 				// nothing for us to do here besides not crash the loop.
 			}
+		}
+	}
+
+	private async endConversation(
+		conversationId: string,
+		args: {
+			endedBy: EndedBy;
+			resolution: EndResolution;
+			note?: string | null;
+		},
+	): Promise<void> {
+		const prisma = getPrisma(this.env.DATABASE_URL);
+		await prisma.conversation.update({
+			where: { id: conversationId },
+			data: {
+				status: args.resolution === "abandoned" ? "abandoned" : "ended",
+				endedAt: new Date(),
+				lastActivityAt: new Date(),
+			},
+		});
+		this.broadcast({
+			type: "conversation_ended",
+			resolution: args.resolution,
+			endedBy: args.endedBy,
+			note: args.note ?? null,
+		});
+		await this.scheduleSummary(conversationId);
+	}
+
+	private async scheduleSummary(conversationId: string): Promise<void> {
+		try {
+			await this.env.CONVERSATION_SUMMARIZE.create({
+				params: { conversationId },
+			});
+		} catch (err) {
+			console.error("[do] failed to schedule conversation summarize", err);
 		}
 	}
 

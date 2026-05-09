@@ -7,6 +7,7 @@
 //     POST /:id/take-over     — flip mode=paused, broadcast mode_change
 //     POST /:id/release       — flip mode=auto,  broadcast mode_change
 //     POST /:id/human-message — operator reply, broadcast human_msg
+//     POST /:id/end           — mark ended, broadcast conversation_ended
 //
 // All inbox routes call into the ConversationDO via its internal /control
 // endpoint so attached WebSockets see the broadcast immediately even
@@ -18,6 +19,7 @@ import {
 	ConversationStatus,
 	ConversationMode,
 	ConversationWithTurnsSchema,
+	EndConversationSchema,
 	ErrorSchema,
 	HumanMessageSchema,
 	SuccessSchema,
@@ -232,6 +234,38 @@ conversationsInboxApp.openapi(humanMessageRoute, async (c) => {
 	if (!access.ok) return c.json(access.body, access.status);
 
 	const res = await callDoControl(c.env, id, { action: "human_message", text });
+	if (!res.ok) return c.json({ error: "DO control failed" }, 404);
+	return c.json({ success: true as const }, 200);
+});
+
+// POST /api/conversations/:id/end
+const endConversationRoute = createRoute({
+	method: "post",
+	path: "/{id}/end",
+	tags: ["Conversations"],
+	request: {
+		params: z.object({ id: z.string() }),
+		body: { content: { "application/json": { schema: EndConversationSchema } } },
+	},
+	responses: {
+		200: { content: { "application/json": { schema: SuccessSchema } }, description: "Ended" },
+		400: { content: { "application/json": { schema: ErrorSchema } }, description: "Invalid input" },
+		401: { content: { "application/json": { schema: ErrorSchema } }, description: "Unauthorized" },
+		403: { content: { "application/json": { schema: ErrorSchema } }, description: "Forbidden" },
+		404: { content: { "application/json": { schema: ErrorSchema } }, description: "Not found" },
+	},
+});
+
+conversationsInboxApp.openapi(endConversationRoute, async (c) => {
+	const { id } = c.req.valid("param");
+	const { note } = c.req.valid("json");
+	const access = await loadConversationAndCheckAccess(c, id);
+	if (!access.ok) return c.json(access.body, access.status);
+
+	const res = await callDoControl(c.env, id, {
+		action: "end_conversation",
+		note,
+	});
 	if (!res.ok) return c.json({ error: "DO control failed" }, 404);
 	return c.json({ success: true as const }, 200);
 });

@@ -40,10 +40,16 @@ export type UserMsgFrame = z.infer<typeof UserMsgFrame>;
 export const PingFrame = z.object({ type: z.literal("ping") });
 export type PingFrame = z.infer<typeof PingFrame>;
 
+export const EndChatFrame = z.object({
+	type: z.literal("end_chat"),
+});
+export type EndChatFrame = z.infer<typeof EndChatFrame>;
+
 export const ClientFrame = z.discriminatedUnion("type", [
 	WidgetHelloFrame,
 	UserMsgFrame,
 	PingFrame,
+	EndChatFrame,
 ]);
 export type ClientFrame = z.infer<typeof ClientFrame>;
 
@@ -132,6 +138,14 @@ export type ErrorFrame = z.infer<typeof ErrorFrame>;
 export const PongFrame = z.object({ type: z.literal("pong") });
 export type PongFrame = z.infer<typeof PongFrame>;
 
+export const ConversationEndedFrame = z.object({
+	type: z.literal("conversation_ended"),
+	resolution: z.enum(["resolved", "handed_off", "abandoned", "other"]),
+	endedBy: z.enum(["visitor", "operator", "agent", "system"]),
+	note: z.string().nullable().optional(),
+});
+export type ConversationEndedFrame = z.infer<typeof ConversationEndedFrame>;
+
 export const ServerFrame = z.discriminatedUnion("type", [
 	AgentTokenFrame,
 	AgentTurnEndFrame,
@@ -142,6 +156,7 @@ export const ServerFrame = z.discriminatedUnion("type", [
 	HumanMsgFrame,
 	ErrorFrame,
 	PongFrame,
+	ConversationEndedFrame,
 ]);
 export type ServerFrame = z.infer<typeof ServerFrame>;
 
@@ -180,11 +195,20 @@ export const ObserverHumanMsgFrame = z.object({
 });
 export type ObserverHumanMsgFrame = z.infer<typeof ObserverHumanMsgFrame>;
 
+export const ObserverEndConversationFrame = z.object({
+	type: z.literal("observer_end_conversation"),
+	note: z.string().max(500).optional(),
+});
+export type ObserverEndConversationFrame = z.infer<
+	typeof ObserverEndConversationFrame
+>;
+
 export const ObserverFrame = z.discriminatedUnion("type", [
 	ObserverHelloFrame,
 	ObserverTakeOverFrame,
 	ObserverReleaseFrame,
 	ObserverHumanMsgFrame,
+	ObserverEndConversationFrame,
 	PingFrame,
 ]);
 export type ObserverFrame = z.infer<typeof ObserverFrame>;

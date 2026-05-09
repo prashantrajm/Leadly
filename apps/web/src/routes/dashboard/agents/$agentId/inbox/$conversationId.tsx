@@ -1,8 +1,10 @@
+import type { ConversationWithTurns } from "@leadly/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format, formatDistanceToNow } from "date-fns";
 import {
 	ArrowLeft,
+	CircleStop,
 	Hand,
 	HandMetal,
 	Loader2,
@@ -22,7 +24,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { api, LeadlyApiError } from "@/lib/api";
-import type { ConversationWithTurns } from "@leadly/api-client";
 
 export const Route = createFileRoute(
 	"/dashboard/agents/$agentId/inbox/$conversationId",
@@ -133,11 +134,20 @@ function TranscriptPane({
 		},
 	});
 
+	const endMutation = useMutation({
+		mutationFn: () => api.conversations.end(conversationId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["conversation", conversationId],
+			});
+		},
+	});
+
 	const scrollRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
 		const el = scrollRef.current;
 		if (el) el.scrollTop = el.scrollHeight;
-	}, [conversation.turns]);
+	});
 
 	return (
 		<Card className="flex h-[680px] flex-col overflow-hidden">
@@ -162,36 +172,52 @@ function TranscriptPane({
 						{conversation.turns.length === 1 ? "" : "s"}
 					</span>
 				</div>
-				{!ended &&
-					(live ? (
+				{!ended && (
+					<div className="flex items-center gap-2">
 						<Button
 							size="sm"
 							variant="outline"
-							onClick={() => releaseMutation.mutate()}
-							disabled={releaseMutation.isPending}
+							onClick={() => endMutation.mutate()}
+							disabled={endMutation.isPending}
 						>
-							{releaseMutation.isPending ? (
+							{endMutation.isPending ? (
 								<Loader2 className="mr-1 size-3.5 animate-spin" />
 							) : (
-								<HandMetal className="mr-1 size-3.5" />
+								<CircleStop className="mr-1 size-3.5" />
 							)}
-							Release
+							End
 						</Button>
-					) : (
-						<Button
-							size="sm"
-							onClick={() => takeoverMutation.mutate()}
-							disabled={takeoverMutation.isPending}
-							className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-						>
-							{takeoverMutation.isPending ? (
-								<Loader2 className="mr-1 size-3.5 animate-spin" />
-							) : (
-								<Hand className="mr-1 size-3.5" />
-							)}
-							Take over
-						</Button>
-					))}
+						{live ? (
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => releaseMutation.mutate()}
+								disabled={releaseMutation.isPending}
+							>
+								{releaseMutation.isPending ? (
+									<Loader2 className="mr-1 size-3.5 animate-spin" />
+								) : (
+									<HandMetal className="mr-1 size-3.5" />
+								)}
+								Release
+							</Button>
+						) : (
+							<Button
+								size="sm"
+								onClick={() => takeoverMutation.mutate()}
+								disabled={takeoverMutation.isPending}
+								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+							>
+								{takeoverMutation.isPending ? (
+									<Loader2 className="mr-1 size-3.5 animate-spin" />
+								) : (
+									<Hand className="mr-1 size-3.5" />
+								)}
+								Take over
+							</Button>
+						)}
+					</div>
+				)}
 			</div>
 
 			<div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-6">
@@ -208,9 +234,7 @@ function TranscriptPane({
 				)}
 			</div>
 
-			{!ended && live && (
-				<HumanComposer conversationId={conversationId} />
-			)}
+			{!ended && live && <HumanComposer conversationId={conversationId} />}
 			{!ended && !live && (
 				<div className="border-t border-border/60 px-5 py-3 text-xs text-muted-foreground">
 					Click <span className="font-medium text-foreground">Take over</span>{" "}
@@ -363,7 +387,9 @@ function ContextPane({
 					<CardContent className="text-sm">
 						<div className="flex items-center gap-2 text-muted-foreground">
 							<Mail className="size-4" />
-							<span className="font-mono text-xs">{c.leadId.slice(0, 12)}…</span>
+							<span className="font-mono text-xs">
+								{c.leadId.slice(0, 12)}…
+							</span>
 						</div>
 					</CardContent>
 				</Card>
