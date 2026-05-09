@@ -1,7 +1,7 @@
-// Analytics endpoints for the dashboard. Both read straight from
-// DailyStat — that table is what the rollup cron writes, so the endpoints
-// here are "give me what we already aggregated" rather than re-running
-// any expensive query at request time.
+// Analytics endpoints for the dashboard. These intentionally read from live
+// Conversation/Turn/Lead rows so today's activity appears immediately. The
+// DailyStat rollup remains useful for future heavier analytics, but dashboard
+// v1 should not wait for the midnight cron to show non-zero counts.
 
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import {
@@ -21,6 +21,16 @@ function daysAgoUtc(days: number, now: Date = new Date()): Date {
 		Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
 	);
 	return new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+}
+
+function utcDayStart(date: Date): Date {
+	return new Date(
+		Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+	);
+}
+
+function addUtcDays(date: Date, days: number): Date {
+	return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
 // ---------- summary ----------
@@ -58,41 +68,34 @@ analyticsApp.openapi(summaryRoute, async (c) => {
 	const prisma = getPrisma(c.env.DATABASE_URL);
 
 	const since = daysAgoUtc(windowDays);
-	const stats = await prisma.dailyStat.findMany({
-		where: { agentId, date: { gte: since } },
-	});
-
-	let conversations = 0;
-	let leadsCaptured = 0;
-	let handoffs = 0;
-	let totalTurnsApprox = 0;
-	const articleCitations = new Map<string, number>();
-
-	for (const s of stats) {
-		conversations += s.conversations;
-		leadsCaptured += s.leadsCaptured;
-		handoffs += s.handoffs;
-		totalTurnsApprox += s.avgTurnsPerConv * s.conversations;
-		for (const id of (s.topCitedArticleIds as string[]) ?? []) {
-			articleCitations.set(id, (articleCitations.get(id) ?? 0) + 1);
-		}
-	}
-
+	const [conversations, leadsCaptured, handoffRows, turnCount] =
+		await Promise.all([
+			prisma.conversation.count({
+				where: { agentId, startedAt: { gte: since } },
+			}),
+			prisma.lead.count({
+				where: { agentId, createdAt: { gte: since } },
+			}),
+			prisma.turn.findMany({
+				where: {
+					role: "tool",
+					toolName: "request_handoff",
+					createdAt: { gte: since },
+					conversation: { agentId },
+				},
+				distinct: ["conversationId"],
+				select: { conversationId: true },
+			}),
+			prisma.turn.count({
+				where: {
+					createdAt: { gte: since },
+					conversation: { agentId, startedAt: { gte: since } },
+				},
+			}),
+		]);
+	const handoffs = handoffRows.length;
 	const avgTurnsPerConv =
-		conversations > 0 ? totalTurnsApprox / conversations : 0;
-
-	// Resolve article titles for the top 5 most-cited.
-	const sorted = [...articleCitations.entries()]
-		.sort((a, b) => b[1] - a[1])
-		.slice(0, 5);
-	const articleIds = sorted.map(([id]) => id);
-	const articles = articleIds.length
-		? await prisma.kbArticle.findMany({
-				where: { id: { in: articleIds } },
-				select: { id: true, title: true },
-			})
-		: [];
-	const titleById = new Map(articles.map((a) => [a.id, a.title]));
+		conversations > 0 ? turnCount / conversations : 0;
 
 	return c.json(
 		{
@@ -101,11 +104,7 @@ analyticsApp.openapi(summaryRoute, async (c) => {
 			leadsCaptured,
 			handoffs,
 			avgTurnsPerConv,
-			topCitedArticles: sorted.map(([id, citations]) => ({
-				articleId: id,
-				title: titleById.get(id) ?? "(deleted)",
-				citations,
-			})),
+			topCitedArticles: [],
 		},
 		200,
 	);
@@ -146,10 +145,28 @@ analyticsApp.openapi(timeseriesRoute, async (c) => {
 	const prisma = getPrisma(c.env.DATABASE_URL);
 
 	const since = daysAgoUtc(windowDays);
-	const stats = await prisma.dailyStat.findMany({
-		where: { agentId, date: { gte: since } },
-		orderBy: { date: "asc" },
-	});
+	const today = utcDayStart(new Date());
+	const until = addUtcDays(today, 1);
+	const [conversations, leads, handoffTurns] = await Promise.all([
+		prisma.conversation.findMany({
+			where: { agentId, startedAt: { gte: since, lt: until } },
+			select: { id: true, startedAt: true },
+		}),
+		prisma.lead.findMany({
+			where: { agentId, createdAt: { gte: since, lt: until } },
+			select: { id: true, createdAt: true },
+		}),
+		prisma.turn.findMany({
+			where: {
+				role: "tool",
+				toolName: "request_handoff",
+				createdAt: { gte: since, lt: until },
+				conversation: { agentId },
+			},
+			distinct: ["conversationId"],
+			select: { conversationId: true, createdAt: true },
+		}),
+	]);
 
 	// Backfill missing days with zeros so the chart has a continuous x-axis
 	// even on a fresh agent that hasn't been live for the full window.
@@ -159,18 +176,43 @@ analyticsApp.openapi(timeseriesRoute, async (c) => {
 		leadsCaptured: number;
 		handoffs: number;
 	}> = [];
-	const byDate = new Map<string, (typeof stats)[number]>();
-	for (const s of stats) byDate.set(s.date.toISOString().slice(0, 10), s);
+	const byDate = new Map<
+		string,
+		{ conversations: number; leadsCaptured: number; handoffs: number }
+	>();
+	for (let d = 0; d < windowDays; d++) {
+		const day = daysAgoUtc(windowDays - 1 - d);
+		byDate.set(day.toISOString().slice(0, 10), {
+			conversations: 0,
+			leadsCaptured: 0,
+			handoffs: 0,
+		});
+	}
+	for (const conv of conversations) {
+		const key = conv.startedAt.toISOString().slice(0, 10);
+		const point = byDate.get(key);
+		if (point) point.conversations += 1;
+	}
+	for (const lead of leads) {
+		const key = lead.createdAt.toISOString().slice(0, 10);
+		const point = byDate.get(key);
+		if (point) point.leadsCaptured += 1;
+	}
+	for (const handoff of handoffTurns) {
+		const key = handoff.createdAt.toISOString().slice(0, 10);
+		const point = byDate.get(key);
+		if (point) point.handoffs += 1;
+	}
 
 	for (let d = 0; d < windowDays; d++) {
 		const day = daysAgoUtc(windowDays - 1 - d);
 		const key = day.toISOString().slice(0, 10);
-		const s = byDate.get(key);
+		const point = byDate.get(key);
 		points.push({
 			date: key,
-			conversations: s?.conversations ?? 0,
-			leadsCaptured: s?.leadsCaptured ?? 0,
-			handoffs: s?.handoffs ?? 0,
+			conversations: point?.conversations ?? 0,
+			leadsCaptured: point?.leadsCaptured ?? 0,
+			handoffs: point?.handoffs ?? 0,
 		});
 	}
 

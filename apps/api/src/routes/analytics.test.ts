@@ -55,18 +55,72 @@ beforeAll(async () => {
 	});
 	agentId = agent.id;
 
-	// Seed a few DailyStat rows in the recent window (relative to wall now).
-	const today = new Date();
-	const utcMidnight = new Date(
-		Date.UTC(
-			today.getUTCFullYear(),
-			today.getUTCMonth(),
-			today.getUTCDate(),
-		),
-	);
-	const days = [3, 2, 1];
-	for (let i = 0; i < days.length; i++) {
-		const d = new Date(utcMidnight.getTime() - days[i] * 24 * 60 * 60 * 1000);
+	// Seed live rows in the recent window. Analytics reads from raw tables so
+	// current-day activity shows up before the midnight DailyStat rollup.
+	const visitor = await prisma.visitor.create({
+		data: {
+			organizationId: orgId,
+			agentId,
+			externalId: `visitor-${tag}`,
+		},
+	});
+	const lead = await prisma.lead.create({
+		data: {
+			organizationId: orgId,
+			agentId,
+			email: `lead-${tag}@test.local`,
+		},
+	});
+	const startedAt = new Date();
+	const first = await prisma.conversation.create({
+		data: {
+			organizationId: orgId,
+			agentId,
+			visitorId: visitor.id,
+			leadId: lead.id,
+			startedAt,
+			lastActivityAt: startedAt,
+		},
+	});
+	await prisma.turn.createMany({
+		data: [
+			{ conversationId: first.id, role: "user", text: "hi", createdAt: startedAt },
+			{
+				conversationId: first.id,
+				role: "agent",
+				text: "hello",
+				createdAt: startedAt,
+			},
+			{
+				conversationId: first.id,
+				role: "tool",
+				toolName: "request_handoff",
+				text: "{}",
+				createdAt: startedAt,
+			},
+		],
+	});
+	const second = await prisma.conversation.create({
+		data: {
+			organizationId: orgId,
+			agentId,
+			visitorId: visitor.id,
+			startedAt,
+			lastActivityAt: startedAt,
+		},
+	});
+	await prisma.turn.createMany({
+		data: [
+			{ conversationId: second.id, role: "user", text: "q", createdAt: startedAt },
+			{ conversationId: second.id, role: "agent", text: "a", createdAt: startedAt },
+		],
+	});
+
+	// Stale DailyStat rows should not be the source of truth for live dashboard
+	// numbers. If the endpoint still read DailyStat-only, these tests would
+	// return 18 conversations instead of 2.
+	for (let i = 0; i < 3; i++) {
+		const d = new Date(Date.UTC(2026, 0, i + 1));
 		await prisma.dailyStat.create({
 			data: {
 				organizationId: orgId,
@@ -91,7 +145,7 @@ afterAll(async () => {
 });
 
 describe("GET /agents/:agentId/analytics/summary", () => {
-	it("aggregates the seeded window for a member", async () => {
+	it("aggregates live rows for a member", async () => {
 		const res = await makeApp(owner).request(
 			`/agents/${agentId}/analytics/summary?windowDays=30`,
 		);
@@ -102,12 +156,10 @@ describe("GET /agents/:agentId/analytics/summary", () => {
 			handoffs: number;
 			avgTurnsPerConv: number;
 		};
-		expect(body.conversations).toBe(5 + 6 + 7);
-		expect(body.leadsCaptured).toBe(1 + 2 + 3);
-		expect(body.handoffs).toBe(0 + 1 + 2);
-		// avg = (5*2 + 6*3 + 7*4) / (5+6+7) = (10+18+28)/18 = 56/18 ≈ 3.111
-		expect(body.avgTurnsPerConv).toBeGreaterThan(3.1);
-		expect(body.avgTurnsPerConv).toBeLessThan(3.2);
+		expect(body.conversations).toBe(2);
+		expect(body.leadsCaptured).toBe(1);
+		expect(body.handoffs).toBe(1);
+		expect(body.avgTurnsPerConv).toBe(2.5);
 	});
 
 	it("returns zeros for a tight window with no rows", async () => {
@@ -154,8 +206,10 @@ describe("GET /agents/:agentId/analytics/timeseries", () => {
 		for (let i = 1; i < body.points.length; i++) {
 			expect(body.points[i].date > body.points[i - 1].date).toBe(true);
 		}
-		// At least one non-zero day from the seeds.
-		expect(body.points.some((p) => p.conversations > 0)).toBe(true);
+		// At least one non-zero day from the live rows.
+		expect(body.points.some((p) => p.conversations === 2)).toBe(true);
+		expect(body.points.some((p) => p.leadsCaptured === 1)).toBe(true);
+		expect(body.points.some((p) => p.handoffs === 1)).toBe(true);
 		// And the days that don't have a stat row come back as zeros.
 		expect(body.points.some((p) => p.conversations === 0)).toBe(true);
 	});
