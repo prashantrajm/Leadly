@@ -51,6 +51,7 @@ bun install
 # 1. apps/api/.dev.vars — copy from .dev.vars.example, fill secrets
 #    DATABASE_URL, BETTER_AUTH_SECRET, OPENROUTER_API_KEY,
 #    SECRETS_ENCRYPTION_KEY (generate with `openssl rand -base64 32`)
+#    Deployed Worker plaintext vars stay in Cloudflare dashboard; wrangler keeps them via keep_vars.
 
 # 2. Apply the schema
 bun run --filter=api migrate
