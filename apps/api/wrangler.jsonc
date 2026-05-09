@@ -3,6 +3,7 @@
   "name": "leadly-api",
   "main": "src/index.ts",
   "compatibility_date": "2025-12-24",
+  "keep_vars": true,
   "env": {
     "development": {
       // "vars": {} // Do NOT use empty vars block as it clears dashboard variables on deploy
