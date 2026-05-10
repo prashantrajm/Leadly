@@ -3,17 +3,35 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { slugify } from "@leadly/utils";
 import { getPrisma } from "./prisma";
 
-export const getAuth = (env: {
+type AuthEnv = {
 	DATABASE_URL: string;
 	BETTER_AUTH_SECRET: string;
 	BETTER_AUTH_URL?: string;
 	GOOGLE_CLIENT_ID?: string;
 	GOOGLE_CLIENT_SECRET?: string;
 	CORS_ORIGIN?: string;
-}) => {
+};
+
+let cachedAuthKey: string | undefined;
+let cachedAuth: ReturnType<typeof betterAuth> | undefined;
+
+export const getAuth = (env: AuthEnv) => {
+	const cacheKey = [
+		env.DATABASE_URL,
+		env.BETTER_AUTH_SECRET,
+		env.BETTER_AUTH_URL ?? "",
+		env.GOOGLE_CLIENT_ID ?? "",
+		env.GOOGLE_CLIENT_SECRET ?? "",
+		env.CORS_ORIGIN ?? "",
+	].join("\0");
+
+	if (cachedAuth && cachedAuthKey === cacheKey) {
+		return cachedAuth;
+	}
+
 	const prisma = getPrisma(env.DATABASE_URL);
 
-	return betterAuth({
+	cachedAuth = betterAuth({
 		database: prismaAdapter(prisma, {
 			provider: "postgresql",
 		}),
@@ -52,6 +70,12 @@ export const getAuth = (env: {
 				},
 			},
 		},
+		session: {
+			cookieCache: {
+				enabled: true,
+				maxAge: 5 * 60,
+			},
+		},
 		emailAndPassword: {
 			enabled: true,
 		},
@@ -69,6 +93,8 @@ export const getAuth = (env: {
 			},
 		},
 	});
+	cachedAuthKey = cacheKey;
+	return cachedAuth;
 };
 
 // Idempotent: safe to re-run on re-login or on retry. We check membership
