@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { authClient } from "@/lib/auth-client";
+import { getCachedSession } from "@/lib/auth-client";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { ModeToggle } from "@/components/mode-toggle";
 import {
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/dashboard")({
 		// guard runs on every dashboard route, including refresh and direct
 		// navigation. If unauthenticated, bounce to /auth and remember where
 		// we were headed.
-		const session = await authClient.getSession();
+		const session = await getCachedSession();
 		if (!session.data?.user) {
 			throw redirect({
 				to: "/auth",

@@ -12,26 +12,10 @@ type AuthEnv = {
 	CORS_ORIGIN?: string;
 };
 
-let cachedAuthKey: string | undefined;
-let cachedAuth: ReturnType<typeof betterAuth> | undefined;
-
 export const getAuth = (env: AuthEnv) => {
-	const cacheKey = [
-		env.DATABASE_URL,
-		env.BETTER_AUTH_SECRET,
-		env.BETTER_AUTH_URL ?? "",
-		env.GOOGLE_CLIENT_ID ?? "",
-		env.GOOGLE_CLIENT_SECRET ?? "",
-		env.CORS_ORIGIN ?? "",
-	].join("\0");
-
-	if (cachedAuth && cachedAuthKey === cacheKey) {
-		return cachedAuth;
-	}
-
 	const prisma = getPrisma(env.DATABASE_URL);
 
-	cachedAuth = betterAuth({
+	return betterAuth({
 		database: prismaAdapter(prisma, {
 			provider: "postgresql",
 		}),
@@ -93,8 +77,6 @@ export const getAuth = (env: AuthEnv) => {
 			},
 		},
 	});
-	cachedAuthKey = cacheKey;
-	return cachedAuth;
 };
 
 // Idempotent: safe to re-run on re-login or on retry. We check membership
