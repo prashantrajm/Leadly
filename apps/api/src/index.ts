@@ -44,7 +44,7 @@ app.use("*", async (c, next) => {
 	return cors({
 		origin: origin,
 		allowHeaders: ["Content-Type", "Authorization", "x-better-auth-session-id"],
-		allowMethods: ["POST", "GET", "PUT", "DELETE", "OPTIONS"],
+		allowMethods: ["POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"],
 		exposeHeaders: ["Content-Length", "Set-Cookie"],
 		maxAge: 600,
 		credentials: true,
