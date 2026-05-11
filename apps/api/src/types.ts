@@ -18,6 +18,10 @@ export type Bindings = {
 	OPENROUTER_API_KEY: string;
 	LANGCHAIN_TRACING?: string;
 	LANGCHAIN_API_KEY?: string;
+	LANGCHAIN_PROJECT?: string;
+	LANGSMITH_TRACING?: string;
+	LANGSMITH_API_KEY?: string;
+	LANGSMITH_PROJECT?: string;
 	SECRETS_ENCRYPTION_KEY: string;
 	MEDIA_BUCKET: R2Bucket;
 	WIDGET_CACHE: KVNamespace;
