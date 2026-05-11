@@ -166,6 +166,17 @@ bunx dotenv -e .dev.vars -- bun scripts/e2e-smoke.ts
 
 Better Auth, Google OAuth + email/password. Custom `databaseHooks.user.create.after` auto-creates a personal Organization + owner Membership on first sign-up so a fresh dashboard always has at least one org to work with.
 
+### Auth performance on Cloudflare Workers
+
+Dashboard routes can call `GET /api/auth/get-session` often during navigation because TanStack Router guards, route preloading, and session UI all need to know whether the user is signed in. Repeated `get-session` logs are normal during active dashboard use.
+
+Best practices:
+
+- Use Better Auth's documented `session.cookieCache` for session caching. It stores short-lived signed session data in a cookie so most `getSession` / `useSession` calls do not hit Postgres.
+- Keep the cache short. Leadly uses `maxAge: 5 * 60`; use `60` seconds instead if immediate cross-device revocation matters more than fewer DB reads.
+- Do not add custom module-level caches for the Better Auth instance or Prisma client inside the Worker unless the runtime behavior has been proven safe. Cloudflare can cancel continuations from promises that resolve after their request context has ended, which shows up as cross-request promise warnings and can lead to hung requests.
+- Frontend de-duping is fine for navigation bursts. `apps/web/src/lib/auth-client.ts` shares one pending dashboard guard `getSession()` call and keeps a short browser-side result cache.
+
 ## Design references
 
 - [`docs/v1-design.md`](../../docs/v1-design.md) — product / architecture

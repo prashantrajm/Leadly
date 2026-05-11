@@ -29,7 +29,11 @@
   // `npx wrangler secret put DATABASE_URL`
   // `npx wrangler secret put GOOGLE_CLIENT_ID` (already exists as secret)
   // `npx wrangler secret put OPENROUTER_API_KEY`
+  // `npx wrangler secret put LANGCHAIN_API_KEY` (optional LangSmith tracing)
   // `npx wrangler secret put SECRETS_ENCRYPTION_KEY`  (openssl rand -base64 32)
+  //
+  // Optional LangSmith tracing var:
+  // `LANGCHAIN_TRACING=true`
   "observability": {
     "logs": {
       "enabled": true,
