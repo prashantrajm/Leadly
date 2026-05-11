@@ -29,6 +29,7 @@ import {
 } from "../services/agent-loop";
 import { retrieveForQuery } from "../lib/retrieval";
 import { getPrisma } from "../lib/prisma";
+import { configureLangSmith } from "../lib/langsmith";
 import { resolveCredentialForAgent } from "../services/credential-resolver";
 import { SYSTEM_TOOLS } from "../services/system-tools";
 import type { Bindings } from "../types";
@@ -355,6 +356,7 @@ export class ConversationDO extends DurableObject<Bindings> {
 		userText: string,
 	): Promise<void> {
 		const prisma = getPrisma(this.env.DATABASE_URL);
+		configureLangSmith(this.env);
 
 		// Load the conversation + agent + visitor + history in one call. The
 		// extension-accelerate include-type bug (#28703) bites here too, so

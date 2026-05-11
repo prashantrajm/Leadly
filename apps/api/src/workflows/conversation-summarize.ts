@@ -15,8 +15,12 @@
 
 import { WorkflowEntrypoint, type WorkflowStep } from "cloudflare:workers";
 import type { WorkflowEvent } from "cloudflare:workers";
-import { generateObject } from "ai";
 import { z } from "zod";
+import {
+	configureLangSmith,
+	flushLangSmithTraces,
+	generateObject,
+} from "../lib/langsmith";
 import { getPrisma } from "../lib/prisma";
 import { makeOpenRouterModel } from "../services/agent-loop";
 import { resolveCredentialForAgent } from "../services/credential-resolver";
@@ -42,6 +46,7 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 	) {
 		const { conversationId } = event.payload;
 		const prisma = getPrisma(this.env.DATABASE_URL);
+		configureLangSmith(this.env);
 
 		// Step 1 — load conversation + agent + turns. Turns are bounded by
 		// design (per-agent maxTurns default 50) so a single SELECT is fine.
@@ -107,7 +112,7 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 					"\n\nWrite a one-paragraph summary, infer the visitor's overall " +
 					"sentiment, and pick up to 5 short topic tags (lowercase, " +
 					"hyphenated, no punctuation).",
-			});
+			}).finally(() => flushLangSmithTraces());
 
 			// generateObject already validated against SummaryOutput, but the
 			// summary length is enforced with .min(2).max(2000) so a model

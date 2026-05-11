@@ -14,9 +14,9 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import {
 	type LanguageModel,
-	streamText,
 	type ToolSet,
 } from "ai";
+import { flushLangSmithTraces, streamText } from "../lib/langsmith";
 import type { RetrievedChunk } from "../lib/retrieval";
 
 // ---------- types ----------
@@ -182,20 +182,24 @@ export async function runTurn(args: RunTurnArgs): Promise<RunTurnResult> {
 	});
 
 	let text = "";
-	for await (const delta of result.textStream) {
-		text += delta;
-		args.onToken?.(delta);
+	try {
+		for await (const delta of result.textStream) {
+			text += delta;
+			args.onToken?.(delta);
+		}
+
+		const usage = await result.usage;
+		const finishReason = await result.finishReason;
+
+		return {
+			text,
+			finishReason,
+			tokensIn: usage?.inputTokens,
+			tokensOut: usage?.outputTokens,
+		};
+	} finally {
+		await flushLangSmithTraces();
 	}
-
-	const usage = await result.usage;
-	const finishReason = await result.finishReason;
-
-	return {
-		text,
-		finishReason,
-		tokensIn: usage?.inputTokens,
-		tokensOut: usage?.outputTokens,
-	};
 }
 
 // ---------- model factory ----------
