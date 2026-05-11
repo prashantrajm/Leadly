@@ -9,10 +9,9 @@ BETTER_AUTH_URL="http://localhost:8787"
 # Get one at https://openrouter.ai/keys
 OPENROUTER_API_KEY="sk-or-..."
 
-# LangSmith AI SDK tracing. Set LANGSMITH_TRACING="true" to enable.
-LANGSMITH_TRACING="false"
-LANGSMITH_API_KEY="lsv2_pt_..."
-LANGSMITH_PROJECT="leadly"
+# LangSmith AI SDK tracing. Set LANGCHAIN_TRACING="true" to enable.
+LANGCHAIN_TRACING="false"
+LANGCHAIN_API_KEY="lsv2_pt_..."
 
 # Root key for AES-256-GCM envelope encryption of BYOK provider keys.
 # 32 raw bytes, base64-encoded. Generate with: `openssl rand -base64 32`
