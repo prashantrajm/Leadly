@@ -157,31 +157,70 @@ export class ConversationDO extends DurableObject<Bindings> {
 		if (!conversationId) {
 			return new Response("conversationId required", { status: 400 });
 		}
+		await this.bumpIdleAlarm();
 
 		switch (body.action) {
 			case "take_over":
 				await prisma.conversation.update({
 					where: { id: conversationId },
-					data: { mode: "paused" },
+					data: { mode: "paused", lastActivityAt: new Date() },
 				});
 				this.broadcast({ type: "mode_change", mode: "paused" });
 				return Response.json({ ok: true });
 
-			case "release":
+			case "release": {
+				const conversation = await prisma.conversation.findUnique({
+					where: { id: conversationId },
+					select: { mode: true, status: true },
+				});
+				if (!conversation) {
+					return new Response("Conversation not found", { status: 404 });
+				}
+				if (conversation.status === "ended") {
+					return new Response("Conversation already ended", { status: 409 });
+				}
 				await prisma.conversation.update({
 					where: { id: conversationId },
-					data: { mode: "auto" },
+					data: {
+						mode: "auto",
+						lastActivityAt: new Date(),
+						...(conversation.mode === "paused" &&
+						conversation.status === "abandoned"
+							? { status: "active" as const, endedAt: null }
+							: {}),
+					},
 				});
 				this.broadcast({ type: "mode_change", mode: "auto" });
 				return Response.json({ ok: true });
+			}
 
 			case "human_message": {
 				const text = body.text;
 				if (!text || text.length === 0 || text.length > 4000) {
 					return new Response("Invalid text", { status: 400 });
 				}
+				const conversation = await prisma.conversation.findUnique({
+					where: { id: conversationId },
+					select: { mode: true, status: true },
+				});
+				if (!conversation) {
+					return new Response("Conversation not found", { status: 404 });
+				}
+				if (conversation.status === "ended") {
+					return new Response("Conversation already ended", { status: 409 });
+				}
 				const turn = await prisma.turn.create({
 					data: { conversationId, role: "human", text },
+				});
+				await prisma.conversation.update({
+					where: { id: conversationId },
+					data: {
+						lastActivityAt: new Date(),
+						...(conversation.mode === "paused" &&
+						conversation.status === "abandoned"
+							? { status: "active" as const, endedAt: null }
+							: {}),
+					},
 				});
 				this.broadcast({ type: "human_msg", turnId: turn.id, text });
 				return Response.json({ ok: true, turnId: turn.id });
@@ -208,6 +247,15 @@ export class ConversationDO extends DurableObject<Bindings> {
 		const conversationId = await this.ctx.storage.get<string>("conversationId");
 		if (!conversationId) return;
 		const prisma = getPrisma(this.env.DATABASE_URL);
+		const conversation = await prisma.conversation.findUnique({
+			where: { id: conversationId },
+			select: { mode: true, status: true },
+		});
+		if (!conversation || conversation.status !== "active") return;
+		if (conversation.mode === "paused") {
+			await this.bumpIdleAlarm();
+			return;
+		}
 		await prisma.conversation
 			.update({
 				where: { id: conversationId },
