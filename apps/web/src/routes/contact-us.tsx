@@ -64,8 +64,8 @@ const CHANNELS: {
 	{
 		icon: Github,
 		label: "GitHub",
-		handle: "rajmaurya-dev/Leady",
-		href: "https://github.com/rajmaurya-dev/Leady",
+		handle: "prashantrajm/Leadly",
+		href: "https://github.com/prashantrajm/Leadly",
 	},
 	{
 		icon: Twitter,

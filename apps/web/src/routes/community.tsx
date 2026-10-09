@@ -12,7 +12,7 @@ const CHANNELS = [
 		title: "GitHub",
 		blurb: "Issues, pull requests, and the source code itself.",
 		cta: "Open repository",
-		href: "https://github.com/rajmaurya-dev/Leady",
+		href: "https://github.com/prashantrajm/Leadly",
 	},
 	{
 		icon: MessageSquare,

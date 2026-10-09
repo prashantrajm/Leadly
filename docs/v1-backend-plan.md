@@ -1,6 +1,6 @@
 # Leadly v1 — Backend Architecture & Route Plan
 
-This document is the build spec for Leadly v1. It conforms to every committed decision in `/Users/prashantraj/Developer/apps/Leady/docs/v1-design.md`. No new infra is introduced. Names, paths and route strings below are the canonical ones — implementers should not invent variants.
+This document is the build spec for Leadly v1. It conforms to every committed decision in `/Users/prashantraj/Developer/apps/Leadly/docs/v1-design.md`. No new infra is introduced. Names, paths and route strings below are the canonical ones — implementers should not invent variants.
 
 ---
 
@@ -46,7 +46,7 @@ Bun workspaces resolve `workspace:*` to source. `wrangler dev`/`wrangler deploy`
 ### 1.5 Resulting top-level tree
 
 ```
-Leady/
+Leadly/
   apps/
     api/                       # Cloudflare Worker (Hono)
     web/                       # Vite + React 19 dashboard
@@ -1164,8 +1164,8 @@ These are intentionally not resolved here — call them before building.
 
 ### Critical Files for Implementation
 
-- /Users/prashantraj/Developer/apps/Leady/apps/api/src/index.ts
-- /Users/prashantraj/Developer/apps/Leady/apps/api/src/durable/conversation.ts
-- /Users/prashantraj/Developer/apps/Leady/apps/api/prisma/domain.prisma
-- /Users/prashantraj/Developer/apps/Leady/apps/api/wrangler.jsonc
-- /Users/prashantraj/Developer/apps/Leady/packages/schemas/src/index.ts
+- /Users/prashantraj/Developer/apps/Leadly/apps/api/src/index.ts
+- /Users/prashantraj/Developer/apps/Leadly/apps/api/src/durable/conversation.ts
+- /Users/prashantraj/Developer/apps/Leadly/apps/api/prisma/domain.prisma
+- /Users/prashantraj/Developer/apps/Leadly/apps/api/wrangler.jsonc
+- /Users/prashantraj/Developer/apps/Leadly/packages/schemas/src/index.ts
