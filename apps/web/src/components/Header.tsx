@@ -71,7 +71,7 @@ export function Header() {
 						className="h-8 w-8 text-muted-foreground hover:text-foreground"
 					>
 						<a
-							href="https://github.com/rajmaurya-dev/Leady"
+							href="https://github.com/prashantrajm/Leadly"
 							target="_blank"
 							rel="noopener noreferrer"
 							aria-label="GitHub"
@@ -192,7 +192,7 @@ export function Header() {
 									</Link>
 								))}
 								<a
-									href="https://github.com/rajmaurya-dev/Leady"
+									href="https://github.com/prashantrajm/Leadly"
 									target="_blank"
 									rel="noopener noreferrer"
 									onClick={() => setIsOpen(false)}
