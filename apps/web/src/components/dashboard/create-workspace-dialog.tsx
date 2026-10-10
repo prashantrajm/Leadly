@@ -21,7 +21,11 @@ import {
 } from "@/components/ui/input-group";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api, LeadlyApiError } from "@/lib/api";
+import {
+	describeInvitation,
+	useMyInvitations,
+} from "@/hooks/use-my-invitations";
+import { api, apiErrorMessage, LeadlyApiError } from "@/lib/api";
 import { authClient, useSession } from "@/lib/auth-client";
 
 const CHECK_DEBOUNCE_MS = 300;
@@ -113,6 +117,11 @@ export function CreateWorkspaceDialog({
 		},
 	});
 
+	// First sign-in with pending invites (verified email): offer to join
+	// those before creating a new workspace.
+	const { invitations, accept: acceptInvite, busyToken } = useMyInvitations();
+	const showInvites = firstWorkspace && invitations.length > 0;
+
 	const nameValid = name.trim().length >= 2;
 	const canSave = nameValid && result?.available === true && !create.isPending;
 
@@ -132,13 +141,65 @@ export function CreateWorkspaceDialog({
 			>
 				<DialogHeader>
 					<DialogTitle>
-						{firstWorkspace ? "Create your workspace" : "New workspace"}
+						{showInvites
+							? "Join or create a workspace"
+							: firstWorkspace
+								? "Create your workspace"
+								: "New workspace"}
 					</DialogTitle>
 					<DialogDescription>
-						A workspace holds your agents, inbox and leads. You can rename it
-						later.
+						{showInvites
+							? "You've been invited to a workspace. Join it, or create your own."
+							: "A workspace holds your agents, inbox and leads. You can rename it later."}
 					</DialogDescription>
 				</DialogHeader>
+
+				{showInvites && (
+					<div className="space-y-4">
+						<ul className="space-y-2">
+							{invitations.map((inv) => (
+								<li
+									key={inv.token}
+									className="flex items-center gap-3 rounded-lg border border-accent-blue/30 bg-accent-blue/5 p-3"
+								>
+									<div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-blue text-sm font-semibold text-accent-blue-foreground">
+										{inv.organization.name.charAt(0).toUpperCase()}
+									</div>
+									<div className="min-w-0 flex-1">
+										<div className="truncate text-sm font-medium">
+											{inv.organization.name}
+										</div>
+										<div className="truncate text-xs text-muted-foreground">
+											{describeInvitation(inv)}
+										</div>
+									</div>
+									<Button
+										type="button"
+										size="sm"
+										disabled={busyToken === inv.token}
+										onClick={() => acceptInvite.mutate(inv)}
+										className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+									>
+										{busyToken === inv.token && acceptInvite.isPending && (
+											<Loader2 className="mr-1.5 size-3.5 animate-spin" />
+										)}
+										Join
+									</Button>
+								</li>
+							))}
+						</ul>
+						{acceptInvite.isError && (
+							<p className="text-sm text-destructive">
+								{apiErrorMessage(acceptInvite.error)}
+							</p>
+						)}
+						<div className="flex items-center gap-3 text-xs text-muted-foreground">
+							<span className="h-px flex-1 bg-border" />
+							or create your own workspace
+							<span className="h-px flex-1 bg-border" />
+						</div>
+					</div>
+				)}
 
 				<form
 					className="space-y-5"

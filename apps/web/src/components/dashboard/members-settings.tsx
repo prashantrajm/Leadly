@@ -271,9 +271,7 @@ function PendingInvitations({ orgId }: { orgId: string }) {
 
 	return (
 		<section className="space-y-3">
-			<h2 className="text-base font-semibold tracking-tight">
-				Pending invitations
-			</h2>
+			<h2 className="text-base font-semibold tracking-tight">Invitations</h2>
 			<Card>
 				<CardContent className="p-0">
 					<ul className="divide-y divide-border/60">
@@ -287,15 +285,25 @@ function PendingInvitations({ orgId }: { orgId: string }) {
 										{inv.email}
 									</div>
 									<div className="truncate text-xs text-muted-foreground">
-										Expires{" "}
-										{formatDistanceToNow(new Date(inv.expiresAt), {
-											addSuffix: true,
-										})}
+										{inv.status === "declined" ? (
+											<span className="font-medium text-destructive">
+												Declined
+											</span>
+										) : (
+											<>
+												Expires{" "}
+												{formatDistanceToNow(new Date(inv.expiresAt), {
+													addSuffix: true,
+												})}
+											</>
+										)}
 										{inv.invitedBy && ` · invited by ${inv.invitedBy.name}`}
 									</div>
 								</div>
 								<RoleBadge role={inv.role} />
-								<CopyButton text={inviteLink(inv.token)} label="Copy link" />
+								{inv.status === "pending" && (
+									<CopyButton text={inviteLink(inv.token)} label="Copy link" />
+								)}
 								<Button
 									variant="ghost"
 									size="icon-sm"
@@ -305,7 +313,9 @@ function PendingInvitations({ orgId }: { orgId: string }) {
 								>
 									<X className="size-4" />
 									<span className="sr-only">
-										Revoke invitation for {inv.email}
+										{inv.status === "declined"
+											? `Clear declined invitation for ${inv.email}`
+											: `Revoke invitation for ${inv.email}`}
 									</span>
 								</Button>
 							</li>

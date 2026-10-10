@@ -1,4 +1,5 @@
 import type { Agent } from "@leadly/api-client";
+import type { MyInvitation } from "@leadly/schemas";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useRouterState } from "@tanstack/react-router";
 import {
@@ -10,6 +11,7 @@ import {
 	Inbox,
 	LayoutDashboard,
 	LifeBuoy,
+	Loader2,
 	LogOut,
 	Play,
 	Plus,
@@ -20,6 +22,7 @@ import {
 import { useEffect, useState } from "react";
 import { CreateWorkspaceDialog } from "@/components/dashboard/create-workspace-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -53,6 +56,10 @@ import {
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useCurrentOrg, useOrgPath } from "@/hooks/use-current-org";
+import {
+	describeInvitation,
+	useMyInvitations,
+} from "@/hooks/use-my-invitations";
 import { useOrgAgents } from "@/hooks/use-org-agents";
 import { api } from "@/lib/api";
 import { authClient, useSession } from "@/lib/auth-client";
@@ -67,6 +74,7 @@ export function DashboardSidebar() {
 	const agentId = params.agentId;
 	const { agents, isLoading: agentsLoading } = useOrgAgents();
 	const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
+	const { invitations, accept, decline, busyToken } = useMyInvitations();
 
 	// Conversations paused for a human (handoff requested or taken over).
 	// Polled so the badge is useful from any page, not just the inbox.
@@ -89,18 +97,33 @@ export function DashboardSidebar() {
 									size="lg"
 									className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 								>
-									<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-accent-blue text-accent-blue-foreground">
+									<div className="relative flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg bg-accent-blue text-accent-blue-foreground">
 										<span className="text-sm font-semibold">
 											{currentOrg?.name.charAt(0).toUpperCase() ?? "L"}
 										</span>
+										{invitations.length > 0 && (
+											<span className="absolute -right-1 -top-1 size-2.5 rounded-full bg-destructive ring-2 ring-sidebar">
+												<span className="sr-only">
+													{invitations.length} pending invitation
+													{invitations.length === 1 ? "" : "s"}
+												</span>
+											</span>
+										)}
 									</div>
 									<div className="grid flex-1 text-left text-sm leading-tight">
 										<span className="truncate font-semibold">
 											{currentOrg?.name ?? "Leadly"}
 										</span>
-										<span className="truncate text-xs text-muted-foreground">
-											{orgs.length} org{orgs.length === 1 ? "" : "s"}
-										</span>
+										{invitations.length > 0 ? (
+											<span className="truncate text-xs font-medium text-accent-blue">
+												{invitations.length} invitation
+												{invitations.length === 1 ? "" : "s"}
+											</span>
+										) : (
+											<span className="truncate text-xs text-muted-foreground">
+												{orgs.length} workspace{orgs.length === 1 ? "" : "s"}
+											</span>
+										)}
 									</div>
 									<ChevronsUpDown className="ml-auto size-4" />
 								</SidebarMenuButton>
@@ -110,8 +133,25 @@ export function DashboardSidebar() {
 								align="start"
 								sideOffset={4}
 							>
+								{invitations.length > 0 && (
+									<>
+										<DropdownMenuLabel className="text-xs text-muted-foreground">
+											Invitations
+										</DropdownMenuLabel>
+										{invitations.map((inv) => (
+											<SwitcherInvitation
+												key={inv.token}
+												invitation={inv}
+												busy={busyToken === inv.token}
+												onAccept={() => accept.mutate(inv)}
+												onDecline={() => decline.mutate(inv)}
+											/>
+										))}
+										<DropdownMenuSeparator />
+									</>
+								)}
 								<DropdownMenuLabel className="text-xs text-muted-foreground">
-									Organizations
+									Workspaces
 								</DropdownMenuLabel>
 								{orgs.map((o) => (
 									<DropdownMenuItem
@@ -156,7 +196,11 @@ export function DashboardSidebar() {
 				<SidebarGroup>
 					<SidebarGroupContent>
 						<SidebarMenu>
-							<NavLink to={orgPath()} pathname={pathname} icon={LayoutDashboard}>
+							<NavLink
+								to={orgPath()}
+								pathname={pathname}
+								icon={LayoutDashboard}
+							>
 								Overview
 							</NavLink>
 							<NavLink
@@ -171,7 +215,11 @@ export function DashboardSidebar() {
 							<NavLink to={orgPath("/leads")} pathname={pathname} icon={Tags}>
 								Leads
 							</NavLink>
-							<NavLink to={orgPath("/visitors")} pathname={pathname} icon={Users}>
+							<NavLink
+								to={orgPath("/visitors")}
+								pathname={pathname}
+								icon={Users}
+							>
 								Visitors
 							</NavLink>
 							<NavLink
@@ -375,7 +423,11 @@ function AgentNavItem({
 	return (
 		<Collapsible asChild open={open} onOpenChange={setOpen}>
 			<SidebarMenuItem>
-				<SidebarMenuButton asChild isActive={pathname === base} tooltip={agent.name}>
+				<SidebarMenuButton
+					asChild
+					isActive={pathname === base}
+					tooltip={agent.name}
+				>
 					<Link to={base}>
 						<span
 							className="flex size-4 shrink-0 items-center justify-center rounded text-[10px] font-semibold text-white"
@@ -414,5 +466,56 @@ function AgentNavItem({
 				</CollapsibleContent>
 			</SidebarMenuItem>
 		</Collapsible>
+	);
+}
+
+// An invitation inside the workspace switcher. Not a menu item: it has its
+// own Accept / Decline buttons, and clicking the row shouldn't do anything.
+function SwitcherInvitation({
+	invitation,
+	busy,
+	onAccept,
+	onDecline,
+}: {
+	invitation: MyInvitation;
+	busy: boolean;
+	onAccept: () => void;
+	onDecline: () => void;
+}) {
+	return (
+		<div className="flex items-start gap-2 px-2 py-1.5">
+			<div className="flex size-6 shrink-0 items-center justify-center rounded-md border border-dashed border-accent-blue/60 text-accent-blue">
+				<span className="text-xs font-semibold">
+					{invitation.organization.name.charAt(0).toUpperCase()}
+				</span>
+			</div>
+			<div className="min-w-0 flex-1">
+				<div className="truncate text-sm font-medium">
+					{invitation.organization.name}
+				</div>
+				<div className="truncate text-xs text-muted-foreground">
+					{describeInvitation(invitation)}
+				</div>
+				<div className="mt-1.5 flex gap-1.5">
+					<Button
+						size="sm"
+						className="h-7 bg-accent-blue px-2.5 text-xs text-accent-blue-foreground hover:bg-accent-blue/90"
+						disabled={busy}
+						onClick={onAccept}
+					>
+						{busy ? <Loader2 className="size-3 animate-spin" /> : "Accept"}
+					</Button>
+					<Button
+						size="sm"
+						variant="ghost"
+						className="h-7 px-2.5 text-xs"
+						disabled={busy}
+						onClick={onDecline}
+					>
+						Decline
+					</Button>
+				</div>
+			</div>
+		</div>
 	);
 }

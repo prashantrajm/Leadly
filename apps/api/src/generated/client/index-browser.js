@@ -214,7 +214,8 @@ exports.Prisma.InvitationScalarFieldEnum = {
   createdAt: 'createdAt',
   expiresAt: 'expiresAt',
   acceptedAt: 'acceptedAt',
-  revokedAt: 'revokedAt'
+  revokedAt: 'revokedAt',
+  declinedAt: 'declinedAt'
 };
 
 exports.Prisma.AgentScalarFieldEnum = {

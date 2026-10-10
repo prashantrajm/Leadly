@@ -42,6 +42,7 @@ import type {
 	KbArticleListItem,
 	Lead,
 	MembershipWithUser,
+	MyInvitation,
 	Organization,
 	OrganizationWithMembers,
 	OrgLlmCredentialPublic,
@@ -179,10 +180,16 @@ export function createLeadlyClient(opts: ClientOptions) {
 					"POST",
 					`/api/invitations/${encodeURIComponent(token)}/accept`,
 				),
+			decline: (token: string) =>
+				request<{ success: true }>(
+					"POST",
+					`/api/invitations/${encodeURIComponent(token)}/decline`,
+				),
 		},
 
 		// ---------- account ----------
 		me: {
+			invitations: () => request<MyInvitation[]>("GET", "/api/me/invitations"),
 			deletionPreview: () =>
 				request<AccountDeletionPreview>("GET", "/api/me/deletion-preview"),
 			delete: () => request<{ success: true }>("DELETE", "/api/me"),

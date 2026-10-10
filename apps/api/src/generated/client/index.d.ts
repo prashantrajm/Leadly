@@ -11836,6 +11836,7 @@ export namespace Prisma {
     expiresAt: Date | null
     acceptedAt: Date | null
     revokedAt: Date | null
+    declinedAt: Date | null
   }
 
   export type InvitationMaxAggregateOutputType = {
@@ -11849,6 +11850,7 @@ export namespace Prisma {
     expiresAt: Date | null
     acceptedAt: Date | null
     revokedAt: Date | null
+    declinedAt: Date | null
   }
 
   export type InvitationCountAggregateOutputType = {
@@ -11862,6 +11864,7 @@ export namespace Prisma {
     expiresAt: number
     acceptedAt: number
     revokedAt: number
+    declinedAt: number
     _all: number
   }
 
@@ -11877,6 +11880,7 @@ export namespace Prisma {
     expiresAt?: true
     acceptedAt?: true
     revokedAt?: true
+    declinedAt?: true
   }
 
   export type InvitationMaxAggregateInputType = {
@@ -11890,6 +11894,7 @@ export namespace Prisma {
     expiresAt?: true
     acceptedAt?: true
     revokedAt?: true
+    declinedAt?: true
   }
 
   export type InvitationCountAggregateInputType = {
@@ -11903,6 +11908,7 @@ export namespace Prisma {
     expiresAt?: true
     acceptedAt?: true
     revokedAt?: true
+    declinedAt?: true
     _all?: true
   }
 
@@ -11989,6 +11995,7 @@ export namespace Prisma {
     expiresAt: Date
     acceptedAt: Date | null
     revokedAt: Date | null
+    declinedAt: Date | null
     _count: InvitationCountAggregateOutputType | null
     _min: InvitationMinAggregateOutputType | null
     _max: InvitationMaxAggregateOutputType | null
@@ -12019,6 +12026,7 @@ export namespace Prisma {
     expiresAt?: boolean
     acceptedAt?: boolean
     revokedAt?: boolean
+    declinedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     invitedBy?: boolean | Invitation$invitedByArgs<ExtArgs>
   }, ExtArgs["result"]["invitation"]>
@@ -12034,6 +12042,7 @@ export namespace Prisma {
     expiresAt?: boolean
     acceptedAt?: boolean
     revokedAt?: boolean
+    declinedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     invitedBy?: boolean | Invitation$invitedByArgs<ExtArgs>
   }, ExtArgs["result"]["invitation"]>
@@ -12049,6 +12058,7 @@ export namespace Prisma {
     expiresAt?: boolean
     acceptedAt?: boolean
     revokedAt?: boolean
+    declinedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     invitedBy?: boolean | Invitation$invitedByArgs<ExtArgs>
   }, ExtArgs["result"]["invitation"]>
@@ -12064,9 +12074,10 @@ export namespace Prisma {
     expiresAt?: boolean
     acceptedAt?: boolean
     revokedAt?: boolean
+    declinedAt?: boolean
   }
 
-  export type InvitationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "email" | "role" | "token" | "invitedById" | "createdAt" | "expiresAt" | "acceptedAt" | "revokedAt", ExtArgs["result"]["invitation"]>
+  export type InvitationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "email" | "role" | "token" | "invitedById" | "createdAt" | "expiresAt" | "acceptedAt" | "revokedAt" | "declinedAt", ExtArgs["result"]["invitation"]>
   export type InvitationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     invitedBy?: boolean | Invitation$invitedByArgs<ExtArgs>
@@ -12097,6 +12108,7 @@ export namespace Prisma {
       expiresAt: Date
       acceptedAt: Date | null
       revokedAt: Date | null
+      declinedAt: Date | null
     }, ExtArgs["result"]["invitation"]>
     composites: {}
   }
@@ -12532,6 +12544,7 @@ export namespace Prisma {
     readonly expiresAt: FieldRef<"Invitation", 'DateTime'>
     readonly acceptedAt: FieldRef<"Invitation", 'DateTime'>
     readonly revokedAt: FieldRef<"Invitation", 'DateTime'>
+    readonly declinedAt: FieldRef<"Invitation", 'DateTime'>
   }
     
 
@@ -23690,7 +23703,8 @@ export namespace Prisma {
     createdAt: 'createdAt',
     expiresAt: 'expiresAt',
     acceptedAt: 'acceptedAt',
-    revokedAt: 'revokedAt'
+    revokedAt: 'revokedAt',
+    declinedAt: 'declinedAt'
   };
 
   export type InvitationScalarFieldEnum = (typeof InvitationScalarFieldEnum)[keyof typeof InvitationScalarFieldEnum]
@@ -24687,6 +24701,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFilter<"Invitation"> | Date | string
     acceptedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
     revokedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    declinedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
     invitedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }
@@ -24702,6 +24717,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     acceptedAt?: SortOrderInput | SortOrder
     revokedAt?: SortOrderInput | SortOrder
+    declinedAt?: SortOrderInput | SortOrder
     organization?: OrganizationOrderByWithRelationInput
     invitedBy?: UserOrderByWithRelationInput
   }
@@ -24720,6 +24736,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFilter<"Invitation"> | Date | string
     acceptedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
     revokedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    declinedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
     invitedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }, "id" | "token">
@@ -24735,6 +24752,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     acceptedAt?: SortOrderInput | SortOrder
     revokedAt?: SortOrderInput | SortOrder
+    declinedAt?: SortOrderInput | SortOrder
     _count?: InvitationCountOrderByAggregateInput
     _max?: InvitationMaxOrderByAggregateInput
     _min?: InvitationMinOrderByAggregateInput
@@ -24754,6 +24772,7 @@ export namespace Prisma {
     expiresAt?: DateTimeWithAggregatesFilter<"Invitation"> | Date | string
     acceptedAt?: DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
     revokedAt?: DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
+    declinedAt?: DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
   }
 
   export type AgentWhereInput = {
@@ -26204,6 +26223,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
     organization: OrganizationCreateNestedOneWithoutInvitationsInput
     invitedBy?: UserCreateNestedOneWithoutInvitationsSentInput
   }
@@ -26219,6 +26239,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
   }
 
   export type InvitationUpdateInput = {
@@ -26230,6 +26251,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     organization?: OrganizationUpdateOneRequiredWithoutInvitationsNestedInput
     invitedBy?: UserUpdateOneWithoutInvitationsSentNestedInput
   }
@@ -26245,6 +26267,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type InvitationCreateManyInput = {
@@ -26258,6 +26281,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
   }
 
   export type InvitationUpdateManyMutationInput = {
@@ -26269,6 +26293,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type InvitationUncheckedUpdateManyInput = {
@@ -26282,6 +26307,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type AgentCreateInput = {
@@ -27700,6 +27726,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     acceptedAt?: SortOrder
     revokedAt?: SortOrder
+    declinedAt?: SortOrder
   }
 
   export type InvitationMaxOrderByAggregateInput = {
@@ -27713,6 +27740,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     acceptedAt?: SortOrder
     revokedAt?: SortOrder
+    declinedAt?: SortOrder
   }
 
   export type InvitationMinOrderByAggregateInput = {
@@ -27726,6 +27754,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     acceptedAt?: SortOrder
     revokedAt?: SortOrder
+    declinedAt?: SortOrder
   }
 
   export type EnumAgentIdentityPolicyFilter<$PrismaModel = never> = {
@@ -30337,6 +30366,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
     organization: OrganizationCreateNestedOneWithoutInvitationsInput
   }
 
@@ -30350,6 +30380,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
   }
 
   export type InvitationCreateOrConnectWithoutInvitedByInput = {
@@ -30484,6 +30515,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFilter<"Invitation"> | Date | string
     acceptedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
     revokedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
+    declinedAt?: DateTimeNullableFilter<"Invitation"> | Date | string | null
   }
 
   export type UserCreateWithoutSessionsInput = {
@@ -30951,6 +30983,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
     invitedBy?: UserCreateNestedOneWithoutInvitationsSentInput
   }
 
@@ -30964,6 +30997,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
   }
 
   export type InvitationCreateOrConnectWithoutOrganizationInput = {
@@ -33204,6 +33238,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
   }
 
   export type SessionUpdateWithoutUserInput = {
@@ -33311,6 +33346,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     organization?: OrganizationUpdateOneRequiredWithoutInvitationsNestedInput
   }
 
@@ -33324,6 +33360,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type InvitationUncheckedUpdateManyWithoutInvitedByInput = {
@@ -33336,6 +33373,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type AgentLlmOverrideCreateManyCredentialInput = {
@@ -33379,6 +33417,7 @@ export namespace Prisma {
     expiresAt: Date | string
     acceptedAt?: Date | string | null
     revokedAt?: Date | string | null
+    declinedAt?: Date | string | null
   }
 
   export type AgentCreateManyOrganizationInput = {
@@ -33440,6 +33479,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitedBy?: UserUpdateOneWithoutInvitationsSentNestedInput
   }
 
@@ -33453,6 +33493,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type InvitationUncheckedUpdateManyWithoutOrganizationInput = {
@@ -33465,6 +33506,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     acceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type AgentUpdateWithoutOrganizationInput = {

@@ -138,6 +138,11 @@ export const CreateInvitationSchema = z
 	.openapi("CreateInvitation");
 export type CreateInvitation = z.infer<typeof CreateInvitationSchema>;
 
+export const InvitationStatus = z
+	.enum(["pending", "accepted", "declined", "revoked", "expired"])
+	.openapi("InvitationStatus");
+export type InvitationStatus = z.infer<typeof InvitationStatus>;
+
 export const InvitationSchema = z
 	.object({
 		id: Cuid,
@@ -148,14 +153,12 @@ export const InvitationSchema = z
 		createdAt: IsoDate,
 		expiresAt: IsoDate,
 		invitedBy: z.object({ name: z.string(), email: z.string() }).nullable(),
+		// "pending" or "declined" in the admin list.
+		status: InvitationStatus,
 	})
 	.openapi("Invitation");
 export type Invitation = z.infer<typeof InvitationSchema>;
 
-export const InvitationStatus = z
-	.enum(["pending", "accepted", "revoked", "expired"])
-	.openapi("InvitationStatus");
-export type InvitationStatus = z.infer<typeof InvitationStatus>;
 
 // What the invite page shows before accepting.
 export const InvitationPreviewSchema = z
@@ -171,6 +174,21 @@ export const InvitationPreviewSchema = z
 	})
 	.openapi("InvitationPreview");
 export type InvitationPreview = z.infer<typeof InvitationPreviewSchema>;
+
+// A pending invitation addressed to the signed-in user, shown in the app
+// (workspace switcher, banner, first-workspace setup). Only returned when
+// the user's email is verified — otherwise anyone could register an
+// address and see its invites. `token` is what accept/decline take.
+export const MyInvitationSchema = z
+	.object({
+		token: z.string(),
+		organization: z.object({ name: z.string(), slug: z.string() }),
+		role: MembershipRole,
+		invitedByName: z.string().nullable(),
+		expiresAt: IsoDate,
+	})
+	.openapi("MyInvitation");
+export type MyInvitation = z.infer<typeof MyInvitationSchema>;
 
 // ---------- Account deletion ----------
 

@@ -6,6 +6,7 @@ import {
 	redirect,
 } from "@tanstack/react-router";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { InvitationsBanner } from "@/components/dashboard/invitations-banner";
 import { PageTitle } from "@/components/dashboard/page-title";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ function DashboardLayout() {
 						<ModeToggle />
 					</div>
 				</header>
+				<InvitationsBanner />
 				<main className="flex-1 px-4 py-6 md:px-6 md:py-8">
 					<Outlet />
 				</main>
