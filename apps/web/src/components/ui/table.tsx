@@ -2,7 +2,14 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+function Table({
+	className,
+	flush = false,
+	...props
+}: React.ComponentProps<"table"> & {
+	// Edge-to-edge in a page: outer cells pick up the page gutter.
+	flush?: boolean;
+}) {
 	return (
 		<div
 			data-slot="table-container"
@@ -10,7 +17,13 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
 		>
 			<table
 				data-slot="table"
-				className={cn("w-full caption-bottom text-sm", className)}
+				data-flush={flush || undefined}
+				className={cn(
+					"w-full caption-bottom text-sm",
+					flush &&
+						"[&_tr>*:first-child]:pl-4 md:[&_tr>*:first-child]:pl-6 [&_tr>*:last-child]:pr-4 md:[&_tr>*:last-child]:pr-6",
+					className,
+				)}
 				{...props}
 			/>
 		</div>

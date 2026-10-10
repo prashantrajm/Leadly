@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { IconComponent } from "@/components/icons";
 
 export interface NavItem {
 	title: string;
@@ -19,7 +19,7 @@ export interface FooterSection {
 }
 
 export interface SocialLink {
-	icon: LucideIcon;
+	icon: IconComponent;
 	href: string;
 	label: string;
 }
@@ -30,21 +30,21 @@ export interface PaymentMethod {
 }
 
 export interface HowItWorksStep {
-	icon: LucideIcon;
+	icon: IconComponent;
 	title: string;
 	description: string;
 }
 
 export interface Category {
 	name: string;
-	icon: LucideIcon;
+	icon: IconComponent;
 	href: string;
 	color: string;
 	count: string;
 }
 
 export interface Stat {
-	icon: LucideIcon;
+	icon: IconComponent;
 	label: string;
 	value: string;
 }

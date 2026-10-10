@@ -2,17 +2,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { UpdateAgentSchema, type UpdateAgent } from "@leadly/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2, Save } from "lucide-react";
+import { SaveIcon, SpinnerIcon } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import {
 	Form,
 	FormControl,
@@ -24,6 +17,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Page,
+	PageContent,
+	PageSection,
+	PageSectionContent,
+	PageSectionDescription,
+	PageSectionHeader,
+	PageSectionTitle,
+	PageToolbar,
+} from "@/components/ui/page";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
 	Select,
@@ -53,23 +56,26 @@ function AgentSettingsPage() {
 
 	if (q.isLoading) {
 		return (
-			<div className="mx-auto max-w-3xl">
-				<Skeleton className="h-10 w-48 rounded-md" />
-				<Skeleton className="mt-6 h-96 rounded-xl" />
-			</div>
+			<Page>
+				<PageContent width="narrow">
+					<Skeleton className="h-96 rounded-xl" />
+				</PageContent>
+			</Page>
 		);
 	}
 
 	if (q.isError || !q.data) {
 		const err = q.error;
 		return (
-			<div className="mx-auto max-w-3xl">
-				<div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-					{err instanceof LeadlyApiError
-						? `API ${err.status}: ${err.message}`
-						: "Could not load agent."}
-				</div>
-			</div>
+			<Page>
+				<PageContent width="narrow">
+					<p className="text-sm text-destructive">
+						{err instanceof LeadlyApiError
+							? `API ${err.status}: ${err.message}`
+							: "Could not load agent."}
+					</p>
+				</PageContent>
+			</Page>
 		);
 	}
 
@@ -84,32 +90,36 @@ function AgentSettingsBody({
 	agentId: string;
 }) {
 	return (
-		<div className="mx-auto max-w-3xl">
-			<Tabs defaultValue="general">
-				<TabsList>
-					<TabsTrigger value="general">General</TabsTrigger>
-					<TabsTrigger value="persona">Persona</TabsTrigger>
-					<TabsTrigger value="model">Model</TabsTrigger>
-					<TabsTrigger value="identity">Identity</TabsTrigger>
-				</TabsList>
+		<Page>
+			<Tabs defaultValue="general" className="flex-1 gap-0">
+				<PageToolbar>
+					<TabsList>
+						<TabsTrigger value="general">General</TabsTrigger>
+						<TabsTrigger value="persona">Persona</TabsTrigger>
+						<TabsTrigger value="model">Model</TabsTrigger>
+						<TabsTrigger value="identity">Identity</TabsTrigger>
+					</TabsList>
+				</PageToolbar>
 
-				<TabsContent value="general" className="mt-6">
+				<PageContent width="narrow">
+				<TabsContent value="general">
 					<GeneralTab agent={agent} agentId={agentId} />
 				</TabsContent>
 
-				<TabsContent value="persona" className="mt-6">
+				<TabsContent value="persona">
 					<PersonaTab agent={agent} agentId={agentId} />
 				</TabsContent>
 
-				<TabsContent value="model" className="mt-6">
+				<TabsContent value="model">
 					<ModelTab agent={agent} agentId={agentId} />
 				</TabsContent>
 
-				<TabsContent value="identity" className="mt-6">
+				<TabsContent value="identity">
 					<IdentityTab agent={agent} agentId={agentId} />
 				</TabsContent>
+				</PageContent>
 			</Tabs>
-		</div>
+		</Page>
 	);
 }
 
@@ -154,14 +164,14 @@ function GeneralTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 	const dirty = form.formState.isDirty;
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">General</CardTitle>
-				<CardDescription>
+		<PageSection>
+			<PageSectionHeader>
+				<PageSectionTitle>General</PageSectionTitle>
+				<PageSectionDescription>
 					What visitors see, how the widget looks, and the agent's URL slug.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
+				</PageSectionDescription>
+			</PageSectionHeader>
+			<PageSectionContent>
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
@@ -294,33 +304,22 @@ function GeneralTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 						/>
 
 						{mutation.isError && (
-							<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+							<p className="text-sm text-destructive">
 								{mutation.error instanceof LeadlyApiError
 									? `API ${mutation.error.status}: ${mutation.error.bodyText.slice(0, 200) || mutation.error.message}`
 									: mutation.error instanceof Error
 										? mutation.error.message
 										: "Save failed."}
-							</div>
+							</p>
 						)}
 
-						<div className="flex justify-end border-t border-border/60 pt-5">
-							<Button
-								type="submit"
-								disabled={!dirty || mutation.isPending}
-								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-							>
-								{mutation.isPending ? (
-									<Loader2 className="mr-2 size-4 animate-spin" />
-								) : (
-									<Save className="mr-2 size-4" />
-								)}
-								Save changes
-							</Button>
+						<div className="flex justify-end">
+							<SaveButton pending={mutation.isPending} disabled={!dirty} />
 						</div>
 					</form>
 				</Form>
-			</CardContent>
-		</Card>
+			</PageSectionContent>
+		</PageSection>
 	);
 }
 
@@ -355,14 +354,14 @@ function PersonaTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 	});
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">Persona</CardTitle>
-				<CardDescription>
+		<PageSection>
+			<PageSectionHeader>
+				<PageSectionTitle>Persona</PageSectionTitle>
+				<PageSectionDescription>
 					What the agent sounds like and how long it'll keep talking.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
+				</PageSectionDescription>
+			</PageSectionHeader>
+			<PageSectionContent>
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
@@ -424,7 +423,7 @@ function PersonaTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 
 						{mutation.isError && <ErrorRow err={mutation.error} />}
 
-						<div className="flex justify-end border-t border-border/60 pt-5">
+						<div className="flex justify-end">
 							<SaveButton
 								pending={mutation.isPending}
 								disabled={!form.formState.isDirty}
@@ -432,8 +431,8 @@ function PersonaTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 						</div>
 					</form>
 				</Form>
-			</CardContent>
-		</Card>
+			</PageSectionContent>
+		</PageSection>
 	);
 }
 
@@ -506,15 +505,15 @@ function ModelTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 	});
 
 	return (
-		<div className="space-y-6">
-			<Card>
-				<CardHeader>
-					<CardTitle className="text-base">Default model</CardTitle>
-					<CardDescription>
+		<>
+			<PageSection>
+				<PageSectionHeader>
+					<PageSectionTitle>Default model</PageSectionTitle>
+					<PageSectionDescription>
 						Provider + model id used for every turn unless overridden below.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
+					</PageSectionDescription>
+				</PageSectionHeader>
+				<PageSectionContent>
 					<Form {...form}>
 						<form
 							onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
@@ -573,7 +572,7 @@ function ModelTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 
 							{mutation.isError && <ErrorRow err={mutation.error} />}
 
-							<div className="flex justify-end border-t border-border/60 pt-5">
+							<div className="flex justify-end">
 								<SaveButton
 									pending={mutation.isPending}
 									disabled={!form.formState.isDirty}
@@ -581,13 +580,13 @@ function ModelTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 							</div>
 						</form>
 					</Form>
-				</CardContent>
-			</Card>
+				</PageSectionContent>
+			</PageSection>
 
-			<Card>
-				<CardHeader>
-					<CardTitle className="text-base">BYOK override</CardTitle>
-					<CardDescription>
+			<PageSection>
+				<PageSectionHeader>
+					<PageSectionTitle>BYOK override</PageSectionTitle>
+					<PageSectionDescription>
 						Run this agent on a specific bring-your-own-key credential
 						instead of the org default. Add credentials in{" "}
 						<Link
@@ -597,9 +596,9 @@ function ModelTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 							Org settings → API keys
 						</Link>
 						.
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
+					</PageSectionDescription>
+				</PageSectionHeader>
+				<PageSectionContent>
 					{credentialsQuery.isLoading ? (
 						<Skeleton className="h-10 w-full max-w-sm rounded-md" />
 					) : !credentialsQuery.data ||
@@ -642,33 +641,35 @@ function ModelTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 
 							<div className="flex flex-wrap gap-2">
 								<Button
+									variant="accent"
 									onClick={() => setOverrideMutation.mutate()}
+									size="sm"
 									disabled={
 										!selectedCredentialId || setOverrideMutation.isPending
 									}
-									className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 								>
 									{setOverrideMutation.isPending && (
-										<Loader2 className="mr-2 size-4 animate-spin" />
+										<SpinnerIcon className="mr-2 size-4 animate-spin" />
 									)}
 									Set override
 								</Button>
 								<Button
 									variant="outline"
+									size="sm"
 									onClick={() => clearOverrideMutation.mutate()}
 									disabled={clearOverrideMutation.isPending}
 								>
 									{clearOverrideMutation.isPending && (
-										<Loader2 className="mr-2 size-4 animate-spin" />
+										<SpinnerIcon className="mr-2 size-4 animate-spin" />
 									)}
 									Clear override
 								</Button>
 							</div>
 						</>
 					)}
-				</CardContent>
-			</Card>
-		</div>
+				</PageSectionContent>
+			</PageSection>
+		</>
 	);
 }
 
@@ -720,14 +721,14 @@ function IdentityTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 	});
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">Identity policy</CardTitle>
-				<CardDescription>
+		<PageSection>
+			<PageSectionHeader>
+				<PageSectionTitle>Identity policy</PageSectionTitle>
+				<PageSectionDescription>
 					When the widget asks visitors to identify themselves.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
+				</PageSectionDescription>
+			</PageSectionHeader>
+			<PageSectionContent>
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
@@ -742,13 +743,13 @@ function IdentityTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 										<RadioGroup
 											value={field.value ?? agent.identityPolicy}
 											onValueChange={field.onChange}
-											className="space-y-2"
+											className="gap-1"
 										>
 											{IDENTITY_OPTIONS.map((opt) => (
 												<label
 													key={opt.value}
 													htmlFor={`policy-${opt.value}`}
-													className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:border-accent-blue/30"
+													className="-mx-3 flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/60 has-[[data-state=checked]]:bg-accent"
 												>
 													<RadioGroupItem
 														value={opt.value}
@@ -774,7 +775,7 @@ function IdentityTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 
 						{mutation.isError && <ErrorRow err={mutation.error} />}
 
-						<div className="flex justify-end border-t border-border/60 pt-5">
+						<div className="flex justify-end">
 							<SaveButton
 								pending={mutation.isPending}
 								disabled={!form.formState.isDirty}
@@ -782,8 +783,8 @@ function IdentityTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 						</div>
 					</form>
 				</Form>
-			</CardContent>
-		</Card>
+			</PageSectionContent>
+		</PageSection>
 	);
 }
 
@@ -800,15 +801,12 @@ function SaveButton({
 }) {
 	return (
 		<Button
+			variant="accent"
 			type="submit"
+			size="sm"
 			disabled={disabled || pending}
-			className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 		>
-			{pending ? (
-				<Loader2 className="mr-2 size-4 animate-spin" />
-			) : (
-				<Save className="mr-2 size-4" />
-			)}
+			{pending ? <SpinnerIcon className="animate-spin" /> : <SaveIcon />}
 			Save changes
 		</Button>
 	);
@@ -816,12 +814,12 @@ function SaveButton({
 
 function ErrorRow({ err }: { err: unknown }) {
 	return (
-		<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+		<p className="text-sm text-destructive">
 			{err instanceof LeadlyApiError
 				? `API ${err.status}: ${err.bodyText.slice(0, 200) || err.message}`
 				: err instanceof Error
 					? err.message
 					: "Save failed."}
-		</div>
+		</p>
 	);
 }

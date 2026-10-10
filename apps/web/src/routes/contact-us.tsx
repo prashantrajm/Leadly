@@ -1,6 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Github, Linkedin, Loader2, Mail, MessageSquare, Twitter } from "lucide-react";
+import {
+	ArrowRightIcon,
+	GithubIcon,
+	LinkedinIcon,
+	MailIcon,
+	MessageIcon,
+	SpinnerIcon,
+	TwitterIcon,
+} from "@/components/icons";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -56,31 +64,31 @@ const CHANNELS: {
 	href: string;
 }[] = [
 	{
-		icon: Mail,
+		icon: MailIcon,
 		label: "Email",
 		handle: CONTACT_EMAIL,
 		href: `mailto:${CONTACT_EMAIL}`,
 	},
 	{
-		icon: Github,
+		icon: GithubIcon,
 		label: "GitHub",
 		handle: "prashantrajm/Leadly",
 		href: "https://github.com/prashantrajm/Leadly",
 	},
 	{
-		icon: Twitter,
+		icon: TwitterIcon,
 		label: "X / Twitter",
 		handle: "@leadlyhq",
 		href: "https://twitter.com",
 	},
 	{
-		icon: Linkedin,
+		icon: LinkedinIcon,
 		label: "LinkedIn",
 		handle: "Leadly",
 		href: "https://linkedin.com",
 	},
 	{
-		icon: MessageSquare,
+		icon: MessageIcon,
 		label: "Discord",
 		handle: "Community server",
 		href: "#",
@@ -312,14 +320,14 @@ function ContactForm() {
 							We'll only use this to reply. No newsletters, no funnels.
 						</p>
 						<Button
+							variant="accent"
 							type="submit"
 							size="lg"
 							disabled={submitting}
-							className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 						>
-							{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+							{submitting && <SpinnerIcon className="mr-2 h-4 w-4 animate-spin" />}
 							Send message
-							<ArrowRight className="ml-2 h-4 w-4" />
+							<ArrowRightIcon className="ml-2 h-4 w-4" />
 						</Button>
 					</div>
 				</form>
@@ -355,7 +363,7 @@ function ChannelsSidebar() {
 										{c.handle}
 									</div>
 								</div>
-								<ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-accent-blue" />
+								<ArrowRightIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-accent-blue" />
 							</a>
 						</li>
 					))}

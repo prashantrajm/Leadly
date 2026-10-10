@@ -1,15 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
 import { DeleteAccountCard } from "@/components/dashboard/delete-account-card";
+import { LogOutIcon } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+	Page,
+	PageContent,
+	PageSection,
+	PageSectionDescription,
+	PageSectionHeader,
+	PageSectionTitle,
+} from "@/components/ui/page";
+import {
+	SettingsCard,
+	SettingsRow,
+	SettingsRowControl,
+	SettingsRowDescription,
+	SettingsRowLabel,
+	SettingsRowTitle,
+} from "@/components/ui/settings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient, useSession } from "@/lib/auth-client";
 
@@ -19,79 +28,92 @@ export const Route = createFileRoute("/$orgSlug/settings/profile")({
 
 function ProfilePage() {
 	const { data: session, isPending } = useSession();
+	const user = session?.user;
 
 	return (
-		<div className="mx-auto max-w-3xl">
-			<Card>
-				<CardHeader>
-					<CardTitle className="text-base">Account</CardTitle>
-					<CardDescription>
-						Profile editing lands later — for now this is read-only. You can
-						change your name through your social sign-in provider.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
+		<Page>
+			<PageContent width="narrow">
+				<PageSection variant="grouped">
+					<PageSectionHeader>
+						<PageSectionTitle>Account</PageSectionTitle>
+						<PageSectionDescription>
+							Profile editing lands later — for now this is read-only. You can
+							change your name through your social sign-in provider.
+						</PageSectionDescription>
+					</PageSectionHeader>
 					{isPending ? (
-						<div className="flex items-center gap-4">
-							<Skeleton className="size-12 rounded-full" />
-							<div className="flex-1 space-y-2">
-								<Skeleton className="h-4 w-40" />
-								<Skeleton className="h-3 w-56" />
-							</div>
-						</div>
-					) : session?.user ? (
-						<div className="flex items-center gap-4">
-							<Avatar className="size-12">
-								<AvatarImage
-									src={session.user.image ?? undefined}
-									alt={session.user.name ?? ""}
-								/>
-								<AvatarFallback>
-									{session.user.name?.charAt(0) ?? "?"}
-								</AvatarFallback>
-							</Avatar>
-							<div className="min-w-0 flex-1">
-								<div className="truncate text-base font-semibold tracking-tight">
-									{session.user.name}
-								</div>
-								<div className="truncate text-sm text-muted-foreground">
-									{session.user.email}
-								</div>
-							</div>
-						</div>
+						<Skeleton className="h-48 rounded-xl" />
+					) : user ? (
+						<SettingsCard>
+							<SettingsRow className="flex-row items-center">
+								<SettingsRowLabel>
+									<SettingsRowTitle>Profile picture</SettingsRowTitle>
+									<SettingsRowDescription>
+										From your sign-in provider.
+									</SettingsRowDescription>
+								</SettingsRowLabel>
+								<Avatar className="size-10">
+									<AvatarImage
+										src={user.image ?? undefined}
+										alt={user.name ?? ""}
+									/>
+									<AvatarFallback>{user.name?.charAt(0) ?? "?"}</AvatarFallback>
+								</Avatar>
+							</SettingsRow>
+							<SettingsRow>
+								<SettingsRowLabel>
+									<SettingsRowTitle>Name</SettingsRowTitle>
+								</SettingsRowLabel>
+								<SettingsRowControl className="min-w-0 text-sm text-muted-foreground">
+									<span className="truncate">{user.name}</span>
+								</SettingsRowControl>
+							</SettingsRow>
+							<SettingsRow>
+								<SettingsRowLabel>
+									<SettingsRowTitle>Email</SettingsRowTitle>
+								</SettingsRowLabel>
+								<SettingsRowControl className="min-w-0 text-sm text-muted-foreground">
+									<span className="truncate">{user.email}</span>
+								</SettingsRowControl>
+							</SettingsRow>
+						</SettingsCard>
 					) : (
 						<p className="text-sm text-muted-foreground">No session.</p>
 					)}
-				</CardContent>
-			</Card>
+				</PageSection>
 
-			<Card className="mt-6">
-				<CardHeader>
-					<CardTitle className="text-base">Sign out</CardTitle>
-					<CardDescription>
-						Ends this session. You'll need to sign in again to access the
-						dashboard.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<Button
-						variant="outline"
-						onClick={async () => {
-							await authClient.signOut();
-							window.location.href = "/";
-						}}
-					>
-						<LogOut className="mr-2 size-4" />
-						Sign out
-					</Button>
-				</CardContent>
-			</Card>
+				<PageSection variant="grouped">
+					<PageSectionHeader>
+						<PageSectionTitle>Session</PageSectionTitle>
+					</PageSectionHeader>
+					<SettingsCard>
+						<SettingsRow>
+							<SettingsRowLabel>
+								<SettingsRowTitle>Sign out</SettingsRowTitle>
+								<SettingsRowDescription>
+									Ends this session. You'll need to sign in again to access the
+									dashboard.
+								</SettingsRowDescription>
+							</SettingsRowLabel>
+							<SettingsRowControl>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={async () => {
+										await authClient.signOut();
+										window.location.href = "/";
+									}}
+								>
+									<LogOutIcon />
+									Sign out
+								</Button>
+							</SettingsRowControl>
+						</SettingsRow>
+					</SettingsCard>
+				</PageSection>
 
-			{session?.user && (
-				<div className="mt-6">
-					<DeleteAccountCard email={session.user.email} />
-				</div>
-			)}
-		</div>
+				{user && <DeleteAccountCard email={user.email} />}
+			</PageContent>
+		</Page>
 	);
 }

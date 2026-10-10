@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { CheckIcon, CopyIcon } from "@/components/icons";
 import { motion } from "motion/react";
 import { useState } from "react";
 
@@ -58,12 +58,12 @@ export function InstallCard() {
 						>
 							{copied ? (
 								<>
-									<Check className="h-3.5 w-3.5" />
+									<CheckIcon className="h-3.5 w-3.5" />
 									Copied
 								</>
 							) : (
 								<>
-									<Copy className="h-3.5 w-3.5" />
+									<CopyIcon className="h-3.5 w-3.5" />
 									Copy
 								</>
 							)}

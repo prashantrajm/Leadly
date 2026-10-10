@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Download, Loader2, Mail, Phone, Search, Trash2 } from "lucide-react";
+import {
+	DownloadIcon,
+	MailIcon,
+	PhoneIcon,
+	SearchIcon,
+	SpinnerIcon,
+	TagsIcon,
+	TrashIcon,
+} from "@/components/icons";
 import { useEffect, useState } from "react";
 import {
 	AlertDialog,
@@ -19,9 +27,21 @@ import {
 } from "@/components/dashboard/agent-filter";
 import { NoAgentsState } from "@/components/dashboard/no-agents-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Page,
+	PageActions,
+	PageContent,
+	PageToolbar,
+} from "@/components/ui/page";
 import {
 	Sheet,
 	SheetContent,
@@ -103,125 +123,138 @@ function LeadsPage() {
 	}
 
 	return (
-		<div className="mx-auto max-w-6xl">
-			<div className="mb-5 flex flex-wrap items-center gap-2">
+		<Page>
+			<PageToolbar>
+				<div className="relative">
+					<SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+					<Input
+						placeholder="Search name, email, phone…"
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+						className="h-8 w-64 pl-8"
+					/>
+				</div>
 				<AgentFilter
 					agents={agents}
 					value={agentId}
 					onChange={(agent) => navigate({ search: { agent } })}
 				/>
-				<div className="relative">
-					<Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-					<Input
-						placeholder="Search name, email, phone…"
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-						className="w-64 pl-8"
-					/>
-				</div>
-				<Button
-					variant="outline"
-					onClick={exportCsv}
-					disabled={!q.data || q.data.length === 0}
-					className="ml-auto"
-				>
-					<Download className="mr-1 size-4" />
-					Export CSV
-				</Button>
-			</div>
+				<PageActions>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={exportCsv}
+						disabled={!q.data || q.data.length === 0}
+					>
+						<DownloadIcon />
+						Export CSV
+					</Button>
+				</PageActions>
+			</PageToolbar>
 
 			{agentsLoading || q.isLoading ? (
-				<Skeleton className="h-80 rounded-xl" />
+				<PageContent className="flex flex-col gap-2">
+					{[0, 1, 2, 3, 4].map((i) => (
+						<Skeleton key={i} className="h-10 rounded-lg" />
+					))}
+				</PageContent>
 			) : q.isError ? (
-				<div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-					{q.error instanceof LeadlyApiError
-						? `API ${q.error.status}: ${q.error.message}`
-						: "Could not load leads."}
-				</div>
+				<PageContent>
+					<p className="text-sm text-destructive">
+						{q.error instanceof LeadlyApiError
+							? `API ${q.error.status}: ${q.error.message}`
+							: "Could not load leads."}
+					</p>
+				</PageContent>
 			) : agents.length === 0 ? (
-				<NoAgentsState what="Leads" />
+				<PageContent>
+					<NoAgentsState what="Leads" />
+				</PageContent>
 			) : !q.data || q.data.length === 0 ? (
-				<EmptyState search={search} />
+				<PageContent>
+					<EmptyState search={search} />
+				</PageContent>
 			) : (
-				<Card>
-					<CardContent className="p-0">
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Name</TableHead>
-									<TableHead>Email</TableHead>
-									<TableHead>Phone</TableHead>
-									{showAgent && <TableHead>Agent</TableHead>}
-									<TableHead className="text-right">Captured</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{q.data.map((lead) => (
-									<TableRow
-										key={lead.id}
-										className="cursor-pointer"
-										onClick={() => setSelectedLead(lead)}
-									>
-										<TableCell className="font-medium">
-											{lead.name ?? (
-												<span className="text-muted-foreground">—</span>
-											)}
-										</TableCell>
-										<TableCell>
-											{lead.email ? (
-												<span className="inline-flex items-center gap-1.5 text-sm">
-													<Mail className="size-3.5 text-muted-foreground" />
-													{lead.email}
-												</span>
-											) : (
-												<span className="text-muted-foreground">—</span>
-											)}
-										</TableCell>
-										<TableCell>
-											{lead.phone ? (
-												<span className="inline-flex items-center gap-1.5 text-sm">
-													<Phone className="size-3.5 text-muted-foreground" />
-													{lead.phone}
-												</span>
-											) : (
-												<span className="text-muted-foreground">—</span>
-											)}
-										</TableCell>
-										{showAgent && (
-											<TableCell className="text-sm text-muted-foreground">
-												{agentsById.get(lead.agentId)?.name ?? "—"}
-											</TableCell>
+				<PageContent width="flush">
+					<Table flush>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Name</TableHead>
+								<TableHead>Email</TableHead>
+								<TableHead>Phone</TableHead>
+								{showAgent && <TableHead>Agent</TableHead>}
+								<TableHead className="text-right">Captured</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{q.data.map((lead) => (
+								<TableRow
+									key={lead.id}
+									className="cursor-pointer"
+									onClick={() => setSelectedLead(lead)}
+								>
+									<TableCell className="font-medium">
+										{lead.name ?? (
+											<span className="text-muted-foreground">—</span>
 										)}
-										<TableCell className="text-right font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-											{format(new Date(lead.createdAt), "MMM d")}
+									</TableCell>
+									<TableCell>
+										{lead.email ? (
+											<span className="inline-flex items-center gap-1.5 text-sm">
+												<MailIcon className="size-3.5 text-muted-foreground" />
+												{lead.email}
+											</span>
+										) : (
+											<span className="text-muted-foreground">—</span>
+										)}
+									</TableCell>
+									<TableCell>
+										{lead.phone ? (
+											<span className="inline-flex items-center gap-1.5 text-sm">
+												<PhoneIcon className="size-3.5 text-muted-foreground" />
+												{lead.phone}
+											</span>
+										) : (
+											<span className="text-muted-foreground">—</span>
+										)}
+									</TableCell>
+									{showAgent && (
+										<TableCell className="text-sm text-muted-foreground">
+											{agentsById.get(lead.agentId)?.name ?? "—"}
 										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</CardContent>
-				</Card>
+									)}
+									<TableCell className="text-right font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+										{format(new Date(lead.createdAt), "MMM d")}
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</PageContent>
 			)}
 
 			<LeadDrawer lead={selectedLead} onClose={() => setSelectedLead(null)} />
-		</div>
+		</Page>
 	);
 }
 
 function EmptyState({ search }: { search: string }) {
 	return (
-		<Card>
-			<CardContent className="py-14 text-center">
-				<h2 className="text-lg font-semibold tracking-tight">
-					{search ? "No leads match your search." : "No leads yet."}
-				</h2>
-				<p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+		<Empty>
+			<EmptyHeader>
+				<EmptyMedia variant="icon">
+					{search ? <SearchIcon /> : <TagsIcon />}
+				</EmptyMedia>
+				<EmptyTitle>
+					{search ? "No leads match your search" : "No leads yet"}
+				</EmptyTitle>
+				<EmptyDescription>
 					{search
 						? "Try a shorter query, or clear the search to see everyone."
 						: "When the agent captures contact info during a conversation, it lands here."}
-				</p>
-			</CardContent>
-		</Card>
+				</EmptyDescription>
+			</EmptyHeader>
+		</Empty>
 	);
 }
 
@@ -318,7 +351,7 @@ function LeadDrawer({
 								placeholder="—"
 							/>
 						</div>
-						<div className="rounded-md border border-border bg-secondary/20 p-3 text-xs">
+						<div className="rounded-lg bg-muted p-3 text-xs">
 							<div className="font-mono uppercase tracking-[0.15em] text-muted-foreground">
 								Captured
 							</div>
@@ -328,7 +361,7 @@ function LeadDrawer({
 						</div>
 
 						{(saveMutation.isError || deleteMutation.isError) && (
-							<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+							<p className="text-sm text-destructive">
 								{(() => {
 									const err = saveMutation.error ?? deleteMutation.error;
 									if (err instanceof LeadlyApiError)
@@ -336,7 +369,7 @@ function LeadDrawer({
 									if (err instanceof Error) return err.message;
 									return "Action failed.";
 								})()}
-							</div>
+							</p>
 						)}
 					</div>
 				)}
@@ -347,16 +380,16 @@ function LeadDrawer({
 						onClick={() => setConfirmDelete(true)}
 						className="text-destructive hover:bg-destructive/10 hover:text-destructive"
 					>
-						<Trash2 className="mr-1 size-4" />
+						<TrashIcon className="mr-1 size-4" />
 						Delete
 					</Button>
 					<Button
+						variant="accent"
 						onClick={() => saveMutation.mutate()}
 						disabled={saveMutation.isPending}
-						className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 					>
 						{saveMutation.isPending && (
-							<Loader2 className="mr-2 size-4 animate-spin" />
+							<SpinnerIcon className="mr-2 size-4 animate-spin" />
 						)}
 						Save
 					</Button>
@@ -385,7 +418,7 @@ function LeadDrawer({
 							className="bg-destructive text-white hover:bg-destructive/90"
 						>
 							{deleteMutation.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
+								<SpinnerIcon className="mr-2 size-4 animate-spin" />
 							)}
 							Delete
 						</AlertDialogAction>

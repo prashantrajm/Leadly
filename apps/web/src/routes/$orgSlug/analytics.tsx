@@ -1,7 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Inbox, MessageSquare, TrendingUp, UserPlus } from "lucide-react";
+import {
+	InboxIcon,
+	MessageIcon,
+	TrendingUpIcon,
+	UserPlusIcon,
+} from "@/components/icons";
 import { useState } from "react";
 import {
 	CartesianGrid,
@@ -15,22 +20,27 @@ import {
 	validateAgentSearch,
 } from "@/components/dashboard/agent-filter";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
 	type ChartConfig,
 } from "@/components/ui/chart";
+import {
+	Page,
+	PageActions,
+	PageContent,
+	PageSection,
+	PageSectionDescription,
+	PageSectionHeader,
+	PageSectionTitle,
+	PageToolbar,
+} from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOrgAgents } from "@/hooks/use-org-agents";
 import { api, LeadlyApiError } from "@/lib/api";
+import { Kpi } from "@/components/dashboard/kpi";
+import { StatGroup } from "@/components/ui/stat";
 
 type WindowDays = 7 | 14 | 30;
 
@@ -75,13 +85,8 @@ function AnalyticsPage() {
 	});
 
 	return (
-		<div className="mx-auto max-w-6xl">
-			<div className="mb-5 flex flex-wrap items-center gap-3">
-				<AgentFilter
-					agents={agents}
-					value={agentId}
-					onChange={(agent) => navigate({ search: { agent } })}
-				/>
+		<Page>
+			<PageToolbar>
 				<Tabs
 					value={String(windowDays)}
 					onValueChange={(v) => setWindowDays(Number(v) as WindowDays)}
@@ -92,26 +97,33 @@ function AnalyticsPage() {
 						<TabsTrigger value="30">30 days</TabsTrigger>
 					</TabsList>
 				</Tabs>
-			</div>
+				<PageActions>
+					<AgentFilter
+						agents={agents}
+						value={agentId}
+						onChange={(agent) => navigate({ search: { agent } })}
+					/>
+				</PageActions>
+			</PageToolbar>
 
-			<section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+			<StatGroup>
 				<Kpi
 					label="Conversations"
 					value={summary.data?.conversations}
-					icon={MessageSquare}
+					icon={MessageIcon}
 					loading={summary.isLoading}
 				/>
 				<Kpi
 					label="Leads"
 					value={summary.data?.leadsCaptured}
-					icon={UserPlus}
+					icon={UserPlusIcon}
 					accent
 					loading={summary.isLoading}
 				/>
 				<Kpi
 					label="Handoffs"
 					value={summary.data?.handoffs}
-					icon={Inbox}
+					icon={InboxIcon}
 					loading={summary.isLoading}
 				/>
 				<Kpi
@@ -121,28 +133,28 @@ function AnalyticsPage() {
 							? Number(summary.data.avgTurnsPerConv.toFixed(1))
 							: undefined
 					}
-					icon={TrendingUp}
+					icon={TrendingUpIcon}
 					loading={summary.isLoading}
 				/>
-			</section>
+			</StatGroup>
 
-			<Card className="mt-6">
-				<CardHeader>
-					<CardTitle className="text-base">Daily volume</CardTitle>
-					<CardDescription>
-						Conversations, leads, and handoffs over the last {windowDays}{" "}
-						days.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
+			<PageContent>
+				<PageSection className="md:grid-cols-1">
+					<PageSectionHeader>
+						<PageSectionTitle>Daily volume</PageSectionTitle>
+						<PageSectionDescription>
+							Conversations, leads, and handoffs over the last {windowDays}{" "}
+							days.
+						</PageSectionDescription>
+					</PageSectionHeader>
 					{timeseries.isLoading ? (
 						<Skeleton className="h-[260px] w-full rounded-md" />
 					) : timeseries.isError ? (
-						<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+						<p className="text-sm text-destructive">
 							{timeseries.error instanceof LeadlyApiError
 								? `API ${timeseries.error.status}: ${timeseries.error.message}`
 								: "Could not load timeseries."}
-						</div>
+						</p>
 					) : (
 						<ChartContainer
 							config={chartConfig}
@@ -199,18 +211,16 @@ function AnalyticsPage() {
 							</LineChart>
 						</ChartContainer>
 					)}
-				</CardContent>
-			</Card>
+				</PageSection>
 
-			<Card className="mt-6">
-				<CardHeader>
-					<CardTitle className="text-base">Top cited articles</CardTitle>
-					<CardDescription>
-						Which KB articles the agent leans on most. Empty if retrieval
-						hasn't fired yet.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
+				<PageSection className="md:grid-cols-1">
+					<PageSectionHeader>
+						<PageSectionTitle>Top cited articles</PageSectionTitle>
+						<PageSectionDescription>
+							Which KB articles the agent leans on most. Empty if retrieval
+							hasn't fired yet.
+						</PageSectionDescription>
+					</PageSectionHeader>
 					{summary.isLoading ? (
 						<Skeleton className="h-32 w-full rounded-md" />
 					) : !summary.data || summary.data.topCitedArticles.length === 0 ? (
@@ -218,13 +228,13 @@ function AnalyticsPage() {
 							No citations yet in this window.
 						</p>
 					) : (
-						<ul className="space-y-2">
+						<ul className="divide-y divide-border/60">
 							{summary.data.topCitedArticles.map((a, i) => (
 								<li
 									key={a.articleId}
-									className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5"
+									className="flex items-center gap-3 py-2.5"
 								>
-									<span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-blue/10 font-mono text-[11px] font-semibold text-accent-blue">
+									<span className="w-5 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
 										{i + 1}
 									</span>
 									<span className="min-w-0 flex-1 truncate text-sm font-medium">
@@ -238,46 +248,9 @@ function AnalyticsPage() {
 							))}
 						</ul>
 					)}
-				</CardContent>
-			</Card>
-		</div>
+				</PageSection>
+			</PageContent>
+		</Page>
 	);
 }
 
-function Kpi({
-	label,
-	value,
-	icon: Icon,
-	accent,
-	loading,
-}: {
-	label: string;
-	value: number | undefined;
-	icon: React.ComponentType<{ className?: string }>;
-	accent?: boolean;
-	loading?: boolean;
-}) {
-	return (
-		<Card>
-			<CardHeader className="pb-2">
-				<div className="flex items-center justify-between">
-					<CardDescription className="text-xs font-medium uppercase tracking-wider">
-						{label}
-					</CardDescription>
-					<Icon
-						className={`size-4 ${accent ? "text-accent-blue" : "text-muted-foreground"}`}
-					/>
-				</div>
-			</CardHeader>
-			<CardContent>
-				{loading ? (
-					<Skeleton className="h-8 w-16" />
-				) : (
-					<div className="text-2xl font-semibold tracking-tight">
-						{(value ?? 0).toLocaleString()}
-					</div>
-				)}
-			</CardContent>
-		</Card>
-	);
-}

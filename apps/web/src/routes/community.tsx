@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Github, MessageSquare, Twitter } from "lucide-react";
+import { GithubIcon, MessageIcon, TwitterIcon } from "@/components/icons";
 import { PageShell, Section } from "@/components/page-shell";
 
 export const Route = createFileRoute("/community")({
@@ -8,21 +8,21 @@ export const Route = createFileRoute("/community")({
 
 const CHANNELS = [
 	{
-		icon: Github,
+		icon: GithubIcon,
 		title: "GitHub",
 		blurb: "Issues, pull requests, and the source code itself.",
 		cta: "Open repository",
 		href: "https://github.com/prashantrajm/Leadly",
 	},
 	{
-		icon: MessageSquare,
+		icon: MessageIcon,
 		title: "Discord",
 		blurb: "Real-time chat for setup help, feature requests, and shipping wins.",
 		cta: "Join the Discord",
 		href: "#",
 	},
 	{
-		icon: Twitter,
+		icon: TwitterIcon,
 		title: "X / Twitter",
 		blurb: "Build-in-public updates and the occasional release video.",
 		cta: "Follow @leadlyhq",

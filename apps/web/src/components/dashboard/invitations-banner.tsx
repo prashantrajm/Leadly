@@ -1,4 +1,4 @@
-import { Loader2, Mail, X } from "lucide-react";
+import { MailIcon, SpinnerIcon, XIcon } from "@/components/icons";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useMyInvitations } from "@/hooks/use-my-invitations";
@@ -38,8 +38,8 @@ export function InvitationsBanner() {
 	const error = accept.error ?? decline.error;
 
 	return (
-		<div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-accent-blue/20 bg-accent-blue/5 px-4 py-2.5 text-sm md:px-6">
-			<Mail className="size-4 shrink-0 text-accent-blue" />
+		<div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border/60 px-4 py-2 text-sm md:px-6">
+			<MailIcon className="size-4 shrink-0 text-accent-blue" />
 			<p className="min-w-0 flex-1">
 				<span className="font-medium">{inv.invitedByName ?? "A teammate"}</span>{" "}
 				invited you to join{" "}
@@ -67,13 +67,13 @@ export function InvitationsBanner() {
 					Decline
 				</Button>
 				<Button
+					variant="accent"
 					size="sm"
 					disabled={busy}
 					onClick={() => accept.mutate(inv)}
-					className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 				>
 					{busy && accept.isPending && (
-						<Loader2 className="mr-1.5 size-3.5 animate-spin" />
+						<SpinnerIcon className="mr-1.5 size-3.5 animate-spin" />
 					)}
 					Accept
 				</Button>
@@ -87,7 +87,7 @@ export function InvitationsBanner() {
 						writeDismissed(next);
 					}}
 				>
-					<X className="size-4" />
+					<XIcon className="size-4" />
 					<span className="sr-only">Hide for now</span>
 				</Button>
 			</div>

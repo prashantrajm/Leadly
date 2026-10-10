@@ -33,6 +33,7 @@ import { Route as DashboardSplatRouteImport } from './routes/dashboard/$'
 import { Route as OrgSlugVisitorsRouteImport } from './routes/$orgSlug/visitors'
 import { Route as OrgSlugLeadsRouteImport } from './routes/$orgSlug/leads'
 import { Route as OrgSlugAnalyticsRouteImport } from './routes/$orgSlug/analytics'
+import { Route as OrgSlugInboxRouteRouteImport } from './routes/$orgSlug/inbox/route'
 import { Route as OrgSlugSettingsIndexRouteImport } from './routes/$orgSlug/settings/index'
 import { Route as OrgSlugInboxIndexRouteImport } from './routes/$orgSlug/inbox/index'
 import { Route as OrgSlugAgentsIndexRouteImport } from './routes/$orgSlug/agents/index'
@@ -172,15 +173,20 @@ const OrgSlugAnalyticsRoute = OrgSlugAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => OrgSlugRoute,
 } as any)
+const OrgSlugInboxRouteRoute = OrgSlugInboxRouteRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => OrgSlugRoute,
+} as any)
 const OrgSlugSettingsIndexRoute = OrgSlugSettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
   getParentRoute: () => OrgSlugRoute,
 } as any)
 const OrgSlugInboxIndexRoute = OrgSlugInboxIndexRouteImport.update({
-  id: '/inbox/',
-  path: '/inbox/',
-  getParentRoute: () => OrgSlugRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrgSlugInboxRouteRoute,
 } as any)
 const OrgSlugAgentsIndexRoute = OrgSlugAgentsIndexRouteImport.update({
   id: '/agents/',
@@ -194,9 +200,9 @@ const OrgSlugSettingsProfileRoute = OrgSlugSettingsProfileRouteImport.update({
 } as any)
 const OrgSlugInboxConversationIdRoute =
   OrgSlugInboxConversationIdRouteImport.update({
-    id: '/inbox/$conversationId',
-    path: '/inbox/$conversationId',
-    getParentRoute: () => OrgSlugRoute,
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => OrgSlugInboxRouteRoute,
   } as any)
 const OrgSlugAgentsAgentIdIndexRoute =
   OrgSlugAgentsAgentIdIndexRouteImport.update({
@@ -295,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
+  '/$orgSlug/inbox': typeof OrgSlugInboxRouteRouteWithChildren
   '/$orgSlug/analytics': typeof OrgSlugAnalyticsRoute
   '/$orgSlug/leads': typeof OrgSlugLeadsRoute
   '/$orgSlug/visitors': typeof OrgSlugVisitorsRoute
@@ -383,6 +390,7 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
+  '/$orgSlug/inbox': typeof OrgSlugInboxRouteRouteWithChildren
   '/$orgSlug/analytics': typeof OrgSlugAnalyticsRoute
   '/$orgSlug/leads': typeof OrgSlugLeadsRoute
   '/$orgSlug/visitors': typeof OrgSlugVisitorsRoute
@@ -429,6 +437,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/refund-policy'
     | '/terms-and-conditions'
+    | '/$orgSlug/inbox'
     | '/$orgSlug/analytics'
     | '/$orgSlug/leads'
     | '/$orgSlug/visitors'
@@ -516,6 +525,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/refund-policy'
     | '/terms-and-conditions'
+    | '/$orgSlug/inbox'
     | '/$orgSlug/analytics'
     | '/$orgSlug/leads'
     | '/$orgSlug/visitors'
@@ -736,6 +746,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgSlugAnalyticsRouteImport
       parentRoute: typeof OrgSlugRoute
     }
+    '/$orgSlug/inbox': {
+      id: '/$orgSlug/inbox'
+      path: '/inbox'
+      fullPath: '/$orgSlug/inbox'
+      preLoaderRoute: typeof OrgSlugInboxRouteRouteImport
+      parentRoute: typeof OrgSlugRoute
+    }
     '/$orgSlug/settings/': {
       id: '/$orgSlug/settings/'
       path: '/settings'
@@ -745,10 +762,10 @@ declare module '@tanstack/react-router' {
     }
     '/$orgSlug/inbox/': {
       id: '/$orgSlug/inbox/'
-      path: '/inbox'
+      path: '/'
       fullPath: '/$orgSlug/inbox/'
       preLoaderRoute: typeof OrgSlugInboxIndexRouteImport
-      parentRoute: typeof OrgSlugRoute
+      parentRoute: typeof OrgSlugInboxRouteRoute
     }
     '/$orgSlug/agents/': {
       id: '/$orgSlug/agents/'
@@ -766,10 +783,10 @@ declare module '@tanstack/react-router' {
     }
     '/$orgSlug/inbox/$conversationId': {
       id: '/$orgSlug/inbox/$conversationId'
-      path: '/inbox/$conversationId'
+      path: '/$conversationId'
       fullPath: '/$orgSlug/inbox/$conversationId'
       preLoaderRoute: typeof OrgSlugInboxConversationIdRouteImport
-      parentRoute: typeof OrgSlugRoute
+      parentRoute: typeof OrgSlugInboxRouteRoute
     }
     '/$orgSlug/agents/$agentId/': {
       id: '/$orgSlug/agents/$agentId/'
@@ -865,15 +882,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface OrgSlugInboxRouteRouteChildren {
+  OrgSlugInboxConversationIdRoute: typeof OrgSlugInboxConversationIdRoute
+  OrgSlugInboxIndexRoute: typeof OrgSlugInboxIndexRoute
+}
+
+const OrgSlugInboxRouteRouteChildren: OrgSlugInboxRouteRouteChildren = {
+  OrgSlugInboxConversationIdRoute: OrgSlugInboxConversationIdRoute,
+  OrgSlugInboxIndexRoute: OrgSlugInboxIndexRoute,
+}
+
+const OrgSlugInboxRouteRouteWithChildren =
+  OrgSlugInboxRouteRoute._addFileChildren(OrgSlugInboxRouteRouteChildren)
+
 interface OrgSlugRouteChildren {
+  OrgSlugInboxRouteRoute: typeof OrgSlugInboxRouteRouteWithChildren
   OrgSlugAnalyticsRoute: typeof OrgSlugAnalyticsRoute
   OrgSlugLeadsRoute: typeof OrgSlugLeadsRoute
   OrgSlugVisitorsRoute: typeof OrgSlugVisitorsRoute
   OrgSlugIndexRoute: typeof OrgSlugIndexRoute
-  OrgSlugInboxConversationIdRoute: typeof OrgSlugInboxConversationIdRoute
   OrgSlugSettingsProfileRoute: typeof OrgSlugSettingsProfileRoute
   OrgSlugAgentsIndexRoute: typeof OrgSlugAgentsIndexRoute
-  OrgSlugInboxIndexRoute: typeof OrgSlugInboxIndexRoute
   OrgSlugSettingsIndexRoute: typeof OrgSlugSettingsIndexRoute
   OrgSlugAgentsAgentIdAnalyticsRoute: typeof OrgSlugAgentsAgentIdAnalyticsRoute
   OrgSlugAgentsAgentIdInstallRoute: typeof OrgSlugAgentsAgentIdInstallRoute
@@ -891,14 +920,13 @@ interface OrgSlugRouteChildren {
 }
 
 const OrgSlugRouteChildren: OrgSlugRouteChildren = {
+  OrgSlugInboxRouteRoute: OrgSlugInboxRouteRouteWithChildren,
   OrgSlugAnalyticsRoute: OrgSlugAnalyticsRoute,
   OrgSlugLeadsRoute: OrgSlugLeadsRoute,
   OrgSlugVisitorsRoute: OrgSlugVisitorsRoute,
   OrgSlugIndexRoute: OrgSlugIndexRoute,
-  OrgSlugInboxConversationIdRoute: OrgSlugInboxConversationIdRoute,
   OrgSlugSettingsProfileRoute: OrgSlugSettingsProfileRoute,
   OrgSlugAgentsIndexRoute: OrgSlugAgentsIndexRoute,
-  OrgSlugInboxIndexRoute: OrgSlugInboxIndexRoute,
   OrgSlugSettingsIndexRoute: OrgSlugSettingsIndexRoute,
   OrgSlugAgentsAgentIdAnalyticsRoute: OrgSlugAgentsAgentIdAnalyticsRoute,
   OrgSlugAgentsAgentIdInstallRoute: OrgSlugAgentsAgentIdInstallRoute,

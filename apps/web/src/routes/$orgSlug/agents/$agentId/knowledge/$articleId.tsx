@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ArticleEditor } from "@/components/dashboard/article-editor";
+import { Page, PageContent } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, LeadlyApiError } from "@/lib/api";
 
@@ -20,11 +21,12 @@ function EditArticlePage() {
 
 	if (q.isLoading) {
 		return (
-			<div className="mx-auto max-w-5xl">
-				<Skeleton className="h-10 w-40 rounded-md" />
-				<Skeleton className="mt-6 h-12 w-full rounded-md" />
-				<Skeleton className="mt-4 h-[460px] w-full rounded-md" />
-			</div>
+			<Page>
+				<PageContent width="narrow">
+					<Skeleton className="h-10 w-full rounded-md" />
+					<Skeleton className="mt-4 h-[460px] w-full rounded-md" />
+				</PageContent>
+			</Page>
 		);
 	}
 
@@ -37,11 +39,11 @@ function EditArticlePage() {
 					: `API ${err.status}: ${err.message}`
 				: "Could not load article.";
 		return (
-			<div className="mx-auto max-w-5xl">
-				<div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-					{message}
-				</div>
-			</div>
+			<Page>
+				<PageContent width="narrow">
+					<p className="text-sm text-destructive">{message}</p>
+				</PageContent>
+			</Page>
 		);
 	}
 

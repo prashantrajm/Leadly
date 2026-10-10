@@ -49,8 +49,12 @@ function DashboardLayout() {
 	return (
 		<SidebarProvider>
 			<DashboardSidebar />
-			<SidebarInset>
-				<header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur">
+			{/* On desktop the inset panel scrolls itself so the frame stays put. */}
+			<SidebarInset
+				data-scroll-restoration-id="dashboard-main"
+				className="md:h-[calc(100svh-1rem)] md:overflow-y-auto"
+			>
+				<header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur">
 					<SidebarTrigger className="-ml-1" />
 					<div className="h-4 w-px bg-border/60" />
 					<PageTitle />
@@ -59,7 +63,9 @@ function DashboardLayout() {
 					</div>
 				</header>
 				<InvitationsBanner />
-				<main className="flex-1 px-4 py-6 md:px-6 md:py-8">
+				{/* Pages own their gutters (see components/ui/page.tsx) so lists and
+				    split views can run edge to edge. */}
+				<main className="flex min-h-0 flex-1 flex-col">
 					<Outlet />
 				</main>
 			</SidebarInset>
@@ -77,10 +83,7 @@ function WorkspaceNotFound({ fallbackSlug }: { fallbackSlug?: string }) {
 				This page doesn't exist, or it belongs to a workspace you're not a
 				member of. If the workspace URL was changed, use the new one.
 			</p>
-			<Button
-				asChild
-				className="mt-6 bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-			>
+			<Button variant="accent" asChild className="mt-6">
 				{fallbackSlug ? (
 					<Link to="/$orgSlug" params={{ orgSlug: fallbackSlug }}>
 						Go to your workspace

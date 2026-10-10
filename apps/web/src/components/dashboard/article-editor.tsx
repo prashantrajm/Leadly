@@ -8,13 +8,13 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-	ArrowLeft,
-	Eye,
-	Loader2,
-	PencilLine,
-	Save,
-	Trash2,
-} from "lucide-react";
+	ArrowLeftIcon,
+	EyeIcon,
+	PencilIcon,
+	SaveIcon,
+	SpinnerIcon,
+	TrashIcon,
+} from "@/components/icons";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import ReactMarkdown from "react-markdown";
@@ -30,6 +30,12 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+	Page,
+	PageActions,
+	PageContent,
+	PageToolbar,
+} from "@/components/ui/page";
 import {
 	Form,
 	FormControl,
@@ -133,18 +139,17 @@ export function ArticleEditor({ mode }: { mode: Mode }) {
 	const content = form.watch("contentMarkdown") ?? "";
 
 	return (
-		<div className="mx-auto max-w-5xl">
-			{/* Header */}
-			<div className="mb-6 flex items-center justify-between gap-3">
+		<Page>
+			<PageToolbar>
 				<Button asChild variant="ghost" size="sm" className="-ml-2">
 					<Link
 						to={orgPath(`/agents/${mode.agentId}/knowledge`) as string}
 					>
-						<ArrowLeft className="mr-1 size-4" />
+						<ArrowLeftIcon />
 						Knowledge base
 					</Link>
 				</Button>
-				<div className="flex items-center gap-2">
+				<PageActions>
 					{mode.kind === "edit" && (
 						<Button
 							variant="outline"
@@ -152,26 +157,23 @@ export function ArticleEditor({ mode }: { mode: Mode }) {
 							onClick={() => setConfirmDeleteOpen(true)}
 							className="text-destructive hover:bg-destructive/10 hover:text-destructive"
 						>
-							<Trash2 className="mr-1 size-4" />
+							<TrashIcon />
 							Delete
 						</Button>
 					)}
 					<Button
+						variant="accent"
 						onClick={form.handleSubmit(onSubmit)}
 						disabled={saving || (mode.kind === "edit" && !dirty)}
 						size="sm"
-						className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 					>
-						{saving ? (
-							<Loader2 className="mr-1 size-4 animate-spin" />
-						) : (
-							<Save className="mr-1 size-4" />
-						)}
+						{saving ? <SpinnerIcon className="animate-spin" /> : <SaveIcon />}
 						{mode.kind === "create" ? "Create article" : "Save changes"}
 					</Button>
-				</div>
-			</div>
+				</PageActions>
+			</PageToolbar>
 
+			<PageContent width="narrow">
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 					<FormField
@@ -204,13 +206,13 @@ export function ArticleEditor({ mode }: { mode: Mode }) {
 										value={view}
 										onValueChange={(v) => setView(v as "edit" | "preview")}
 									>
-										<TabsList className="h-8">
+										<TabsList className="h-7">
 											<TabsTrigger value="edit" className="gap-1 text-xs">
-												<PencilLine className="size-3.5" />
+												<PencilIcon className="size-3.5" />
 												Write
 											</TabsTrigger>
 											<TabsTrigger value="preview" className="gap-1 text-xs">
-												<Eye className="size-3.5" />
+												<EyeIcon className="size-3.5" />
 												Preview
 											</TabsTrigger>
 										</TabsList>
@@ -252,16 +254,17 @@ export function ArticleEditor({ mode }: { mode: Mode }) {
 					/>
 
 					{error && (
-						<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+						<p className="text-sm text-destructive">
 							{error instanceof LeadlyApiError
 								? `API ${error.status}: ${error.bodyText.slice(0, 200) || error.message}`
 								: error instanceof Error
 									? error.message
 									: "Save failed."}
-						</div>
+						</p>
 					)}
 				</form>
 			</Form>
+			</PageContent>
 
 			<AlertDialog
 				open={confirmDeleteOpen}
@@ -288,14 +291,14 @@ export function ArticleEditor({ mode }: { mode: Mode }) {
 							className="bg-destructive text-white hover:bg-destructive/90"
 						>
 							{deleteMutation.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
+								<SpinnerIcon className="mr-2 size-4 animate-spin" />
 							)}
 							Delete
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</div>
+		</Page>
 	);
 }
 

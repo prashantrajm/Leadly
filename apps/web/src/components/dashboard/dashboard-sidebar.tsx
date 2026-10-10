@@ -3,22 +3,22 @@ import type { MyInvitation } from "@leadly/schemas";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useRouterState } from "@tanstack/react-router";
 import {
-	BarChart3,
-	BookOpen,
-	ChevronRight,
-	ChevronsUpDown,
-	Code,
-	Inbox,
-	LayoutDashboard,
-	LifeBuoy,
-	Loader2,
-	LogOut,
-	Play,
-	Plus,
-	Settings,
-	Tags,
-	Users,
-} from "lucide-react";
+	BookIcon,
+	ChartIcon,
+	ChevronRightIcon,
+	ChevronsUpDownIcon,
+	CodeIcon,
+	DashboardIcon,
+	InboxIcon,
+	LifebuoyIcon,
+	LogOutIcon,
+	PlayIcon,
+	PlusIcon,
+	SettingsIcon,
+	SpinnerIcon,
+	TagsIcon,
+	UsersIcon,
+} from "@/components/icons";
 import { useEffect, useState } from "react";
 import { CreateWorkspaceDialog } from "@/components/dashboard/create-workspace-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -87,7 +87,7 @@ export function DashboardSidebar() {
 	const waitingOnHuman = countsQuery.data?.waitingOnHuman ?? 0;
 
 	return (
-		<Sidebar collapsible="icon">
+		<Sidebar collapsible="icon" variant="inset">
 			<SidebarHeader>
 				<SidebarMenu>
 					<SidebarMenuItem>
@@ -125,7 +125,7 @@ export function DashboardSidebar() {
 											</span>
 										)}
 									</div>
-									<ChevronsUpDown className="ml-auto size-4" />
+									<ChevronsUpDownIcon className="ml-auto size-4" />
 								</SidebarMenuButton>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
@@ -178,7 +178,7 @@ export function DashboardSidebar() {
 									className="gap-2"
 								>
 									<div className="flex size-6 items-center justify-center rounded-md border border-dashed border-border">
-										<Plus className="size-3.5" />
+										<PlusIcon className="size-3.5" />
 									</div>
 									New workspace
 								</DropdownMenuItem>
@@ -199,33 +199,33 @@ export function DashboardSidebar() {
 							<NavLink
 								to={orgPath()}
 								pathname={pathname}
-								icon={LayoutDashboard}
+								icon={DashboardIcon}
 							>
 								Overview
 							</NavLink>
 							<NavLink
 								to={orgPath("/inbox")}
 								pathname={pathname}
-								icon={Inbox}
+								icon={InboxIcon}
 								matchPrefix
 								badge={waitingOnHuman}
 							>
 								Inbox
 							</NavLink>
-							<NavLink to={orgPath("/leads")} pathname={pathname} icon={Tags}>
+							<NavLink to={orgPath("/leads")} pathname={pathname} icon={TagsIcon}>
 								Leads
 							</NavLink>
 							<NavLink
 								to={orgPath("/visitors")}
 								pathname={pathname}
-								icon={Users}
+								icon={UsersIcon}
 							>
 								Visitors
 							</NavLink>
 							<NavLink
 								to={orgPath("/analytics")}
 								pathname={pathname}
-								icon={BarChart3}
+								icon={ChartIcon}
 							>
 								Analytics
 							</NavLink>
@@ -239,7 +239,7 @@ export function DashboardSidebar() {
 					</SidebarGroupLabel>
 					<SidebarGroupAction asChild title="New agent">
 						<Link to={orgPath("/agents")} search={{ new: true }}>
-							<Plus />
+							<PlusIcon />
 							<span className="sr-only">New agent</span>
 						</Link>
 					</SidebarGroupAction>
@@ -251,7 +251,7 @@ export function DashboardSidebar() {
 								<SidebarMenuItem>
 									<SidebarMenuButton asChild tooltip="Create your first agent">
 										<Link to={orgPath("/agents")} search={{ new: true }}>
-											<Plus className="size-4" />
+											<PlusIcon className="size-4" />
 											<span>Create your first agent</span>
 										</Link>
 									</SidebarMenuButton>
@@ -278,12 +278,12 @@ export function DashboardSidebar() {
 							<NavLink
 								to={orgPath("/settings")}
 								pathname={pathname}
-								icon={Settings}
+								icon={SettingsIcon}
 								matchPrefix
 							>
 								Settings
 							</NavLink>
-							<NavLink to="/docs" pathname={pathname} icon={LifeBuoy}>
+							<NavLink to="/docs" pathname={pathname} icon={LifebuoyIcon}>
 								Docs &amp; help
 							</NavLink>
 						</SidebarMenu>
@@ -314,7 +314,7 @@ export function DashboardSidebar() {
 											{session?.user?.email ?? ""}
 										</span>
 									</div>
-									<ChevronsUpDown className="ml-auto size-4" />
+									<ChevronsUpDownIcon className="ml-auto size-4" />
 								</SidebarMenuButton>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
@@ -346,7 +346,7 @@ export function DashboardSidebar() {
 										window.location.href = "/";
 									}}
 								>
-									<LogOut className="mr-2 size-4" />
+									<LogOutIcon className="mr-2 size-4" />
 									Sign out
 								</DropdownMenuItem>
 							</DropdownMenuContent>
@@ -396,10 +396,10 @@ function NavLink({
 // The setup pages that belong to one agent. Inbox, leads, visitors and
 // analytics live at the top level with an agent filter instead.
 const AGENT_PAGES = [
-	{ segment: "knowledge", label: "Knowledge", icon: BookOpen },
-	{ segment: "playground", label: "Playground", icon: Play },
-	{ segment: "install", label: "Install", icon: Code },
-	{ segment: "settings", label: "Settings", icon: Settings },
+	{ segment: "knowledge", label: "Knowledge", icon: BookIcon },
+	{ segment: "playground", label: "Playground", icon: PlayIcon },
+	{ segment: "install", label: "Install", icon: CodeIcon },
+	{ segment: "settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 
 function AgentNavItem({
@@ -440,7 +440,7 @@ function AgentNavItem({
 				</SidebarMenuButton>
 				<CollapsibleTrigger asChild>
 					<SidebarMenuAction className="data-[state=open]:rotate-90">
-						<ChevronRight />
+						<ChevronRightIcon />
 						<span className="sr-only">Toggle {agent.name}</span>
 					</SidebarMenuAction>
 				</CollapsibleTrigger>
@@ -503,7 +503,7 @@ function SwitcherInvitation({
 						disabled={busy}
 						onClick={onAccept}
 					>
-						{busy ? <Loader2 className="size-3 animate-spin" /> : "Accept"}
+						{busy ? <SpinnerIcon className="size-3 animate-spin" /> : "Accept"}
 					</Button>
 					<Button
 						size="sm"

@@ -27,7 +27,7 @@ export function AgentFilter({
 			value={value ?? ALL}
 			onValueChange={(v) => onChange(v === ALL ? undefined : v)}
 		>
-			<SelectTrigger className="w-48">
+			<SelectTrigger size="sm" className="w-44">
 				<SelectValue placeholder="All agents" />
 			</SelectTrigger>
 			<SelectContent>

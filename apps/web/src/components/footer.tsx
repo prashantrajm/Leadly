@@ -1,4 +1,9 @@
-import { Github, Linkedin, Twitter, Zap } from "lucide-react";
+import {
+	GithubIcon,
+	LinkedinIcon,
+	TwitterIcon,
+	ZapIcon,
+} from "@/components/icons";
 import type { FooterSection, SocialLink } from "@/types";
 import { Separator } from "./ui/separator";
 
@@ -41,9 +46,9 @@ const footerSections: FooterSection[] = [
 ];
 
 const socialLinks: SocialLink[] = [
-	{ icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-	{ icon: Github, href: "https://github.com", label: "GitHub" },
-	{ icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
+	{ icon: TwitterIcon, href: "https://twitter.com", label: "Twitter" },
+	{ icon: GithubIcon, href: "https://github.com", label: "GitHub" },
+	{ icon: LinkedinIcon, href: "https://linkedin.com", label: "LinkedIn" },
 ];
 
 const Footer = () => {
@@ -55,7 +60,7 @@ const Footer = () => {
 					<div className="lg:col-span-2 space-y-4">
 						<a href="/" className="inline-flex items-center space-x-2">
 							<div className="bg-accent-blue p-2 rounded-lg">
-								<Zap className="h-5 w-5 text-accent-blue-foreground" />
+								<ZapIcon className="h-5 w-5 text-accent-blue-foreground" />
 							</div>
 							<span className="font-bold text-xl tracking-tight">
 								Leadly

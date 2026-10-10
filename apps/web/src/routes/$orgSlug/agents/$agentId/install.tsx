@@ -1,10 +1,22 @@
 import type { Agent } from "@leadly/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Copy, ExternalLink, Play } from "lucide-react";
+import {
+	CheckIcon,
+	CopyIcon,
+	ExternalLinkIcon,
+	PlayIcon,
+} from "@/components/icons";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Page,
+	PageContent,
+	PageSection,
+	PageSectionContent,
+	PageSectionHeader,
+	PageSectionTitle,
+} from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, LeadlyApiError } from "@/lib/api";
@@ -30,22 +42,26 @@ function InstallPage() {
 
 	if (agentQuery.isLoading) {
 		return (
-			<div className="mx-auto max-w-4xl">
-				<Skeleton className="h-10 w-40 rounded-md" />
-				<Skeleton className="mt-6 h-80 rounded-xl" />
-			</div>
+			<Page>
+				<PageContent width="narrow" className="flex flex-col gap-4">
+					<Skeleton className="h-6 w-40" />
+					<Skeleton className="h-48 w-full" />
+				</PageContent>
+			</Page>
 		);
 	}
 
 	if (agentQuery.isError || !agentQuery.data) {
 		return (
-			<div className="mx-auto max-w-4xl">
-				<div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-					{agentQuery.error instanceof LeadlyApiError
-						? `API ${agentQuery.error.status}: ${agentQuery.error.message}`
-						: "Could not load agent."}
-				</div>
-			</div>
+			<Page>
+				<PageContent>
+					<p className="text-sm text-destructive">
+						{agentQuery.error instanceof LeadlyApiError
+							? `API ${agentQuery.error.status}: ${agentQuery.error.message}`
+							: "Could not load agent."}
+					</p>
+				</PageContent>
+			</Page>
 		);
 	}
 
@@ -53,8 +69,8 @@ function InstallPage() {
 	const hasConversation = (conversationsQuery.data?.items.length ?? 0) > 0;
 
 	return (
-		<div className="mx-auto max-w-4xl">
-			<div className="space-y-4">
+		<Page>
+			<PageContent width="narrow">
 				<Step n={1} title="Copy the script" done>
 					<SnippetTabs agent={agent} />
 				</Step>
@@ -90,11 +106,13 @@ function InstallPage() {
 						</p>
 					)}
 				</Step>
-			</div>
-		</div>
+			</PageContent>
+		</Page>
 	);
 }
 
+// One numbered install step, laid out as a page section: step marker and
+// title on the left, instructions on the right.
 function Step({
 	n,
 	title,
@@ -109,23 +127,25 @@ function Step({
 	children: React.ReactNode;
 }) {
 	return (
-		<Card className={subtle ? "border-dashed" : undefined}>
-			<CardHeader className="pb-3">
-				<div className="flex items-center gap-3">
-					<div
-						className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-							done
-								? "bg-accent-blue text-accent-blue-foreground"
-								: "border border-border bg-card text-muted-foreground"
-						}`}
-					>
-						{done ? <Check className="size-3.5" /> : n}
-					</div>
-					<CardTitle className="text-base">{title}</CardTitle>
+		<PageSection>
+			<PageSectionHeader className="flex-row items-center gap-3 md:items-start">
+				<div
+					className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
+						done
+							? "bg-accent-blue text-accent-blue-foreground"
+							: "bg-muted text-muted-foreground"
+					}`}
+				>
+					{done ? <CheckIcon className="size-3.5" /> : n}
 				</div>
-			</CardHeader>
-			<CardContent className="pl-[3.25rem]">{children}</CardContent>
-		</Card>
+				<PageSectionTitle
+					className={subtle ? "text-muted-foreground md:pt-0.5" : "md:pt-0.5"}
+				>
+					{title}
+				</PageSectionTitle>
+			</PageSectionHeader>
+			<PageSectionContent>{children}</PageSectionContent>
+		</PageSection>
 	);
 }
 
@@ -214,28 +234,26 @@ function Snippet({ code }: { code: string }) {
 	}
 
 	return (
-		<div className="relative overflow-hidden rounded-lg border border-border bg-secondary/40">
-			<button
+		<div className="relative overflow-hidden rounded-lg bg-muted">
+			<Button
 				type="button"
+				variant="outline"
+				size="sm"
 				onClick={copy}
-				className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-					copied
-						? "bg-accent-blue text-accent-blue-foreground"
-						: "bg-background/80 text-muted-foreground backdrop-blur hover:bg-background hover:text-foreground"
-				}`}
+				className="absolute right-2 top-2 h-7 gap-1 px-2 text-xs"
 			>
 				{copied ? (
 					<>
-						<Check className="size-3.5" />
+						<CheckIcon className="size-3.5" />
 						Copied
 					</>
 				) : (
 					<>
-						<Copy className="size-3.5" />
+						<CopyIcon className="size-3.5" />
 						Copy
 					</>
 				)}
-			</button>
+			</Button>
 			<pre className="overflow-x-auto px-4 py-3 pr-20 font-mono text-[12.5px] leading-relaxed text-foreground/90">
 				<code>{code}</code>
 			</pre>
@@ -259,7 +277,7 @@ function TestStep({ agentId }: { agentId: string }) {
 						className="text-left"
 					>
 						<span className="flex w-full items-center gap-2 text-sm font-semibold text-foreground">
-							<Play className="size-4 text-accent-blue" />
+							<PlayIcon className="size-4 text-accent-blue" />
 							Open Playground
 						</span>
 						<span className="text-xs font-normal text-muted-foreground">
@@ -279,7 +297,7 @@ function TestStep({ agentId }: { agentId: string }) {
 						className="text-left"
 					>
 						<span className="flex w-full items-center gap-2 text-sm font-semibold text-foreground">
-							<ExternalLink className="size-4 text-accent-blue" />
+							<ExternalLinkIcon className="size-4 text-accent-blue" />
 							Live test page
 						</span>
 						<span className="text-xs font-normal text-muted-foreground">
@@ -294,7 +312,7 @@ function TestStep({ agentId }: { agentId: string }) {
 
 function Code({ children }: { children: React.ReactNode }) {
 	return (
-		<code className="rounded bg-secondary/60 px-1 py-0.5 font-mono text-[0.85em]">
+		<code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">
 			{children}
 		</code>
 	);

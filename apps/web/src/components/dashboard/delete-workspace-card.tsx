@@ -1,7 +1,7 @@
 import type { Organization } from "@leadly/schemas";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, Trash2 } from "lucide-react";
+import { SpinnerIcon, TrashIcon } from "@/components/icons";
 import { useId, useState } from "react";
 import {
 	AlertDialog,
@@ -14,15 +14,21 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	PageSection,
+	PageSectionHeader,
+	PageSectionTitle,
+} from "@/components/ui/page";
+import {
+	SettingsCard,
+	SettingsRow,
+	SettingsRowControl,
+	SettingsRowDescription,
+	SettingsRowLabel,
+	SettingsRowTitle,
+} from "@/components/ui/settings";
 import { api, apiErrorMessage } from "@/lib/api";
 
 // Owner-only "Danger zone" on Settings → General. Deleting is permanent and
@@ -48,27 +54,33 @@ export function DeleteWorkspaceCard({ org }: { org: Organization }) {
 	});
 
 	return (
-		<Card className="border-destructive/40">
-			<CardHeader>
-				<CardTitle className="text-base text-destructive">
-					Danger zone
-				</CardTitle>
-				<CardDescription>
-					Delete this workspace and everything in it: agents, knowledge base,
-					conversations, leads, visitors and API keys. Installed widgets stop
-					working. This can't be undone.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<Button
-					variant="outline"
-					onClick={() => setOpen(true)}
-					className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-				>
-					<Trash2 className="mr-1 size-4" />
-					Delete workspace
-				</Button>
-			</CardContent>
+		<PageSection variant="grouped">
+			<PageSectionHeader>
+				<PageSectionTitle>Danger zone</PageSectionTitle>
+			</PageSectionHeader>
+			<SettingsCard>
+				<SettingsRow>
+					<SettingsRowLabel>
+						<SettingsRowTitle>Delete workspace</SettingsRowTitle>
+						<SettingsRowDescription>
+							Delete this workspace and everything in it: agents, knowledge base,
+							conversations, leads, visitors and API keys. Installed widgets stop
+							working. This can't be undone.
+						</SettingsRowDescription>
+					</SettingsRowLabel>
+					<SettingsRowControl>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setOpen(true)}
+							className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+						>
+							<TrashIcon />
+							Delete workspace
+						</Button>
+					</SettingsRowControl>
+				</SettingsRow>
+			</SettingsCard>
 
 			<AlertDialog
 				open={open}
@@ -118,13 +130,13 @@ export function DeleteWorkspaceCard({ org }: { org: Organization }) {
 							className="bg-destructive text-white hover:bg-destructive/90"
 						>
 							{mutation.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
+								<SpinnerIcon className="mr-2 size-4 animate-spin" />
 							)}
 							Delete workspace
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</Card>
+		</PageSection>
 	);
 }
