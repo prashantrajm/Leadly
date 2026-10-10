@@ -88,13 +88,6 @@ function OrgSettings() {
 
 	return (
 		<div className="mx-auto max-w-3xl">
-			<header className="mb-8">
-				<h1 className="text-2xl font-semibold tracking-tight">Org settings</h1>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Settings that apply to every agent in {currentOrg.name}.
-				</p>
-			</header>
-
 			<Tabs defaultValue="general">
 				<TabsList>
 					<TabsTrigger value="general">General</TabsTrigger>

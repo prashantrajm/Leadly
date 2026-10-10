@@ -8,9 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api, LeadlyApiError } from "@/lib/api";
 import { useOrgPath } from "@/hooks/use-current-org";
 
-export const Route = createFileRoute(
-	"/$orgSlug/agents/$agentId/knowledge/",
-)({
+export const Route = createFileRoute("/$orgSlug/agents/$agentId/knowledge/")({
 	component: KnowledgeList,
 });
 
@@ -25,38 +23,23 @@ function KnowledgeList() {
 
 	return (
 		<div className="mx-auto max-w-5xl">
-			<header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-				<div>
-					<h1 className="text-2xl font-semibold tracking-tight">
-						Knowledge base
-					</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						What your agent answers from. Articles are chunked, embedded, and
-						retrieved on every turn.
-					</p>
-				</div>
-				<div className="flex items-center gap-2">
-					<Button asChild variant="outline">
-						<Link
-							to={orgPath(`/agents/${agentId}/knowledge/upload`) as string}
-						>
-							<Upload className="mr-1 size-4" />
-							Upload
-						</Link>
-					</Button>
-					<Button
-						asChild
-						className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-					>
-						<Link
-							to={orgPath(`/agents/${agentId}/knowledge/new`) as string}
-						>
-							<Plus className="mr-1 size-4" />
-							New article
-						</Link>
-					</Button>
-				</div>
-			</header>
+			<div className="mb-5 flex items-center justify-end gap-2">
+				<Button asChild variant="outline">
+					<Link to={orgPath(`/agents/${agentId}/knowledge/upload`) as string}>
+						<Upload className="mr-1 size-4" />
+						Upload
+					</Link>
+				</Button>
+				<Button
+					asChild
+					className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+				>
+					<Link to={orgPath(`/agents/${agentId}/knowledge/new`) as string}>
+						<Plus className="mr-1 size-4" />
+						New article
+					</Link>
+				</Button>
+			</div>
 
 			{q.isLoading ? (
 				<div className="space-y-3">
@@ -71,11 +54,7 @@ function KnowledgeList() {
 			) : (
 				<div className="space-y-3">
 					{q.data.map((article) => (
-						<ArticleRow
-							key={article.id}
-							agentId={agentId}
-							article={article}
-						/>
+						<ArticleRow key={article.id} agentId={agentId} article={article} />
 					))}
 				</div>
 			)}
@@ -101,9 +80,7 @@ function EmptyState({ agentId }: { agentId: string }) {
 				</p>
 				<div className="mt-6 flex flex-wrap items-center justify-center gap-2">
 					<Button asChild variant="outline">
-						<Link
-							to={orgPath(`/agents/${agentId}/knowledge/upload`) as string}
-						>
+						<Link to={orgPath(`/agents/${agentId}/knowledge/upload`) as string}>
 							<Upload className="mr-1 size-4" />
 							Upload .md file
 						</Link>
@@ -139,9 +116,7 @@ function ArticleRow({
 	const orgPath = useOrgPath();
 	return (
 		<Link
-			to={
-				orgPath(`/agents/${agentId}/knowledge/${article.id}`) as string
-			}
+			to={orgPath(`/agents/${agentId}/knowledge/${article.id}`) as string}
 			className="group block"
 		>
 			<Card className="transition-colors hover:border-accent-blue/30">

@@ -54,16 +54,6 @@ function InstallPage() {
 
 	return (
 		<div className="mx-auto max-w-4xl">
-			<header className="mb-8">
-				<h1 className="text-2xl font-semibold tracking-tight">
-					Install the widget
-				</h1>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Drop one script tag on your site and the agent shows up. No SDK, no
-					build step.
-				</p>
-			</header>
-
 			<div className="space-y-4">
 				<Step n={1} title="Copy the script" done>
 					<SnippetTabs agent={agent} />

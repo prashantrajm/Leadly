@@ -87,16 +87,6 @@ function UploadPage() {
 				</Button>
 			</div>
 
-			<header className="mb-8">
-				<h1 className="text-2xl font-semibold tracking-tight">
-					Upload an article
-				</h1>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Drop a Markdown or plain-text file. We'll chunk and embed it
-					automatically.
-				</p>
-			</header>
-
 			<Card>
 				<CardContent className="space-y-6 p-6">
 					{/* Dropzone */}

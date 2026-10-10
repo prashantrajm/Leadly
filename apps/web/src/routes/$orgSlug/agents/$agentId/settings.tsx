@@ -85,16 +85,6 @@ function AgentSettingsBody({
 }) {
 	return (
 		<div className="mx-auto max-w-3xl">
-			<header className="mb-8">
-				<h1 className="text-2xl font-semibold tracking-tight">
-					{agent.name} settings
-				</h1>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Tune what your agent says, how it sounds, and which model it runs
-					on.
-				</p>
-			</header>
-
 			<Tabs defaultValue="general">
 				<TabsList>
 					<TabsTrigger value="general">General</TabsTrigger>

@@ -86,15 +86,9 @@ function AgentsList() {
 
 function Header({ children }: { children?: React.ReactNode }) {
 	return (
-		<header className="mb-8 flex items-end justify-between">
-			<div>
-				<h1 className="text-2xl font-semibold tracking-tight">Agents</h1>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Each agent is a separate widget with its own knowledge base.
-				</p>
-			</div>
+		<div className="mb-5 flex min-h-9 items-center justify-end">
 			{children}
-		</header>
+		</div>
 	);
 }
 

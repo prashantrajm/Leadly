@@ -75,14 +75,6 @@ function PlaygroundBody({
 
 	return (
 		<div className="mx-auto max-w-6xl">
-			<header className="mb-8">
-				<h1 className="text-2xl font-semibold tracking-tight">Playground</h1>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Try the agent the way a visitor would. No installation needed —
-					this is the real widget pipeline against your real KB.
-				</p>
-			</header>
-
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
 				<ChatPanel agent={agent} conv={conv} />
 				<TuningPanel agent={agent} agentId={agentId} />
