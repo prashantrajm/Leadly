@@ -72,14 +72,23 @@ const FormItemContext = React.createContext<FormItemContextValue>(
 	{} as FormItemContextValue,
 );
 
-function FormItem({ className, ...props }: React.ComponentProps<"div">) {
+function FormItem({
+	className,
+	asChild = false,
+	...props
+}: React.ComponentProps<"div"> & {
+	// Render as the child element (e.g. a SettingsRow) and keep its layout;
+	// the field ids/aria wiring still come from this item.
+	asChild?: boolean;
+}) {
 	const id = React.useId();
+	const Comp = asChild ? Slot : "div";
 
 	return (
 		<FormItemContext.Provider value={{ id }}>
-			<div
+			<Comp
 				data-slot="form-item"
-				className={cn("grid gap-2", className)}
+				className={asChild ? className : cn("grid gap-2", className)}
 				{...props}
 			/>
 		</FormItemContext.Provider>

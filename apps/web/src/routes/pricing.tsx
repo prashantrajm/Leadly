@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Plus } from "lucide-react";
+import { ArrowRightIcon, CheckIcon, PlusIcon } from "@/components/icons";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -258,7 +258,7 @@ function PricingPage() {
 							>
 								<div className="flex items-start justify-between gap-3">
 									<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/40">
-										<Plus className="h-4 w-4 text-foreground" />
+										<PlusIcon className="h-4 w-4 text-foreground" />
 									</div>
 									<div className="font-mono text-sm font-medium tracking-tight text-foreground">
 										{a.price}
@@ -329,13 +329,13 @@ function PricingPage() {
 							</p>
 							<div className="mt-8 flex justify-center">
 								<Button
+									variant="accent"
 									size="lg"
 									asChild
-									className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 								>
 									<Link to="/auth">
 										Start free
-										<ArrowRight className="ml-2 h-4 w-4" />
+										<ArrowRightIcon className="ml-2 h-4 w-4" />
 									</Link>
 								</Button>
 							</div>
@@ -407,12 +407,8 @@ function TierCard({ tier, cycle }: { tier: Tier; cycle: Cycle }) {
 
 			<Button
 				asChild
-				variant={tier.highlighted ? "default" : "outline"}
-				className={
-					tier.highlighted
-						? "mt-5 w-full bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-						: "mt-5 w-full"
-				}
+				variant={tier.highlighted ? "accent" : "outline"}
+				className="mt-5 w-full"
 			>
 				<Link to={tier.cta.href}>{tier.cta.label}</Link>
 			</Button>
@@ -435,7 +431,7 @@ function TierCard({ tier, cycle }: { tier: Tier; cycle: Cycle }) {
 						key={f.label}
 						className="flex items-start gap-2 text-muted-foreground"
 					>
-						<Check
+						<CheckIcon
 							className={`mt-0.5 h-4 w-4 shrink-0 ${
 								f.premium ? "text-accent-blue" : "text-foreground"
 							}`}

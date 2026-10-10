@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@/components/icons";
 import { PageShell, Section } from "@/components/page-shell";
 
 export const Route = createFileRoute("/careers")({
@@ -60,7 +60,7 @@ function CareersPage() {
 								{r.blurb}
 							</p>
 						</div>
-						<ArrowRight className="ml-4 h-5 w-5 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-accent-blue" />
+						<ArrowRightIcon className="ml-4 h-5 w-5 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-accent-blue" />
 					</a>
 				))}
 			</div>

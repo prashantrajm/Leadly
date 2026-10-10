@@ -5,7 +5,15 @@ import type {
 } from "@leadly/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Check, Copy, Loader2, Mail, Plus, UserMinus, X } from "lucide-react";
+import {
+	CheckIcon,
+	CopyIcon,
+	MailIcon,
+	PlusIcon,
+	SpinnerIcon,
+	UserMinusIcon,
+	XIcon,
+} from "@/components/icons";
 import { useId, useState } from "react";
 import {
 	AlertDialog,
@@ -19,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
 	Dialog,
 	DialogContent,
@@ -31,12 +39,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+	List,
+	ListItem,
+	ListItemContent,
+	ListItemDescription,
+	ListItemMeta,
+	ListItemTitle,
+} from "@/components/ui/list";
+import {
+	PageSection,
+	PageSectionActions,
+	PageSectionContent,
+	PageSectionDescription,
+	PageSectionHeader,
+	PageSectionTitle,
+} from "@/components/ui/page";
+import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { SettingsCard } from "@/components/ui/settings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, apiErrorMessage } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
@@ -62,33 +87,42 @@ export function MembersSettings({ orgId }: { orgId: string }) {
 	const [inviteOpen, setInviteOpen] = useState(false);
 
 	return (
-		<div className="space-y-6">
-			<section className="space-y-3">
-				<div className="flex items-center justify-between gap-3">
-					<h2 className="text-base font-semibold tracking-tight">Members</h2>
+		<>
+			<PageSection variant="grouped">
+				<PageSectionHeader>
+					<PageSectionTitle>Members</PageSectionTitle>
+					<PageSectionDescription>
+						Everyone here can see every agent in this workspace. Owners
+						change roles; admins invite and remove.
+					</PageSectionDescription>
 					{isAdmin && (
-						<Button
-							onClick={() => setInviteOpen(true)}
-							className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-						>
-							<Plus className="mr-1 size-4" />
-							Invite member
-						</Button>
+						<PageSectionActions>
+							<Button
+								variant="accent"
+								size="sm"
+								onClick={() => setInviteOpen(true)}
+							>
+								<PlusIcon />
+								Invite member
+							</Button>
+						</PageSectionActions>
 					)}
-				</div>
-				{orgQuery.isLoading ? (
-					<Skeleton className="h-40 rounded-xl" />
-				) : orgQuery.isError || !orgQuery.data ? (
-					<ErrorText err={orgQuery.error} />
-				) : (
-					<MemberList
-						org={orgQuery.data}
-						myUserId={session?.user?.id}
-						isOwner={isOwner}
-						isAdmin={isAdmin}
-					/>
-				)}
-			</section>
+				</PageSectionHeader>
+				<PageSectionContent>
+					{orgQuery.isLoading ? (
+						<Skeleton className="h-40 rounded-xl" />
+					) : orgQuery.isError || !orgQuery.data ? (
+						<ErrorText err={orgQuery.error} />
+					) : (
+						<MemberList
+							org={orgQuery.data}
+							myUserId={session?.user?.id}
+							isOwner={isOwner}
+							isAdmin={isAdmin}
+						/>
+					)}
+				</PageSectionContent>
+			</PageSection>
 
 			{isAdmin && <PendingInvitations orgId={orgId} />}
 
@@ -100,7 +134,7 @@ export function MembersSettings({ orgId }: { orgId: string }) {
 					onOpenChange={setInviteOpen}
 				/>
 			)}
-		</div>
+		</>
 	);
 }
 
@@ -138,84 +172,84 @@ function MemberList({
 
 	return (
 		<>
-			<Card>
-				<CardContent className="p-0">
-					<ul className="divide-y divide-border/60">
-						{org.memberships.map((m) => {
-							const lastOwner = m.role === "owner" && ownerCount <= 1;
-							// Admins can remove members/admins; owners can remove anyone
-							// but the last owner. Nobody removes themselves here.
-							const canRemove =
-								m.userId !== myUserId &&
-								(isOwner ? !lastOwner : isAdmin && m.role !== "owner");
-							return (
-								<li key={m.id} className="flex items-center gap-3 px-4 py-3">
-									<Avatar className="size-9">
-										<AvatarImage src={m.user.image ?? undefined} />
-										<AvatarFallback>
-											{m.user.name.charAt(0).toUpperCase()}
-										</AvatarFallback>
-									</Avatar>
-									<div className="min-w-0 flex-1">
-										<div className="truncate text-sm font-medium">
-											{m.user.name}
-											{m.userId === myUserId && (
-												<span className="ml-1.5 text-xs font-normal text-muted-foreground">
-													(you)
-												</span>
-											)}
-										</div>
-										<div className="truncate text-xs text-muted-foreground">
-											{m.user.email}
-										</div>
-									</div>
-									{isOwner && !lastOwner ? (
-										<Select
-											value={m.role}
-											disabled={roleMutation.isPending}
-											onValueChange={(role) =>
-												roleMutation.mutate({
-													userId: m.userId,
-													role: role as MembershipRole,
-												})
-											}
-										>
-											<SelectTrigger size="sm" className="w-28">
-												<SelectValue />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="owner">Owner</SelectItem>
-												<SelectItem value="admin">Admin</SelectItem>
-												<SelectItem value="member">Member</SelectItem>
-											</SelectContent>
-										</Select>
-									) : (
-										<RoleBadge role={m.role} />
-									)}
-									{canRemove ? (
-										<Button
-											variant="ghost"
-											size="icon-sm"
-											onClick={() =>
-												setConfirmRemove({
-													userId: m.userId,
-													name: m.user.name,
-												})
-											}
-											className="text-muted-foreground hover:text-destructive"
-										>
-											<UserMinus className="size-4" />
-											<span className="sr-only">Remove {m.user.name}</span>
-										</Button>
-									) : (
-										<span className="size-8" />
-									)}
-								</li>
-							);
-						})}
-					</ul>
-				</CardContent>
-			</Card>
+			<SettingsCard>
+				<List variant="card">
+							{org.memberships.map((m) => {
+								const lastOwner = m.role === "owner" && ownerCount <= 1;
+								// Admins can remove members/admins; owners can remove anyone
+								// but the last owner. Nobody removes themselves here.
+								const canRemove =
+									m.userId !== myUserId &&
+									(isOwner ? !lastOwner : isAdmin && m.role !== "owner");
+								return (
+									<ListItem key={m.id}>
+										<Avatar className="size-8">
+											<AvatarImage src={m.user.image ?? undefined} />
+											<AvatarFallback>
+												{m.user.name.charAt(0).toUpperCase()}
+											</AvatarFallback>
+										</Avatar>
+										<ListItemContent>
+											<ListItemTitle>
+												<span className="truncate">{m.user.name}</span>
+												{m.userId === myUserId && (
+													<span className="text-xs font-normal text-muted-foreground">
+														(you)
+													</span>
+												)}
+											</ListItemTitle>
+											<ListItemDescription>
+												<span className="truncate">{m.user.email}</span>
+											</ListItemDescription>
+										</ListItemContent>
+										<ListItemMeta>
+										{isOwner && !lastOwner ? (
+											<Select
+												value={m.role}
+												disabled={roleMutation.isPending}
+												onValueChange={(role) =>
+													roleMutation.mutate({
+														userId: m.userId,
+														role: role as MembershipRole,
+													})
+												}
+											>
+												<SelectTrigger size="sm" className="w-28">
+													<SelectValue />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="owner">Owner</SelectItem>
+													<SelectItem value="admin">Admin</SelectItem>
+													<SelectItem value="member">Member</SelectItem>
+												</SelectContent>
+											</Select>
+										) : (
+											<RoleBadge role={m.role} />
+										)}
+										{canRemove ? (
+											<Button
+												variant="ghost"
+												size="icon-sm"
+												onClick={() =>
+													setConfirmRemove({
+														userId: m.userId,
+														name: m.user.name,
+													})
+												}
+												className="text-muted-foreground hover:text-destructive"
+											>
+												<UserMinusIcon className="size-4" />
+												<span className="sr-only">Remove {m.user.name}</span>
+											</Button>
+										) : (
+											<span className="size-8" />
+										)}
+										</ListItemMeta>
+									</ListItem>
+								);
+							})}
+				</List>
+			</SettingsCard>
 			{roleMutation.isError && <ErrorText err={roleMutation.error} />}
 
 			<AlertDialog
@@ -244,7 +278,7 @@ function MemberList({
 							className="bg-destructive text-white hover:bg-destructive/90"
 						>
 							{removeMutation.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
+								<SpinnerIcon className="mr-2 size-4 animate-spin" />
 							)}
 							Remove
 						</AlertDialogAction>
@@ -270,60 +304,67 @@ function PendingInvitations({ orgId }: { orgId: string }) {
 	if (q.isLoading || !q.data || q.data.length === 0) return null;
 
 	return (
-		<section className="space-y-3">
-			<h2 className="text-base font-semibold tracking-tight">Invitations</h2>
-			<Card>
-				<CardContent className="p-0">
-					<ul className="divide-y divide-border/60">
-						{q.data.map((inv) => (
-							<li key={inv.id} className="flex items-center gap-3 px-4 py-3">
-								<div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed border-border">
-									<Mail className="size-4 text-muted-foreground" />
-								</div>
-								<div className="min-w-0 flex-1">
-									<div className="truncate text-sm font-medium">
-										{inv.email}
+		<PageSection variant="grouped">
+			<PageSectionHeader>
+				<PageSectionTitle>Invitations</PageSectionTitle>
+				<PageSectionDescription>
+					Links waiting to be accepted.
+				</PageSectionDescription>
+			</PageSectionHeader>
+			<SettingsCard>
+						<List variant="card">
+							{q.data.map((inv) => (
+								<ListItem key={inv.id}>
+									<div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+										<MailIcon className="size-4 text-muted-foreground" />
 									</div>
-									<div className="truncate text-xs text-muted-foreground">
-										{inv.status === "declined" ? (
-											<span className="font-medium text-destructive">
-												Declined
+									<ListItemContent>
+										<ListItemTitle>
+											<span className="truncate">{inv.email}</span>
+										</ListItemTitle>
+										<ListItemDescription>
+											<span className="truncate">
+											{inv.status === "declined" ? (
+												<span className="font-medium text-destructive">
+													Declined
+												</span>
+											) : (
+												<>
+													Expires{" "}
+													{formatDistanceToNow(new Date(inv.expiresAt), {
+														addSuffix: true,
+													})}
+												</>
+											)}
+											{inv.invitedBy && ` · invited by ${inv.invitedBy.name}`}
 											</span>
-										) : (
-											<>
-												Expires{" "}
-												{formatDistanceToNow(new Date(inv.expiresAt), {
-													addSuffix: true,
-												})}
-											</>
-										)}
-										{inv.invitedBy && ` · invited by ${inv.invitedBy.name}`}
-									</div>
-								</div>
-								<RoleBadge role={inv.role} />
-								{inv.status === "pending" && (
-									<CopyButton text={inviteLink(inv.token)} label="Copy link" />
-								)}
-								<Button
-									variant="ghost"
-									size="icon-sm"
-									disabled={revoke.isPending}
-									onClick={() => revoke.mutate(inv.id)}
-									className="text-muted-foreground hover:text-destructive"
-								>
-									<X className="size-4" />
-									<span className="sr-only">
-										{inv.status === "declined"
-											? `Clear declined invitation for ${inv.email}`
-											: `Revoke invitation for ${inv.email}`}
-									</span>
-								</Button>
-							</li>
-						))}
-					</ul>
-				</CardContent>
-			</Card>
-		</section>
+										</ListItemDescription>
+									</ListItemContent>
+									<ListItemMeta>
+									<RoleBadge role={inv.role} />
+									{inv.status === "pending" && (
+										<CopyButton text={inviteLink(inv.token)} label="Copy link" />
+									)}
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										disabled={revoke.isPending}
+										onClick={() => revoke.mutate(inv.id)}
+										className="text-muted-foreground hover:text-destructive"
+									>
+										<XIcon className="size-4" />
+										<span className="sr-only">
+											{inv.status === "declined"
+												? `Clear declined invitation for ${inv.email}`
+												: `Revoke invitation for ${inv.email}`}
+										</span>
+									</Button>
+									</ListItemMeta>
+								</ListItem>
+							))}
+						</List>
+			</SettingsCard>
+		</PageSection>
 	);
 }
 
@@ -410,7 +451,7 @@ function InviteDialog({
 							<div className="space-y-1.5">
 								<Label htmlFor={emailId}>Email</Label>
 								<div className="relative">
-									<Mail className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+									<MailIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 									<Input
 										id={emailId}
 										type="email"
@@ -455,13 +496,9 @@ function InviteDialog({
 								>
 									Cancel
 								</Button>
-								<Button
-									type="submit"
-									disabled={!email || mutation.isPending}
-									className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-								>
+								<Button variant="accent" type="submit" disabled={!email || mutation.isPending}>
 									{mutation.isPending && (
-										<Loader2 className="mr-2 size-4 animate-spin" />
+										<SpinnerIcon className="mr-2 size-4 animate-spin" />
 									)}
 									Create invite link
 								</Button>
@@ -501,9 +538,9 @@ function CopyButton({
 			}}
 		>
 			{copied ? (
-				<Check className="mr-1 size-3.5" />
+				<CheckIcon className="mr-1 size-3.5" />
 			) : (
-				<Copy className="mr-1 size-3.5" />
+				<CopyIcon className="mr-1 size-3.5" />
 			)}
 			{copied ? "Copied" : label}
 		</Button>
@@ -512,9 +549,9 @@ function CopyButton({
 
 function RoleBadge({ role }: { role: MembershipRole }) {
 	return (
-		<span className="rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+		<Badge variant="secondary" className="capitalize">
 			{role}
-		</span>
+		</Badge>
 	);
 }
 

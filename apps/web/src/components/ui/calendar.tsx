@@ -1,10 +1,6 @@
 "use client";
 
-import {
-	ChevronDownIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-} from "lucide-react";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import * as React from "react";
 import {
 	type DayButton,

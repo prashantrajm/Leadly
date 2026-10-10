@@ -1,4 +1,4 @@
-import { Mail, User } from "lucide-react";
+import { MailIcon, UserIcon } from "@/components/icons";
 import { motion, useInView } from "motion/react";
 import { useRef } from "react";
 
@@ -32,14 +32,14 @@ export function LeadsCard() {
 				>
 					<div className="flex items-center gap-3">
 						<div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground">
-							<User className="h-3.5 w-3.5" />
+							<UserIcon className="h-3.5 w-3.5" />
 						</div>
 						<div className="min-w-0 flex-1">
 							<div className="truncate text-sm font-medium text-foreground">
 								Maya Patel
 							</div>
 							<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-								<Mail className="h-3 w-3" />
+								<MailIcon className="h-3 w-3" />
 								<span className="truncate">maya@northbeam.co</span>
 							</div>
 						</div>

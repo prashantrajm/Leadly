@@ -1,25 +1,40 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-	ArrowRight,
-	BarChart3,
-	BookOpen,
-	Code,
-	Inbox,
-	MessageSquare,
-	Play,
-	Settings,
-	UserPlus,
-} from "lucide-react";
+	BookIcon,
+	ChartIcon,
+	ChevronRightIcon,
+	CodeIcon,
+	type IconComponent,
+	InboxIcon,
+	PlayIcon,
+	SettingsIcon,
+	UserPlusIcon,
+} from "@/components/icons";
+import { Button } from "@/components/ui/button";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-} from "@/components/ui/card";
+	List,
+	ListItem,
+	ListItemContent,
+	ListItemDescription,
+	ListItemTitle,
+} from "@/components/ui/list";
+import {
+	Page,
+	PageActions,
+	PageContent,
+	PageSection,
+	PageSectionContent,
+	PageSectionDescription,
+	PageSectionHeader,
+	PageSectionTitle,
+	PageToolbar,
+} from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, LeadlyApiError } from "@/lib/api";
 import { useOrgPath } from "@/hooks/use-current-org";
+import { Kpi } from "@/components/dashboard/kpi";
+import { StatGroup } from "@/components/ui/stat";
 
 export const Route = createFileRoute("/$orgSlug/agents/$agentId/")({
 	component: AgentOverview,
@@ -41,10 +56,12 @@ function AgentOverview() {
 
 	if (agentQuery.isLoading) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<Skeleton className="h-20 w-full rounded-xl" />
-				<Skeleton className="mt-6 h-32 w-full rounded-xl" />
-			</div>
+			<Page>
+				<PageContent width="narrow" className="flex flex-col gap-4">
+					<Skeleton className="h-6 w-48" />
+					<Skeleton className="h-20 w-full" />
+				</PageContent>
+			</Page>
 		);
 	}
 
@@ -57,11 +74,11 @@ function AgentOverview() {
 					: `API ${err.status}: ${err.message}`
 				: "Could not load agent.";
 		return (
-			<div className="mx-auto max-w-6xl">
-				<div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-					{message}
-				</div>
-			</div>
+			<Page>
+				<PageContent>
+					<p className="text-sm text-destructive">{message}</p>
+				</PageContent>
+			</Page>
 		);
 	}
 
@@ -71,168 +88,131 @@ function AgentOverview() {
 	const s = summaryQuery.data;
 
 	return (
-		<div className="mx-auto max-w-6xl">
-			{/* Header */}
-			<header className="mb-8 flex flex-col gap-4 border-b border-border/60 pb-6 md:flex-row md:items-end md:justify-between">
-				<div className="flex items-center gap-4">
-					<div
-						className="flex size-12 items-center justify-center rounded-xl text-lg font-semibold text-white shadow-sm"
-						style={{ backgroundColor: agent.accentColor }}
-					>
-						{agent.name.charAt(0).toUpperCase()}
-					</div>
-					<div>
-						<h1 className="text-2xl font-semibold tracking-tight">
-							{agent.name}
-						</h1>
-						<div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-							<span className="font-mono uppercase tracking-[0.15em]">
-								{agent.slug}
-							</span>
-							<span className="size-1 rounded-full bg-muted-foreground/40" />
-							<span>{agent.defaultProvider}</span>
-							<span className="size-1 rounded-full bg-muted-foreground/40" />
-							<span className="font-mono">{agent.defaultModel}</span>
-						</div>
-					</div>
-				</div>
-				<Link
-					to={orgPath(`/agents/${agentId}/settings`) as string}
-					className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+		<Page>
+			<PageToolbar>
+				<span
+					aria-hidden
+					className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sheen text-xs font-semibold text-white shadow-solid"
+					style={{ backgroundColor: agent.accentColor }}
 				>
-					<Settings className="size-4" />
-					Settings
-				</Link>
-			</header>
+					{agent.name.charAt(0).toUpperCase()}
+				</span>
+				<span className="truncate text-sm font-medium">{agent.name}</span>
+				<span className="truncate font-mono text-xs text-muted-foreground max-sm:hidden">
+					{agent.defaultProvider} · {agent.defaultModel}
+				</span>
+				<PageActions>
+					<Button asChild variant="ghost" size="sm">
+						<Link to={orgPath(`/agents/${agentId}/settings`) as string}>
+							<SettingsIcon />
+							Settings
+						</Link>
+					</Button>
+					<Button asChild variant="outline" size="sm">
+						<Link to={orgPath(`/agents/${agentId}/playground`) as string}>
+							<PlayIcon />
+							Playground
+						</Link>
+					</Button>
+				</PageActions>
+			</PageToolbar>
 
-			{/* KPIs */}
-			<section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-				<MiniKpi
-					label="Conversations"
-					value={s?.conversations}
-					sub="last 7 days"
-					icon={MessageSquare}
-					loading={summaryQuery.isLoading}
-				/>
-				<MiniKpi
-					label="Leads"
-					value={s?.leadsCaptured}
-					sub="last 7 days"
-					icon={UserPlus}
-					accent
-					loading={summaryQuery.isLoading}
-				/>
-				<MiniKpi
-					label="Handoffs"
-					value={s?.handoffs}
-					sub="last 7 days"
-					icon={Inbox}
-					loading={summaryQuery.isLoading}
-				/>
-			</section>
+			<PageContent width="narrow">
+				<PageSection>
+					<PageSectionHeader>
+						<PageSectionTitle>Last 7 days</PageSectionTitle>
+						<PageSectionDescription>
+							Activity across every conversation this agent handled.
+						</PageSectionDescription>
+					</PageSectionHeader>
+					<PageSectionContent>
+						<StatGroup variant="inline">
+							<Kpi
+								label="Conversations"
+								value={s?.conversations}
+								loading={summaryQuery.isLoading}
+							/>
+							<Kpi
+								label="Leads"
+								value={s?.leadsCaptured}
+								loading={summaryQuery.isLoading}
+							/>
+							<Kpi
+								label="Handoffs"
+								value={s?.handoffs}
+								loading={summaryQuery.isLoading}
+							/>
+						</StatGroup>
+					</PageSectionContent>
+				</PageSection>
 
-			{/* Quick links */}
-			<section className="mt-8">
-				<h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-					Jump to
-				</h2>
-				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-					<QuickLink
-						title="Inbox"
-						description="Live conversations + transcripts"
-						icon={Inbox}
-						to={orgPath("/inbox")}
-						search={{ agent: agentId }}
-					/>
-					<QuickLink
-						title="Knowledge"
-						description="Articles your agent answers from"
-						icon={BookOpen}
-						to={orgPath(`/agents/${agentId}/knowledge`)}
-					/>
-					<QuickLink
-						title="Playground"
-						description="Try it without installing"
-						icon={Play}
-						to={orgPath(`/agents/${agentId}/playground`)}
-						accent
-					/>
-					<QuickLink
-						title="Install"
-						description="Drop the script on your site"
-						icon={Code}
-						to={orgPath(`/agents/${agentId}/install`)}
-					/>
-					<QuickLink
-						title="Leads"
-						description="Captured contacts"
-						icon={UserPlus}
-						to={orgPath("/leads")}
-						search={{ agent: agentId }}
-					/>
-					<QuickLink
-						title="Analytics"
-						description="Trends over time"
-						icon={BarChart3}
-						to={orgPath("/analytics")}
-						search={{ agent: agentId }}
-					/>
-				</div>
-			</section>
+				<PageSection>
+					<PageSectionHeader>
+						<PageSectionTitle>Jump to</PageSectionTitle>
+						<PageSectionDescription>
+							Everything that belongs to this agent.
+						</PageSectionDescription>
+					</PageSectionHeader>
+					<PageSectionContent>
+						<List variant="inset">
+							<QuickLink
+								title="Inbox"
+								description="Live conversations + transcripts"
+								icon={InboxIcon}
+								to={orgPath("/inbox")}
+								search={{ agent: agentId }}
+							/>
+							<QuickLink
+								title="Knowledge"
+								description="Articles your agent answers from"
+								icon={BookIcon}
+								to={orgPath(`/agents/${agentId}/knowledge`)}
+							/>
+							<QuickLink
+								title="Playground"
+								description="Try it without installing"
+								icon={PlayIcon}
+								to={orgPath(`/agents/${agentId}/playground`)}
+							/>
+							<QuickLink
+								title="Install"
+								description="Drop the script on your site"
+								icon={CodeIcon}
+								to={orgPath(`/agents/${agentId}/install`)}
+							/>
+							<QuickLink
+								title="Leads"
+								description="Captured contacts"
+								icon={UserPlusIcon}
+								to={orgPath("/leads")}
+								search={{ agent: agentId }}
+							/>
+							<QuickLink
+								title="Analytics"
+								description="Trends over time"
+								icon={ChartIcon}
+								to={orgPath("/analytics")}
+								search={{ agent: agentId }}
+							/>
+						</List>
+					</PageSectionContent>
+				</PageSection>
 
-			{/* Greeting preview */}
-			<section className="mt-10">
-				<h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-					What visitors see first
-				</h2>
-				<div className="rounded-xl border border-border bg-card p-5">
-					<p className="text-sm leading-relaxed text-foreground">
-						{agent.greeting}
-					</p>
-				</div>
-			</section>
-		</div>
-	);
-}
-
-function MiniKpi({
-	label,
-	value,
-	sub,
-	icon: Icon,
-	accent,
-	loading,
-}: {
-	label: string;
-	value: number | undefined;
-	sub: string;
-	icon: React.ComponentType<{ className?: string }>;
-	accent?: boolean;
-	loading?: boolean;
-}) {
-	return (
-		<Card>
-			<CardHeader className="pb-2">
-				<div className="flex items-center justify-between">
-					<CardDescription className="text-xs font-medium uppercase tracking-wider">
-						{label}
-					</CardDescription>
-					<Icon
-						className={`size-4 ${accent ? "text-accent-blue" : "text-muted-foreground"}`}
-					/>
-				</div>
-			</CardHeader>
-			<CardContent>
-				{loading ? (
-					<Skeleton className="h-8 w-16" />
-				) : (
-					<div className="text-2xl font-semibold tracking-tight">
-						{(value ?? 0).toLocaleString()}
-					</div>
-				)}
-				<div className="mt-1 text-xs text-muted-foreground">{sub}</div>
-			</CardContent>
-		</Card>
+				<PageSection>
+					<PageSectionHeader>
+						<PageSectionTitle>Greeting</PageSectionTitle>
+						<PageSectionDescription>
+							What visitors see first when they open the widget.
+						</PageSectionDescription>
+					</PageSectionHeader>
+					<PageSectionContent>
+						<div className="w-fit max-w-full rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2.5 text-sm leading-relaxed">
+							{agent.greeting}
+						</div>
+					</PageSectionContent>
+				</PageSection>
+			</PageContent>
+		</Page>
 	);
 }
 
@@ -242,40 +222,24 @@ function QuickLink({
 	icon: Icon,
 	to,
 	search,
-	accent,
 }: {
 	title: string;
 	description: string;
-	icon: React.ComponentType<{ className?: string }>;
+	icon: IconComponent;
 	to: string;
 	// Org-wide pages (inbox, leads, analytics) take the agent as a filter.
 	search?: { agent: string };
-	accent?: boolean;
 }) {
 	return (
-		<Link
-			to={to as string}
-			search={search}
-			className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-accent-blue/30"
-		>
-			<div
-				className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-					accent
-						? "bg-accent-blue text-accent-blue-foreground"
-						: "border border-border bg-secondary/40 text-foreground"
-				}`}
-			>
-				<Icon className="size-4" />
-			</div>
-			<div className="min-w-0 flex-1">
-				<div className="flex items-center gap-1 text-sm font-semibold tracking-tight">
-					{title}
-					<ArrowRight className="size-3.5 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-accent-blue" />
-				</div>
-				<p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-					{description}
-				</p>
-			</div>
-		</Link>
+		<ListItem asChild className="min-h-11 py-2">
+			<Link to={to as string} search={search}>
+				<Icon className="size-4 shrink-0 text-muted-foreground" />
+				<ListItemContent className="flex-row items-baseline gap-2">
+					<ListItemTitle className="shrink-0">{title}</ListItemTitle>
+					<ListItemDescription>{description}</ListItemDescription>
+				</ListItemContent>
+				<ChevronRightIcon className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/list-item:opacity-100" />
+			</Link>
+		</ListItem>
 	);
 }

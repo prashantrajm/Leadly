@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@/components/icons";
 import { motion } from "motion/react";
 import { FeaturesSection } from "@/components/features";
 import {
@@ -76,13 +76,13 @@ function Hero() {
 
 					<div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
 						<Button
+							variant="accent"
 							size="lg"
 							asChild
-							className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 						>
 							<Link to="/auth">
 								Get started
-								<ArrowRight className="ml-2 h-4 w-4" />
+								<ArrowRightIcon className="ml-2 h-4 w-4" />
 							</Link>
 						</Button>
 						<Button size="lg" variant="outline" asChild>
@@ -380,13 +380,13 @@ function ClosingCta() {
 						</p>
 						<div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
 							<Button
+								variant="accent"
 								size="lg"
 								asChild
-								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 							>
 								<Link to="/auth">
 									Start free
-									<ArrowRight className="ml-2 h-4 w-4" />
+									<ArrowRightIcon className="ml-2 h-4 w-4" />
 								</Link>
 							</Button>
 						</div>

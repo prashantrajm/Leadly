@@ -2,30 +2,28 @@ import type { ConversationWithTurns } from "@leadly/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format, formatDistanceToNow } from "date-fns";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
-	ArrowLeft,
-	CircleStop,
-	Hand,
-	HandMetal,
-	Loader2,
-	Mail,
-	Send,
-	UserRound,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+	ArrowLeftIcon,
+	BotIcon,
+	HandIcon,
+	SendIcon,
+	SpinnerIcon,
+	StopIcon,
+} from "@/components/icons";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { api, LeadlyApiError } from "@/lib/api";
 import { useOrgPath } from "@/hooks/use-current-org";
+import {
+	type InboxSearch,
+	useInboxConversations,
+	visitorLabel,
+} from "@/hooks/use-inbox-conversations";
+import { api, LeadlyApiError } from "@/lib/api";
 
+// Right-hand pane of the inbox: transcript, reply composer and details.
 export const Route = createFileRoute("/$orgSlug/inbox/$conversationId")({
 	component: ConversationDetail,
 });
@@ -43,24 +41,23 @@ function ConversationDetail() {
 
 	if (q.isLoading) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<Skeleton className="h-10 w-40 rounded-md" />
-				<Skeleton className="mt-6 h-[600px] rounded-xl" />
+			<div className="flex flex-col gap-4 p-4 md:p-6">
+				<Skeleton className="h-6 w-40" />
+				<Skeleton className="h-16 w-2/3 rounded-2xl" />
+				<Skeleton className="ml-auto h-16 w-2/3 rounded-2xl" />
 			</div>
 		);
 	}
 
 	if (q.isError || !q.data) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-					{q.error instanceof LeadlyApiError
-						? q.error.status === 404
-							? "Conversation not found."
-							: `API ${q.error.status}: ${q.error.message}`
-						: "Could not load conversation."}
-				</div>
-			</div>
+			<p className="p-4 text-sm text-destructive md:p-6">
+				{q.error instanceof LeadlyApiError
+					? q.error.status === 404
+						? "Conversation not found."
+						: `API ${q.error.status}: ${q.error.message}`
+					: "Could not load conversation."}
+			</p>
 		);
 	}
 
@@ -76,25 +73,129 @@ function ConversationView({
 	conversation: ConversationWithTurns;
 	conversationId: string;
 }) {
+	const search = Route.useSearch() as InboxSearch;
 	const orgPath = useOrgPath();
+	// The list row (same query as the list pane, so usually cached) knows the
+	// visitor's name; the detail payload only has ids.
+	const listItem = useInboxConversations(search).data?.items.find(
+		(c) => c.id === conversationId,
+	);
+	const title = listItem
+		? visitorLabel(listItem)
+		: `Visitor ${conversation.visitorId.slice(0, 8)}`;
+	const live = conversation.mode === "paused";
+	const ended = conversation.status === "ended";
+
 	return (
-		<div className="mx-auto max-w-6xl">
-			<div className="mb-6">
-				<Button asChild variant="ghost" size="sm" className="-ml-2">
-					<Link to={orgPath("/inbox")}>
-						<ArrowLeft className="mr-1 size-4" />
-						Inbox
+		<>
+			<header className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 px-4 md:px-6">
+				<Button
+					asChild
+					variant="ghost"
+					size="icon-sm"
+					className="-ml-2 md:hidden"
+				>
+					<Link to={orgPath("/inbox") as string} search={search}>
+						<ArrowLeftIcon />
+						<span className="sr-only">Back to inbox</span>
 					</Link>
 				</Button>
+				<h2 className="truncate text-sm font-medium">{title}</h2>
+				{live ? (
+					<Badge className="gap-1.5 bg-accent-blue/10 text-accent-blue">
+						<span className="size-1.5 animate-pulse rounded-full bg-accent-blue" />
+						You're live
+					</Badge>
+				) : (
+					<Badge variant="outline">{ended ? "Ended" : "Auto"}</Badge>
+				)}
+				{!ended && (
+					<ConversationActions
+						conversationId={conversationId}
+						live={live}
+					/>
+				)}
+			</header>
+			<div className="flex min-h-0 flex-1">
+				<TranscriptPane conversation={conversation} conversationId={conversationId} />
+				<DetailsPane conversation={conversation} />
 			</div>
+		</>
+	);
+}
 
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-				<TranscriptPane
-					conversation={conversation}
-					conversationId={conversationId}
-				/>
-				<ContextPane conversation={conversation} />
-			</div>
+function ConversationActions({
+	conversationId,
+	live,
+}: {
+	conversationId: string;
+	live: boolean;
+}) {
+	const queryClient = useQueryClient();
+	const invalidate = () => {
+		queryClient.invalidateQueries({
+			queryKey: ["conversation", conversationId],
+		});
+		queryClient.invalidateQueries({ queryKey: ["inbox-counts"] });
+	};
+
+	const takeoverMutation = useMutation({
+		mutationFn: () => api.conversations.takeOver(conversationId),
+		onSuccess: invalidate,
+	});
+	const releaseMutation = useMutation({
+		mutationFn: () => api.conversations.release(conversationId),
+		onSuccess: invalidate,
+	});
+	const endMutation = useMutation({
+		mutationFn: () => api.conversations.end(conversationId),
+		onSuccess: invalidate,
+	});
+
+	return (
+		<div className="ml-auto flex items-center gap-1.5">
+			<Button
+				size="sm"
+				variant="outline"
+				onClick={() => endMutation.mutate()}
+				disabled={endMutation.isPending}
+			>
+				{endMutation.isPending ? (
+					<SpinnerIcon className="animate-spin" />
+				) : (
+					<StopIcon />
+				)}
+				End
+			</Button>
+			{live ? (
+				<Button
+					size="sm"
+					variant="outline"
+					onClick={() => releaseMutation.mutate()}
+					disabled={releaseMutation.isPending}
+				>
+					{releaseMutation.isPending ? (
+						<SpinnerIcon className="animate-spin" />
+					) : (
+						<BotIcon />
+					)}
+					Release
+				</Button>
+			) : (
+				<Button
+					variant="accent"
+					size="sm"
+					onClick={() => takeoverMutation.mutate()}
+					disabled={takeoverMutation.isPending}
+				>
+					{takeoverMutation.isPending ? (
+						<SpinnerIcon className="animate-spin" />
+					) : (
+						<HandIcon />
+					)}
+					Take over
+				</Button>
+			)}
 		</div>
 	);
 }
@@ -106,39 +207,8 @@ function TranscriptPane({
 	conversation: ConversationWithTurns;
 	conversationId: string;
 }) {
-	const queryClient = useQueryClient();
 	const live = conversation.mode === "paused";
 	const ended = conversation.status === "ended";
-
-	const takeoverMutation = useMutation({
-		mutationFn: () => api.conversations.takeOver(conversationId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["conversation", conversationId],
-			});
-			queryClient.invalidateQueries({ queryKey: ["inbox-counts"] });
-		},
-	});
-
-	const releaseMutation = useMutation({
-		mutationFn: () => api.conversations.release(conversationId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["conversation", conversationId],
-			});
-			queryClient.invalidateQueries({ queryKey: ["inbox-counts"] });
-		},
-	});
-
-	const endMutation = useMutation({
-		mutationFn: () => api.conversations.end(conversationId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["conversation", conversationId],
-			});
-			queryClient.invalidateQueries({ queryKey: ["inbox-counts"] });
-		},
-	});
 
 	const scrollRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
@@ -147,83 +217,14 @@ function TranscriptPane({
 	});
 
 	return (
-		<Card className="flex h-[680px] flex-col overflow-hidden">
-			<div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-				<div className="flex items-center gap-2">
-					{live ? (
-						<span className="inline-flex items-center gap-1.5 rounded-full bg-accent-blue/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-accent-blue">
-							<span className="size-1.5 animate-pulse rounded-full bg-accent-blue" />
-							You're live
-						</span>
-					) : ended ? (
-						<span className="rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-							Ended
-						</span>
-					) : (
-						<span className="rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-							Auto
-						</span>
-					)}
-					<span className="text-xs text-muted-foreground">
-						{conversation.turns.length} turn
-						{conversation.turns.length === 1 ? "" : "s"}
-					</span>
-				</div>
-				{!ended && (
-					<div className="flex items-center gap-2">
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => endMutation.mutate()}
-							disabled={endMutation.isPending}
-						>
-							{endMutation.isPending ? (
-								<Loader2 className="mr-1 size-3.5 animate-spin" />
-							) : (
-								<CircleStop className="mr-1 size-3.5" />
-							)}
-							End
-						</Button>
-						{live ? (
-							<Button
-								size="sm"
-								variant="outline"
-								onClick={() => releaseMutation.mutate()}
-								disabled={releaseMutation.isPending}
-							>
-								{releaseMutation.isPending ? (
-									<Loader2 className="mr-1 size-3.5 animate-spin" />
-								) : (
-									<HandMetal className="mr-1 size-3.5" />
-								)}
-								Release
-							</Button>
-						) : (
-							<Button
-								size="sm"
-								onClick={() => takeoverMutation.mutate()}
-								disabled={takeoverMutation.isPending}
-								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-							>
-								{takeoverMutation.isPending ? (
-									<Loader2 className="mr-1 size-3.5 animate-spin" />
-								) : (
-									<Hand className="mr-1 size-3.5" />
-								)}
-								Take over
-							</Button>
-						)}
-					</div>
-				)}
-			</div>
-
-			<div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-6">
+		<div className="flex min-w-0 flex-1 flex-col">
+			<div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
 				{conversation.turns.length === 0 ? (
 					<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 						No messages yet.
 					</div>
 				) : (
-					<div className="space-y-3">
+					<div className="mx-auto flex max-w-2xl flex-col gap-3">
 						{conversation.turns.map((t) => (
 							<TurnBubble key={t.id} turn={t} />
 						))}
@@ -233,12 +234,12 @@ function TranscriptPane({
 
 			{!ended && live && <HumanComposer conversationId={conversationId} />}
 			{!ended && !live && (
-				<div className="border-t border-border/60 px-5 py-3 text-xs text-muted-foreground">
+				<div className="border-t border-border/60 px-4 py-3 text-xs text-muted-foreground md:px-6">
 					Click <span className="font-medium text-foreground">Take over</span>{" "}
 					to reply as a human. The visitor sees no difference.
 				</div>
 			)}
-		</Card>
+		</div>
 	);
 }
 
@@ -263,7 +264,7 @@ function HumanComposer({ conversationId }: { conversationId: string }) {
 	}
 
 	return (
-		<div className="border-t border-border/60 p-3">
+		<div className="border-t border-border/60 px-4 py-3 md:px-6">
 			<div className="flex items-end gap-2">
 				<Textarea
 					placeholder="Type a reply… visitor sees this as the agent."
@@ -279,15 +280,15 @@ function HumanComposer({ conversationId }: { conversationId: string }) {
 					className="min-h-[40px] resize-none"
 				/>
 				<Button
+					variant="accent"
 					onClick={send}
 					disabled={!text.trim() || mutation.isPending}
 					size="icon"
-					className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 				>
 					{mutation.isPending ? (
-						<Loader2 className="size-4 animate-spin" />
+						<SpinnerIcon className="size-4 animate-spin" />
 					) : (
-						<Send className="size-4" />
+						<SendIcon className="size-4" />
 					)}
 					<span className="sr-only">Send</span>
 				</Button>
@@ -344,92 +345,68 @@ function TurnBubble({
 	);
 }
 
-function ContextPane({
-	conversation,
+// Properties panel beside the transcript, Linear-issue style: hairline-
+// divided groups of label/value rows rather than a stack of cards.
+function DetailsPane({
+	conversation: c,
 }: {
 	conversation: ConversationWithTurns;
 }) {
-	const c = conversation;
 	return (
-		<div className="space-y-4">
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-sm">Visitor</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-3 text-sm">
-					<div className="flex items-center gap-3">
-						<div className="flex size-9 items-center justify-center rounded-full border border-border bg-secondary/40">
-							<UserRound className="size-4 text-muted-foreground" />
-						</div>
-						<div className="min-w-0 flex-1">
-							<div className="truncate text-sm font-medium">
-								{c.visitorId.slice(0, 8)}…
-							</div>
-							<div className="font-mono text-[11px] text-muted-foreground">
-								visitor id
-							</div>
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-
-			{c.leadId && (
-				<Card>
-					<CardHeader className="pb-3">
-						<CardTitle className="text-sm">Lead captured</CardTitle>
-						<CardDescription>
-							The agent captured contact info during this conversation.
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="text-sm">
-						<div className="flex items-center gap-2 text-muted-foreground">
-							<Mail className="size-4" />
-							<span className="font-mono text-xs">
-								{c.leadId.slice(0, 12)}…
-							</span>
-						</div>
-					</CardContent>
-				</Card>
-			)}
-
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-sm">Conversation</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-2 text-xs text-muted-foreground">
-					<KV label="Channel" value={c.channel} mono />
-					<KV label="Mode" value={c.mode} mono />
-					<KV label="Status" value={c.status} mono />
+		<aside className="hidden w-72 shrink-0 overflow-y-auto border-l border-border/60 xl:block">
+			<DetailsGroup title="Conversation">
+				<KV label="Status" value={c.status} />
+				<KV label="Mode" value={c.mode === "paused" ? "live" : c.mode} />
+				<KV label="Channel" value={c.channel} />
+				<KV label="Turns" value={String(c.turns.length)} />
+				<KV
+					label="Started"
+					value={format(new Date(c.startedAt), "MMM d, h:mm a")}
+				/>
+				<KV
+					label="Last activity"
+					value={formatDistanceToNow(new Date(c.lastActivityAt), {
+						addSuffix: true,
+					})}
+				/>
+				{c.endedAt && (
 					<KV
-						label="Started"
-						value={format(new Date(c.startedAt), "MMM d, h:mm a")}
+						label="Ended"
+						value={format(new Date(c.endedAt), "MMM d, h:mm a")}
 					/>
-					<KV
-						label="Last activity"
-						value={formatDistanceToNow(new Date(c.lastActivityAt), {
-							addSuffix: true,
-						})}
-					/>
-					{c.endedAt && (
-						<KV
-							label="Ended"
-							value={format(new Date(c.endedAt), "MMM d, h:mm a")}
-						/>
-					)}
-				</CardContent>
-			</Card>
-
+				)}
+			</DetailsGroup>
+			<DetailsGroup title="Visitor">
+				<KV label="Visitor" value={`${c.visitorId.slice(0, 8)}…`} mono />
+				<KV
+					label="Lead"
+					value={c.leadId ? `${c.leadId.slice(0, 8)}…` : "Not captured"}
+					mono={Boolean(c.leadId)}
+				/>
+			</DetailsGroup>
 			{c.summary && (
-				<Card>
-					<CardHeader className="pb-3">
-						<CardTitle className="text-sm">Summary</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className="text-sm text-muted-foreground">{c.summary}</p>
-					</CardContent>
-				</Card>
+				<DetailsGroup title="Summary">
+					<p className="text-[13px] leading-relaxed text-muted-foreground">
+						{c.summary}
+					</p>
+				</DetailsGroup>
 			)}
-		</div>
+		</aside>
+	);
+}
+
+function DetailsGroup({
+	title,
+	children,
+}: {
+	title: string;
+	children: ReactNode;
+}) {
+	return (
+		<section className="flex flex-col gap-2.5 border-b border-border/60 px-5 py-4 last:border-b-0">
+			<h3 className="text-xs font-medium text-muted-foreground">{title}</h3>
+			{children}
+		</section>
 	);
 }
 
@@ -443,10 +420,12 @@ function KV({
 	mono?: boolean;
 }) {
 	return (
-		<div className="flex items-center justify-between gap-3">
+		<div className="flex items-center justify-between gap-3 text-[13px]">
 			<span className="text-muted-foreground">{label}</span>
 			<span
-				className={`text-foreground ${mono ? "font-mono text-[11px]" : ""}`}
+				className={
+					mono ? "font-mono text-xs text-foreground" : "capitalize text-foreground"
+				}
 			>
 				{value}
 			</span>

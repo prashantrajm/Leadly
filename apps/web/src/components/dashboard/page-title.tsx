@@ -1,5 +1,5 @@
 import { useRouterState } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon } from "@/components/icons";
 import { useOrgAgents } from "@/hooks/use-org-agents";
 
 // Top-level app pages, keyed by the first segment after /<orgSlug>.
@@ -36,7 +36,7 @@ export function PageTitle() {
 			{crumbs.map((crumb, i) => (
 				<span key={crumb} className="flex min-w-0 items-center gap-1.5">
 					{i > 0 && (
-						<ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+						<ChevronRightIcon className="size-3.5 shrink-0 text-muted-foreground" />
 					)}
 					<span
 						className={

@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Loader2, Trash2 } from "lucide-react";
+import { SpinnerIcon, TrashIcon } from "@/components/icons";
 import { useId, useState } from "react";
 import {
 	AlertDialog,
@@ -13,15 +13,21 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	PageSection,
+	PageSectionHeader,
+	PageSectionTitle,
+} from "@/components/ui/page";
+import {
+	SettingsCard,
+	SettingsRow,
+	SettingsRowControl,
+	SettingsRowDescription,
+	SettingsRowLabel,
+	SettingsRowTitle,
+} from "@/components/ui/settings";
 import { api, apiErrorMessage } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 
@@ -56,26 +62,32 @@ export function DeleteAccountCard({ email }: { email: string }) {
 	const confirmed = typed.trim().toLowerCase() === email.toLowerCase();
 
 	return (
-		<Card className="border-destructive/40">
-			<CardHeader>
-				<CardTitle className="text-base text-destructive">
-					Delete account
-				</CardTitle>
-				<CardDescription>
-					Permanently delete your account. Workspaces where you're the only
-					member are deleted with it. This can't be undone.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<Button
-					variant="outline"
-					onClick={() => setOpen(true)}
-					className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-				>
-					<Trash2 className="mr-1 size-4" />
-					Delete account
-				</Button>
-			</CardContent>
+		<PageSection variant="grouped">
+			<PageSectionHeader>
+				<PageSectionTitle>Danger zone</PageSectionTitle>
+			</PageSectionHeader>
+			<SettingsCard>
+				<SettingsRow>
+					<SettingsRowLabel>
+						<SettingsRowTitle>Delete account</SettingsRowTitle>
+						<SettingsRowDescription>
+							Permanently delete your account. Workspaces where you're the only
+							member are deleted with it. This can't be undone.
+						</SettingsRowDescription>
+					</SettingsRowLabel>
+					<SettingsRowControl>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setOpen(true)}
+							className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+						>
+							<TrashIcon />
+							Delete account
+						</Button>
+					</SettingsRowControl>
+				</SettingsRow>
+			</SettingsCard>
 
 			<AlertDialog
 				open={open}
@@ -94,7 +106,7 @@ export function DeleteAccountCard({ email }: { email: string }) {
 							<div className="space-y-3 text-sm text-muted-foreground">
 								{preview.isLoading || !plan ? (
 									<p className="flex items-center gap-2">
-										<Loader2 className="size-3.5 animate-spin" />
+										<SpinnerIcon className="size-3.5 animate-spin" />
 										Checking your workspaces…
 									</p>
 								) : blocked ? (
@@ -167,7 +179,7 @@ export function DeleteAccountCard({ email }: { email: string }) {
 								className="bg-destructive text-white hover:bg-destructive/90"
 							>
 								{mutation.isPending && (
-									<Loader2 className="mr-2 size-4 animate-spin" />
+									<SpinnerIcon className="mr-2 size-4 animate-spin" />
 								)}
 								Delete account
 							</AlertDialogAction>
@@ -175,7 +187,7 @@ export function DeleteAccountCard({ email }: { email: string }) {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</Card>
+		</PageSection>
 	);
 }
 

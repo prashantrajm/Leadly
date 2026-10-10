@@ -5,10 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 body {
-  @apply m-0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  @apply m-0 font-sans;
+  font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -18,8 +16,9 @@ code {
     source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 :root {
-  /* Light theme — neutral grayscale, no hue */
-  --background: oklch(0.9900 0 0);
+  /* Light theme — neutral grayscale, no hue. Three surface steps:
+     sidebar (app frame) < background (content panel) < card (raised). */
+  --background: oklch(0.9850 0 0);
   --foreground: oklch(0.1800 0 0);
   --card: oklch(1.0000 0 0);
   --card-foreground: oklch(0.1800 0 0);
@@ -29,48 +28,63 @@ code {
   --primary-foreground: oklch(0.9800 0 0);
   --secondary: oklch(0.9600 0 0);
   --secondary-foreground: oklch(0.2200 0 0);
-  --muted: oklch(0.9700 0 0);
-  --muted-foreground: oklch(0.4800 0 0);
-  --accent: oklch(0.9500 0 0);
+  --muted: oklch(0.9650 0 0);
+  --muted-foreground: oklch(0.5000 0 0);
+  --accent: oklch(0.9550 0 0);
   --accent-foreground: oklch(0.2200 0 0);
   --destructive: oklch(0.5800 0.2078 25.3313);
   --destructive-foreground: oklch(0.9800 0 0);
-  --border: oklch(0.9100 0 0);
-  --input: oklch(0.9100 0 0);
+  --success: oklch(0.5600 0.1400 155);
+  --warning: oklch(0.7300 0.1600 70);
+  --border: oklch(0.9250 0 0);
+  --input: oklch(0.9050 0 0);
   --ring: oklch(0.4500 0 0);
   --chart-1: oklch(0.2000 0 0);
   --chart-2: oklch(0.3500 0 0);
   --chart-3: oklch(0.5000 0 0);
   --chart-4: oklch(0.6500 0 0);
   --chart-5: oklch(0.8000 0 0);
-  --sidebar: oklch(0.9700 0 0);
+  --sidebar: oklch(0.9650 0 0);
   --sidebar-foreground: oklch(0.1800 0 0);
   --sidebar-primary: oklch(0.2000 0 0);
   --sidebar-primary-foreground: oklch(0.9800 0 0);
-  --sidebar-accent: oklch(0.9500 0 0);
+  --sidebar-accent: oklch(0.9300 0 0);
   --sidebar-accent-foreground: oklch(0.2200 0 0);
-  --sidebar-border: oklch(0.9100 0 0);
+  --sidebar-border: oklch(0.9150 0 0);
   --sidebar-ring: oklch(0.4500 0 0);
-  --font-sans: Inter, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: Merriweather, serif;
-  --font-mono: JetBrains Mono, monospace;
-  --radius: 0.5rem;
-  --shadow-x: 0px;
-  --shadow-y: 4px;
-  --shadow-blur: 8px;
-  --shadow-spread: -1px;
-  --shadow-opacity: 0.1;
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-2xs: 0px 4px 8px -1px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0px 4px 8px -1px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 1px 2px -2px hsl(0 0% 0% / 0.10);
-  --shadow: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 1px 2px -2px hsl(0 0% 0% / 0.10);
-  --shadow-md: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 2px 4px -2px hsl(0 0% 0% / 0.10);
-  --shadow-lg: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 4px 6px -2px hsl(0 0% 0% / 0.10);
-  --shadow-xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 8px 10px -2px hsl(0 0% 0% / 0.10);
-  --shadow-2xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.25);
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --radius: 0.75rem;
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+
+  /* Elevation. Surfaces get their edge from a hairline ring inside the
+     shadow instead of a border, so stacked layers never double up lines. */
+  --edge: oklch(0 0 0 / 0.06);
+  --edge-strong: oklch(0 0 0 / 0.09);
+  --highlight: oklch(1 0 0 / 0.7);
+  --shadow-2xs: 0 1px oklch(0 0 0 / 0.03);
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.04), 0 1px 3px oklch(0 0 0 / 0.04);
+  --shadow: var(--shadow-sm);
+  --shadow-md: 0 2px 4px -1px oklch(0 0 0 / 0.05), 0 4px 8px -2px oklch(0 0 0 / 0.06);
+  --shadow-lg: 0 4px 8px -2px oklch(0 0 0 / 0.06), 0 12px 24px -6px oklch(0 0 0 / 0.08);
+  --shadow-xl: 0 8px 16px -4px oklch(0 0 0 / 0.07), 0 20px 32px -8px oklch(0 0 0 / 0.10);
+  --shadow-2xl: 0 24px 48px -12px oklch(0 0 0 / 0.18);
+  /* Resting card / panel. */
+  --shadow-card: 0 0 0 1px var(--edge), 0 1px 2px oklch(0 0 0 / 0.04), 0 2px 6px -2px oklch(0 0 0 / 0.04);
+  --shadow-card-hover: 0 0 0 1px var(--edge-strong), 0 2px 4px oklch(0 0 0 / 0.05), 0 6px 14px -4px oklch(0 0 0 / 0.08);
+  /* Light controls on a surface: outline buttons, tabs, switch thumbs. */
+  --shadow-raised: 0 0 0 1px var(--edge-strong), 0 1px 2px oklch(0 0 0 / 0.06), inset 0 -1px 0 oklch(0 0 0 / 0.03);
+  /* Solid fills (primary / destructive): lit top edge, darker rim, drop. */
+  --shadow-solid: inset 0 1px 0 oklch(1 0 0 / 0.16), inset 0 -1px 0 oklch(0 0 0 / 0.12), 0 0 0 1px oklch(0 0 0 / 0.14), 0 1px 2px oklch(0 0 0 / 0.14), 0 2px 5px -1px oklch(0 0 0 / 0.10);
+  /* Floating layers: popovers, menus, dialogs. */
+  --shadow-overlay: 0 0 0 1px var(--edge), 0 4px 8px -2px oklch(0 0 0 / 0.06), 0 16px 32px -8px oklch(0 0 0 / 0.12);
+  /* Recessed wells that hold cards. */
+  --shadow-inset: inset 0 0 0 1px var(--edge), inset 0 1px 2px oklch(0 0 0 / 0.03);
+  /* Top-lit sheen layered over solid fills. */
+  --sheen: linear-gradient(to bottom, oklch(1 0 0 / 0.12), oklch(1 0 0 / 0));
 
   /* Single accent — used sparingly on landing (hero keyword, primary CTAs, highlighted pricing tier) */
   --accent-blue: #2a59da;
@@ -78,61 +92,59 @@ code {
 }
 
 .dark {
-  /* Dark theme — Linear-style neutral near-black, no hue */
-  --background: oklch(0.1400 0 0);
+  /* Dark theme — Linear-style neutral near-black, no hue. Surfaces step up
+     in lightness the same way they do in light mode. */
+  --background: oklch(0.1600 0 0);
   --foreground: oklch(0.9300 0 0);
-  --card: oklch(0.1700 0 0);
+  --card: oklch(0.1950 0 0);
   --card-foreground: oklch(0.9300 0 0);
-  --popover: oklch(0.1700 0 0);
+  --popover: oklch(0.2050 0 0);
   --popover-foreground: oklch(0.9300 0 0);
   --primary: oklch(0.9700 0 0);
   --primary-foreground: oklch(0.1400 0 0);
-  --secondary: oklch(0.2200 0 0);
+  --secondary: oklch(0.2300 0 0);
   --secondary-foreground: oklch(0.9000 0 0);
   --muted: oklch(0.2000 0 0);
-  --muted-foreground: oklch(0.6300 0 0);
-  --accent: oklch(0.2400 0 0);
+  --muted-foreground: oklch(0.6400 0 0);
+  --accent: oklch(0.2500 0 0);
   --accent-foreground: oklch(0.9300 0 0);
   --destructive: oklch(0.5800 0.2078 25.3313);
   --destructive-foreground: oklch(0.9700 0 0);
+  --success: oklch(0.7000 0.1500 155);
+  --warning: oklch(0.7900 0.1500 75);
   --border: oklch(0.2600 0 0);
-  --input: oklch(0.2600 0 0);
+  --input: oklch(0.2900 0 0);
   --ring: oklch(0.7000 0 0);
   --chart-1: oklch(0.9700 0 0);
   --chart-2: oklch(0.8000 0 0);
   --chart-3: oklch(0.6500 0 0);
   --chart-4: oklch(0.5000 0 0);
   --chart-5: oklch(0.3500 0 0);
-  --sidebar: oklch(0.1500 0 0);
+  --sidebar: oklch(0.1300 0 0);
   --sidebar-foreground: oklch(0.9300 0 0);
   --sidebar-primary: oklch(0.9700 0 0);
   --sidebar-primary-foreground: oklch(0.1400 0 0);
-  --sidebar-accent: oklch(0.2400 0 0);
+  --sidebar-accent: oklch(0.2100 0 0);
   --sidebar-accent-foreground: oklch(0.9300 0 0);
-  --sidebar-border: oklch(0.2600 0 0);
+  --sidebar-border: oklch(0.2300 0 0);
   --sidebar-ring: oklch(0.7000 0 0);
-  --font-sans: Inter, sans-serif;
-  --font-serif: Merriweather, serif;
-  --font-mono: JetBrains Mono, monospace;
-  --radius: 0.5rem;
-  --shadow-x: 0px;
-  --shadow-y: 4px;
-  --shadow-blur: 8px;
-  --shadow-spread: -1px;
-  --shadow-opacity: 0.1;
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-2xs: 0px 4px 8px -1px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0px 4px 8px -1px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 1px 2px -2px hsl(0 0% 0% / 0.10);
-  --shadow: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 1px 2px -2px hsl(0 0% 0% / 0.10);
-  --shadow-md: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 2px 4px -2px hsl(0 0% 0% / 0.10);
-  --shadow-lg: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 4px 6px -2px hsl(0 0% 0% / 0.10);
-  --shadow-xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 8px 10px -2px hsl(0 0% 0% / 0.10);
-  --shadow-2xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.25);
 
-  /* Accent retained at the same hex in dark mode — it reads well on near-black */
-  --accent-blue: #2a59da;
-  --accent-blue-foreground: oklch(0.9800 0 0);
+  /* In the dark, edges are light hairlines and the lit top edge does the
+     work a drop shadow can't. */
+  --edge: oklch(1 0 0 / 0.07);
+  --edge-strong: oklch(1 0 0 / 0.10);
+  --highlight: oklch(1 0 0 / 0.06);
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3), 0 1px 3px oklch(0 0 0 / 0.2);
+  --shadow-md: 0 2px 4px -1px oklch(0 0 0 / 0.3), 0 4px 8px -2px oklch(0 0 0 / 0.3);
+  --shadow-lg: 0 4px 8px -2px oklch(0 0 0 / 0.35), 0 12px 24px -6px oklch(0 0 0 / 0.4);
+  --shadow-card: 0 0 0 1px var(--edge), inset 0 1px 0 var(--highlight), 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-card-hover: 0 0 0 1px var(--edge-strong), inset 0 1px 0 var(--highlight), 0 4px 12px -4px oklch(0 0 0 / 0.5);
+  --shadow-raised: 0 0 0 1px var(--edge-strong), inset 0 1px 0 var(--highlight), 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-solid: inset 0 1px 0 oklch(1 0 0 / 0.5), inset 0 -1px 0 oklch(0 0 0 / 0.12), 0 0 0 1px oklch(0 0 0 / 0.5), 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-overlay: 0 0 0 1px var(--edge-strong), inset 0 1px 0 var(--highlight), 0 16px 32px -8px oklch(0 0 0 / 0.6);
+  --shadow-inset: inset 0 0 0 1px var(--edge), inset 0 1px 2px oklch(0 0 0 / 0.2);
+  --sheen: linear-gradient(to bottom, oklch(1 0 0 / 0.08), oklch(0 0 0 / 0.04));
 }
 
 @theme inline {
@@ -152,6 +164,8 @@ code {
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -179,6 +193,7 @@ code {
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
 
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
@@ -188,6 +203,17 @@ code {
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-solid: var(--shadow-solid);
+  --shadow-overlay: var(--shadow-overlay);
+  --shadow-inset: var(--shadow-inset);
+}
+
+/* Layered over a solid bg-* colour for the subtle top-lit look. */
+@utility bg-sheen {
+  background-image: var(--sheen);
 }
 @layer base {
   * {

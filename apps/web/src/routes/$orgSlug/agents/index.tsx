@@ -3,13 +3,12 @@ import { CreateAgentSchema, type CreateAgent } from "@leadly/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-	ArrowRight,
-	Bot,
-	Loader2,
-	MoreHorizontal,
-	Plus,
-	Trash2,
-} from "lucide-react";
+	BotIcon,
+	MoreHorizontalIcon,
+	PlusIcon,
+	SpinnerIcon,
+	TrashIcon,
+} from "@/components/icons";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -23,7 +22,6 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -47,7 +45,29 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
+import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import {
+	List,
+	ListItem,
+	ListItemContent,
+	ListItemDescription,
+	ListItemMeta,
+	ListItemTitle,
+} from "@/components/ui/list";
+import {
+	Page,
+	PageActions,
+	PageContent,
+	PageToolbar,
+} from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentOrg, useOrgPath } from "@/hooks/use-current-org";
 import { api, LeadlyApiError } from "@/lib/api";
@@ -65,29 +85,33 @@ function AgentsList() {
 
 	if (orgLoading) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<Header />
-				<Skeleton className="mt-6 h-32 w-full rounded-xl" />
-			</div>
+			<Page>
+				<PageContent width="flush">
+					<ListSkeleton />
+				</PageContent>
+			</Page>
 		);
 	}
 
 	if (!currentOrg) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<Header />
-				<p className="mt-6 text-sm text-muted-foreground">No organization.</p>
-			</div>
+			<Page>
+				<PageContent>
+					<p className="text-sm text-muted-foreground">No organization.</p>
+				</PageContent>
+			</Page>
 		);
 	}
 
 	return <AgentsListBody orgId={currentOrg.id} />;
 }
 
-function Header({ children }: { children?: React.ReactNode }) {
+function ListSkeleton() {
 	return (
-		<div className="mb-5 flex min-h-9 items-center justify-end">
-			{children}
+		<div className="flex flex-col gap-1 p-2">
+			{[0, 1, 2].map((i) => (
+				<Skeleton key={i} className="h-14 rounded-lg" />
+			))}
 		</div>
 	);
 }
@@ -98,55 +122,71 @@ function AgentsListBody({ orgId }: { orgId: string }) {
 		queryFn: () => api.agents.list(orgId),
 	});
 
+	const count = q.data?.length ?? 0;
+
 	return (
-		<div className="mx-auto max-w-6xl">
-			<Header>
-				<CreateAgentDialog orgId={orgId} openFromSearch />
-			</Header>
+		<Page>
+			<PageToolbar>
+				<span className="text-sm text-muted-foreground">
+					{q.data ? `${count} agent${count === 1 ? "" : "s"}` : null}
+				</span>
+				<PageActions>
+					<CreateAgentDialog orgId={orgId} openFromSearch />
+				</PageActions>
+			</PageToolbar>
 
 			{q.isLoading ? (
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{[0, 1, 2].map((i) => (
-						<Skeleton key={i} className="h-36 rounded-xl" />
-					))}
-				</div>
+				<PageContent width="flush">
+					<ListSkeleton />
+				</PageContent>
 			) : q.isError ? (
-				<ErrorBanner err={q.error} />
+				<PageContent>
+					<ErrorText err={q.error} />
+				</PageContent>
 			) : !q.data || q.data.length === 0 ? (
-				<EmptyState orgId={orgId} />
+				<PageContent>
+					<EmptyState />
+				</PageContent>
 			) : (
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{q.data.map((a) => (
-						<AgentCard key={a.id} agent={a} orgId={orgId} />
-					))}
-				</div>
+				<PageContent width="flush">
+					<List>
+						{q.data.map((a) => (
+							<AgentRow key={a.id} agent={a} orgId={orgId} />
+						))}
+					</List>
+				</PageContent>
 			)}
-		</div>
+		</Page>
 	);
 }
 
-function EmptyState({ orgId }: { orgId: string }) {
+// The toolbar's "New agent" button is the action; the empty state just
+// explains what an agent is.
+function EmptyState() {
 	return (
-		<div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
-			<div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue">
-				<Bot className="size-6" />
-			</div>
-			<h2 className="text-lg font-semibold tracking-tight">
-				Create your first agent.
-			</h2>
-			<p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-				An agent has its own greeting, persona, and knowledge base. You can
-				make as many as you want — one per site, one per language, whatever
-				fits.
-			</p>
-			<div className="mt-6">
-				<CreateAgentDialog orgId={orgId} />
-			</div>
-		</div>
+		<Empty>
+			<EmptyHeader>
+				<EmptyMedia variant="icon">
+					<BotIcon />
+				</EmptyMedia>
+				<EmptyTitle>Create your first agent</EmptyTitle>
+				<EmptyDescription>
+					An agent has its own greeting, persona, and knowledge base. You can
+					make as many as you want — one per site, one per language, whatever
+					fits.
+				</EmptyDescription>
+			</EmptyHeader>
+			<EmptyContent>
+				<p className="text-xs text-muted-foreground">
+					Use <span className="font-medium text-foreground">New agent</span>{" "}
+					above to start.
+				</p>
+			</EmptyContent>
+		</Empty>
 	);
 }
 
-function AgentCard({ agent, orgId }: { agent: Agent; orgId: string }) {
+function AgentRow({ agent, orgId }: { agent: Agent; orgId: string }) {
 	const orgPath = useOrgPath();
 	const queryClient = useQueryClient();
 	const [confirmOpen, setConfirmOpen] = useState(false);
@@ -160,76 +200,59 @@ function AgentCard({ agent, orgId }: { agent: Agent; orgId: string }) {
 	});
 
 	return (
-		<Card className="group relative overflow-hidden transition-colors hover:border-accent-blue/30">
-			<CardContent className="p-5">
-				<div className="flex items-start justify-between gap-3">
-					<Link
-						to={orgPath(`/agents/${agent.id}`) as string}
-						className="min-w-0 flex-1"
-					>
-						<div className="flex items-center gap-2">
-							<span
-								className="size-2.5 shrink-0 rounded-full"
-								style={{ backgroundColor: agent.accentColor }}
-							/>
-							<h3 className="truncate text-base font-semibold tracking-tight">
-								{agent.name}
-							</h3>
-						</div>
-						<div className="mt-1 truncate font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+		<ListItem className="pr-2 md:pr-4">
+			<span
+				className="size-2.5 shrink-0 rounded-full"
+				style={{ backgroundColor: agent.accentColor }}
+			/>
+			<Link
+				to={orgPath(`/agents/${agent.id}`) as string}
+				className="flex min-w-0 flex-1 items-center gap-3 outline-none"
+			>
+				<ListItemContent>
+					<ListItemTitle>
+						<span className="truncate">{agent.name}</span>
+						<span className="shrink-0 font-mono text-xs font-normal text-muted-foreground">
 							{agent.slug}
-						</div>
-					</Link>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								size="icon-sm"
-								className="text-muted-foreground hover:text-foreground"
-							>
-								<MoreHorizontal className="size-4" />
-								<span className="sr-only">Agent actions</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-44">
-							<DropdownMenuItem asChild>
-								<Link
-									to={orgPath(`/agents/${agent.id}/settings`) as string}
-								>
-									Settings
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								className="text-destructive focus:text-destructive"
-								onSelect={(e) => {
-									e.preventDefault();
-									setConfirmOpen(true);
-								}}
-							>
-								<Trash2 className="mr-2 size-4" />
-								Delete agent
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
-
-				<p className="mt-4 line-clamp-2 text-sm text-muted-foreground">
-					{agent.greeting}
-				</p>
-
-				<div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4">
-					<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-						<span className="font-mono">{agent.defaultModel}</span>
-					</div>
-					<Link
-						to={orgPath(`/agents/${agent.id}`) as string}
-						className="inline-flex items-center gap-1 text-xs font-medium text-accent-blue transition-all hover:translate-x-0.5"
+						</span>
+					</ListItemTitle>
+					<ListItemDescription>
+						<span className="truncate">{agent.greeting}</span>
+					</ListItemDescription>
+				</ListItemContent>
+				<ListItemMeta className="max-sm:hidden">
+					<span className="font-mono">{agent.defaultModel}</span>
+				</ListItemMeta>
+			</Link>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						className="shrink-0 text-muted-foreground hover:text-foreground"
 					>
-						Open
-						<ArrowRight className="size-3.5" />
-					</Link>
-				</div>
-			</CardContent>
+						<MoreHorizontalIcon className="size-4" />
+						<span className="sr-only">Agent actions</span>
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end" className="w-44">
+					<DropdownMenuItem asChild>
+						<Link to={orgPath(`/agents/${agent.id}/settings`) as string}>
+							Settings
+						</Link>
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						className="text-destructive focus:text-destructive"
+						onSelect={(e) => {
+							e.preventDefault();
+							setConfirmOpen(true);
+						}}
+					>
+						<TrashIcon className="mr-2 size-4" />
+						Delete agent
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 
 			<AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
 				<AlertDialogContent>
@@ -253,14 +276,14 @@ function AgentCard({ agent, orgId }: { agent: Agent; orgId: string }) {
 							className="bg-destructive text-white hover:bg-destructive/90"
 						>
 							{deleteMutation.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
+								<SpinnerIcon className="mr-2 size-4 animate-spin" />
 							)}
 							Delete
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</Card>
+		</ListItem>
 	);
 }
 
@@ -319,8 +342,8 @@ function CreateAgentDialog({
 			}}
 		>
 			<DialogTrigger asChild>
-				<Button className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90">
-					<Plus className="mr-1 size-4" />
+				<Button variant="accent" size="sm">
+					<PlusIcon />
 					New agent
 				</Button>
 			</DialogTrigger>
@@ -350,7 +373,7 @@ function CreateAgentDialog({
 								</FormItem>
 							)}
 						/>
-						{mutation.isError && <ErrorBanner err={mutation.error} />}
+						{mutation.isError && <ErrorText err={mutation.error} />}
 						<DialogFooter>
 							<Button
 								type="button"
@@ -360,13 +383,9 @@ function CreateAgentDialog({
 							>
 								Cancel
 							</Button>
-							<Button
-								type="submit"
-								disabled={mutation.isPending}
-								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-							>
+							<Button variant="accent" type="submit" disabled={mutation.isPending}>
 								{mutation.isPending && (
-									<Loader2 className="mr-2 size-4 animate-spin" />
+									<SpinnerIcon className="mr-2 size-4 animate-spin" />
 								)}
 								Create agent
 							</Button>
@@ -378,7 +397,7 @@ function CreateAgentDialog({
 	);
 }
 
-function ErrorBanner({ err }: { err: unknown }) {
+function ErrorText({ err }: { err: unknown }) {
 	const message =
 		err instanceof LeadlyApiError
 			? `API ${err.status}: ${err.bodyText.slice(0, 200) || err.message}`
@@ -386,8 +405,6 @@ function ErrorBanner({ err }: { err: unknown }) {
 				? err.message
 				: "Unknown error";
 	return (
-		<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-			{message}
-		</div>
+		<p className="text-sm text-destructive">{message}</p>
 	);
 }

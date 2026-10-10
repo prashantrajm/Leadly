@@ -1,11 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, FileText, Loader2, Upload, X } from "lucide-react";
+import {
+	ArrowLeftIcon,
+	FileTextIcon,
+	SpinnerIcon,
+	UploadIcon,
+	XIcon,
+} from "@/components/icons";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Page, PageContent, PageToolbar } from "@/components/ui/page";
 import { api, LeadlyApiError } from "@/lib/api";
 import { useOrgPath } from "@/hooks/use-current-org";
 
@@ -75,25 +81,25 @@ function UploadPage() {
 	const canSubmit = Boolean(file) && title.trim().length >= 2 && !mutation.isPending;
 
 	return (
-		<div className="mx-auto max-w-2xl">
-			<div className="mb-6">
+		<Page>
+			<PageToolbar>
 				<Button asChild variant="ghost" size="sm" className="-ml-2">
 					<Link
 						to={orgPath(`/agents/${agentId}/knowledge`) as string}
 					>
-						<ArrowLeft className="mr-1 size-4" />
+						<ArrowLeftIcon />
 						Knowledge base
 					</Link>
 				</Button>
-			</div>
+			</PageToolbar>
 
-			<Card>
-				<CardContent className="space-y-6 p-6">
+			<PageContent width="narrow">
+				<div className="space-y-6">
 					{/* Dropzone */}
 					{file ? (
-						<div className="flex items-center gap-3 rounded-xl border border-border bg-secondary/20 px-4 py-3">
-							<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent-blue/10 text-accent-blue">
-								<FileText className="size-5" />
+						<div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2.5">
+							<div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-card shadow-raised">
+								<FileTextIcon className="size-4 text-muted-foreground" />
 							</div>
 							<div className="min-w-0 flex-1">
 								<div className="truncate text-sm font-medium">{file.name}</div>
@@ -111,7 +117,7 @@ function UploadPage() {
 								}}
 								className="text-muted-foreground hover:text-foreground"
 							>
-								<X className="size-4" />
+								<XIcon className="size-4" />
 								<span className="sr-only">Remove file</span>
 							</Button>
 						</div>
@@ -133,11 +139,11 @@ function UploadPage() {
 							className={`flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
 								dragOver
 									? "border-accent-blue/60 bg-accent-blue/5"
-									: "border-border bg-secondary/10 hover:border-accent-blue/40 hover:bg-accent-blue/5"
+									: "border-border hover:bg-muted/60"
 							}`}
 						>
-							<div className="flex size-12 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue">
-								<Upload className="size-6" />
+							<div className="flex size-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+								<UploadIcon className="size-5" />
 							</div>
 							<div>
 								<div className="text-sm font-medium">
@@ -179,23 +185,21 @@ function UploadPage() {
 
 					{/* Errors */}
 					{localError && (
-						<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-							{localError}
-						</div>
+						<p className="text-sm text-destructive">{localError}</p>
 					)}
 					{mutation.isError && (
-						<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+						<p className="text-sm text-destructive">
 							{mutation.error instanceof LeadlyApiError
 								? `API ${mutation.error.status}: ${mutation.error.bodyText.slice(0, 200) || mutation.error.message}`
 								: mutation.error instanceof Error
 									? mutation.error.message
 									: "Upload failed."}
-						</div>
+						</p>
 					)}
 
 					{/* Actions */}
-					<div className="flex justify-end gap-2 border-t border-border/60 pt-5">
-						<Button asChild variant="outline" type="button">
+					<div className="flex justify-end gap-2">
+						<Button asChild variant="outline" size="sm" type="button">
 							<Link
 								to={orgPath(`/agents/${agentId}/knowledge`) as string}
 							>
@@ -203,20 +207,21 @@ function UploadPage() {
 							</Link>
 						</Button>
 						<Button
+							variant="accent"
 							onClick={() => mutation.mutate()}
+							size="sm"
 							disabled={!canSubmit}
-							className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 						>
 							{mutation.isPending ? (
-								<Loader2 className="mr-2 size-4 animate-spin" />
+								<SpinnerIcon className="animate-spin" />
 							) : (
-								<Upload className="mr-2 size-4" />
+								<UploadIcon />
 							)}
 							Upload
 						</Button>
 					</div>
-				</CardContent>
-			</Card>
-		</div>
+				</div>
+			</PageContent>
+		</Page>
 	);
 }

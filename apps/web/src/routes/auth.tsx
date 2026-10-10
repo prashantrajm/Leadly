@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { SpinnerIcon } from "@/components/icons";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -249,7 +249,7 @@ function GoogleButton() {
 			}}
 		>
 			{loading ? (
-				<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+				<SpinnerIcon className="mr-2 h-4 w-4 animate-spin" />
 			) : (
 				<GoogleGlyph />
 			)}
@@ -365,11 +365,12 @@ function SignInForm() {
 					)}
 				/>
 				<Button
+					variant="accent"
 					type="submit"
-					className="h-11 w-full bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+					className="h-11 w-full"
 					disabled={submitting}
 				>
-					{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+					{submitting && <SpinnerIcon className="mr-2 h-4 w-4 animate-spin" />}
 					Sign in
 				</Button>
 			</form>
@@ -470,11 +471,12 @@ function SignUpForm() {
 					)}
 				/>
 				<Button
+					variant="accent"
 					type="submit"
-					className="h-11 w-full bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+					className="h-11 w-full"
 					disabled={submitting}
 				>
-					{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+					{submitting && <SpinnerIcon className="mr-2 h-4 w-4 animate-spin" />}
 					Create account
 				</Button>
 			</form>

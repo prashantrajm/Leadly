@@ -6,7 +6,7 @@ import {
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
-import { Loader2, Users } from "lucide-react";
+import { SpinnerIcon, UsersIcon } from "@/components/icons";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { api, apiErrorMessage, LeadlyApiError } from "@/lib/api";
@@ -64,7 +64,7 @@ function InvitePage() {
 	if (preview.isLoading) {
 		return (
 			<Shell>
-				<Loader2 className="mx-auto size-5 animate-spin text-muted-foreground" />
+				<SpinnerIcon className="mx-auto size-5 animate-spin text-muted-foreground" />
 			</Shell>
 		);
 	}
@@ -89,8 +89,8 @@ function InvitePage() {
 	const inv = preview.data;
 	const workspaceLink = (
 		<Button
+			variant="accent"
 			asChild
-			className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 		>
 			<Link to="/$orgSlug" params={{ orgSlug: inv.organization.slug }}>
 				Open {inv.organization.name}
@@ -163,16 +163,16 @@ function InvitePage() {
 					disabled={accept.isPending || decline.isPending}
 				>
 					{decline.isPending && (
-						<Loader2 className="mr-2 size-4 animate-spin" />
+						<SpinnerIcon className="mr-2 size-4 animate-spin" />
 					)}
 					Decline
 				</Button>
 				<Button
+					variant="accent"
 					onClick={() => accept.mutate()}
 					disabled={accept.isPending || decline.isPending}
-					className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 				>
-					{accept.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+					{accept.isPending && <SpinnerIcon className="mr-2 size-4 animate-spin" />}
 					Accept invitation
 				</Button>
 			</div>
@@ -187,7 +187,7 @@ function Shell({ title, children }: { title?: string; children: ReactNode }) {
 				{title && (
 					<>
 						<div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue">
-							<Users className="size-6" />
+							<UsersIcon className="size-6" />
 						</div>
 						<h1 className="text-xl font-semibold tracking-tight">{title}</h1>
 					</>

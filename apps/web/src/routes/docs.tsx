@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@/components/icons";
 import { PageShell, Section } from "@/components/page-shell";
 
 export const Route = createFileRoute("/docs")({
@@ -75,7 +75,7 @@ function DocsPage() {
 										href="#"
 										className="group/link inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
 									>
-										<ArrowRight className="h-3.5 w-3.5 text-accent-blue transition-transform group-hover/link:translate-x-0.5" />
+										<ArrowRightIcon className="h-3.5 w-3.5 text-accent-blue transition-transform group-hover/link:translate-x-0.5" />
 										{l}
 									</a>
 								</li>

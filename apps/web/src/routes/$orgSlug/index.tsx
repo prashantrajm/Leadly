@@ -1,25 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-	ArrowRight,
-	Bot,
-	Check,
-	Inbox,
-	MessageSquare,
-	TrendingUp,
-	UserPlus,
-} from "lucide-react";
+	ArrowRightIcon,
+	BotIcon,
+	CheckIcon,
+	InboxIcon,
+	MessageIcon,
+	TrendingUpIcon,
+	UserPlusIcon,
+} from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyTitle,
+} from "@/components/ui/empty";
+import {
+	List,
+	ListItem,
+	ListItemContent,
+	ListItemMeta,
+	ListItemTitle,
+} from "@/components/ui/list";
+import { Page, PageContent } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { useCurrentOrg, useOrgPath } from "@/hooks/use-current-org";
 import { api } from "@/lib/api";
+import { Kpi } from "@/components/dashboard/kpi";
+import { StatGroup } from "@/components/ui/stat";
 
 export const Route = createFileRoute("/$orgSlug/")({
 	component: DashboardOverview,
@@ -30,21 +40,25 @@ function DashboardOverview() {
 
 	if (orgLoading) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-					{[0, 1, 2, 3].map((i) => (
-						<Skeleton key={i} className="h-28 rounded-xl" />
-					))}
-				</div>
-			</div>
+			<Page>
+				<PageContent>
+					<div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+						{[0, 1, 2, 3].map((i) => (
+							<Skeleton key={i} className="h-20 rounded-lg" />
+						))}
+					</div>
+				</PageContent>
+			</Page>
 		);
 	}
 
 	if (!currentOrg) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<EmptyState />
-			</div>
+			<Page>
+				<PageContent>
+					<EmptyState />
+				</PageContent>
+			</Page>
 		);
 	}
 
@@ -53,18 +67,15 @@ function DashboardOverview() {
 
 function EmptyState() {
 	return (
-		<div className="rounded-2xl border border-border bg-card p-10 text-center">
-			<h2 className="text-lg font-semibold tracking-tight">
-				Welcome to Leadly.
-			</h2>
-			<p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-				You don't have a workspace yet.{" "}
-				<Link to="/dashboard" className="font-medium text-accent-blue hover:underline">
-					Create one
-				</Link>{" "}
-				to get started.
-			</p>
-		</div>
+		<Empty>
+			<EmptyHeader>
+				<EmptyTitle>Welcome to Leadly</EmptyTitle>
+				<EmptyDescription>
+					You don't have a workspace yet.{" "}
+					<Link to="/dashboard">Create one</Link> to get started.
+				</EmptyDescription>
+			</EmptyHeader>
+		</Empty>
 	);
 }
 
@@ -91,21 +102,21 @@ function DashboardOverviewBody({ orgId }: { orgId: string }) {
 	const avgTurns = summaryQuery.data?.avgTurnsPerConv ?? 0;
 
 	return (
-		<div className="mx-auto max-w-6xl">
-			{/* KPIs */}
-			<section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+		<Page>
+			{/* KPIs: one flat strip, hairlines between cells */}
+			<StatGroup>
 				<Kpi
 					label="Conversations"
 					value={totals.conversations}
 					sub="last 7 days"
-					icon={MessageSquare}
+					icon={MessageIcon}
 					loading={summariesLoading || agentsQuery.isLoading}
 				/>
 				<Kpi
 					label="Leads captured"
 					value={totals.leadsCaptured}
 					sub="last 7 days"
-					icon={UserPlus}
+					icon={UserPlusIcon}
 					accent
 					loading={summariesLoading || agentsQuery.isLoading}
 				/>
@@ -113,65 +124,27 @@ function DashboardOverviewBody({ orgId }: { orgId: string }) {
 					label="Handoffs"
 					value={totals.handoffs}
 					sub="last 7 days"
-					icon={Inbox}
+					icon={InboxIcon}
 					loading={summariesLoading || agentsQuery.isLoading}
 				/>
 				<Kpi
 					label="Avg turns / conv"
 					value={Number(avgTurns.toFixed(1))}
 					sub="last 7 days"
-					icon={TrendingUp}
+					icon={TrendingUpIcon}
 					loading={summariesLoading || agentsQuery.isLoading}
 				/>
-			</section>
+			</StatGroup>
 
-			{/* Setup checklist + agents */}
-			<div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+			{/* Setup checklist + agents, side by side on wide screens. Same
+			    4-column grid as the stat strip, and the divider is the left
+			    column's right border, like the stat cells', so it lines up to
+			    the pixel. */}
+			<div className="flex flex-1 flex-col lg:grid lg:grid-cols-4">
 				<SetupChecklist agents={agents} />
-				<AgentsSummaryCard agents={agents} />
+				<AgentsSummary agents={agents} />
 			</div>
-		</div>
-	);
-}
-
-function Kpi({
-	label,
-	value,
-	sub,
-	icon: Icon,
-	accent,
-	loading,
-}: {
-	label: string;
-	value: number;
-	sub: string;
-	icon: React.ComponentType<{ className?: string }>;
-	accent?: boolean;
-	loading?: boolean;
-}) {
-	return (
-		<Card>
-			<CardHeader className="pb-2">
-				<div className="flex items-center justify-between">
-					<CardDescription className="text-xs font-medium uppercase tracking-wider">
-						{label}
-					</CardDescription>
-					<Icon
-						className={`size-4 ${accent ? "text-accent-blue" : "text-muted-foreground"}`}
-					/>
-				</div>
-			</CardHeader>
-			<CardContent>
-				{loading ? (
-					<Skeleton className="h-8 w-16" />
-				) : (
-					<div className="text-3xl font-semibold tracking-tight">
-						{value.toLocaleString()}
-					</div>
-				)}
-				<div className="mt-1 text-xs text-muted-foreground">{sub}</div>
-			</CardContent>
-		</Card>
+		</Page>
 	);
 }
 
@@ -250,137 +223,141 @@ function SetupChecklist({
 	const completed = steps.filter((s) => s.done).length;
 
 	return (
-		<Card>
-			<CardHeader>
-				<div className="flex items-center justify-between">
-					<div>
-						<CardTitle className="text-base">Get set up</CardTitle>
-						<CardDescription>
-							{completed === steps.length
-								? "All set. Your agent is live."
-								: `${completed} of ${steps.length} steps done.`}
-						</CardDescription>
-					</div>
-					<div className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
-						{Math.round((completed / steps.length) * 100)}%
-					</div>
-				</div>
-			</CardHeader>
-			<CardContent>
-				<ul className="space-y-3">
-					{steps.map((step, i) => (
-						<li
-							key={step.title}
-							className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 ${
+		<section aria-label="Get set up" className="flex min-w-0 flex-1 flex-col border-border/60 lg:col-span-3 lg:border-r">
+			<ColumnHeader
+				title="Get set up"
+				description={
+					completed === steps.length
+						? "All set. Your agent is live."
+						: `${completed} of ${steps.length} steps done.`
+				}
+				meta={`${Math.round((completed / steps.length) * 100)}%`}
+			/>
+			<List>
+				{steps.map((step, i) => (
+					<ListItem
+						key={step.title}
+						className={cn(step.disabled && !step.done && "opacity-60")}
+					>
+						<div
+							className={cn(
+								"flex size-6 shrink-0 items-center justify-center rounded-full",
 								step.done
-									? "border-accent-blue/20 bg-accent-blue/5"
-									: step.disabled
-										? "border-border bg-card opacity-60"
-										: "border-border bg-card"
-							}`}
+									? "bg-accent-blue text-accent-blue-foreground"
+									: "bg-muted text-muted-foreground",
+							)}
 						>
-							<div
-								className={`flex size-6 shrink-0 items-center justify-center rounded-full ${
-									step.done
-										? "bg-accent-blue text-accent-blue-foreground"
-										: "border border-border bg-background text-muted-foreground"
-								}`}
-							>
-								{step.done ? (
-									<Check className="size-3.5" />
-								) : (
-									<span className="text-xs">{i + 1}</span>
+							{step.done ? (
+								<CheckIcon className="size-3.5" />
+							) : (
+								<span className="text-xs tabular-nums">{i + 1}</span>
+							)}
+						</div>
+						<ListItemContent>
+							<ListItemTitle
+								className={cn(
+									"font-normal",
+									step.done && "text-muted-foreground line-through decoration-muted-foreground/40",
 								)}
-							</div>
-							<span
-								className={`flex-1 text-sm ${step.done ? "text-foreground" : "text-foreground"}`}
 							>
 								{step.title}
-							</span>
-							{step.cta && (
-								<Button
-									asChild
-									size="sm"
-									variant="ghost"
-									className="text-accent-blue hover:bg-accent-blue/10 hover:text-accent-blue"
-								>
+							</ListItemTitle>
+						</ListItemContent>
+						{step.cta && (
+							<ListItemMeta>
+								<Button asChild size="sm" variant="ghost">
 									<Link to={step.cta.to}>
 										{step.cta.label}
-										<ArrowRight className="ml-1 size-3.5" />
+										<ArrowRightIcon />
 									</Link>
 								</Button>
-							)}
-						</li>
-					))}
-				</ul>
-			</CardContent>
-		</Card>
+							</ListItemMeta>
+						)}
+					</ListItem>
+				))}
+			</List>
+		</section>
 	);
 }
 
-function AgentsSummaryCard({
+// Heading row at the top of an overview column.
+function ColumnHeader({
+	title,
+	description,
+	meta,
+}: {
+	title: string;
+	description: string;
+	meta?: string;
+}) {
+	return (
+		<div className="flex items-start justify-between gap-4 px-4 pt-6 pb-2 md:px-6">
+			<div className="flex flex-col gap-1">
+				<h2 className="text-sm font-medium">{title}</h2>
+				<p className="text-[13px] text-muted-foreground">{description}</p>
+			</div>
+			{meta && (
+				<span className="text-xs text-muted-foreground tabular-nums">
+					{meta}
+				</span>
+			)}
+		</div>
+	);
+}
+
+function AgentsSummary({
 	agents,
 }: {
 	agents: Array<{ id: string; name: string; slug: string; accentColor: string }>;
 }) {
 	const orgPath = useOrgPath();
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">Agents</CardTitle>
-				<CardDescription>
-					{agents.length === 0
+		<section
+			aria-label="Agents"
+			className="flex min-w-0 flex-col border-border/60 max-lg:border-t"
+		>
+			<ColumnHeader
+				title="Agents"
+				description={
+					agents.length === 0
 						? "No agents yet."
-						: `${agents.length} agent${agents.length === 1 ? "" : "s"} in this org.`}
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				{agents.length === 0 ? (
-					<Button
-						asChild
-						className="w-full bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-					>
+						: `${agents.length} agent${agents.length === 1 ? "" : "s"} in this org.`
+				}
+			/>
+			{agents.length === 0 ? (
+				<div className="px-4 py-3 md:px-6">
+					<Button variant="accent" asChild size="sm">
 						<Link to={orgPath("/agents")}>
-							<Bot className="mr-2 size-4" />
+							<BotIcon />
 							Create your first agent
 						</Link>
 					</Button>
-				) : (
-					<ul className="space-y-1.5">
-						{agents.slice(0, 5).map((a) => (
-							<li key={a.id}>
-								<Link
-									to={orgPath(`/agents/${a.id}`) as string}
-									className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:border-accent-blue/30"
-								>
-									<span
-										className="size-2.5 shrink-0 rounded-full"
-										style={{ backgroundColor: a.accentColor }}
-									/>
-									<span className="flex-1 truncate text-sm font-medium">
-										{a.name}
-									</span>
-									<ArrowRight className="size-3.5 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-accent-blue" />
-								</Link>
-							</li>
-						))}
-						{agents.length > 5 && (
-							<li>
-								<Button
-									asChild
-									size="sm"
-									variant="ghost"
-									className="w-full justify-start text-muted-foreground"
-								>
-									<Link to={orgPath("/agents")}>
-										See all {agents.length} agents
-									</Link>
-								</Button>
-							</li>
-						)}
-					</ul>
-				)}
-			</CardContent>
-		</Card>
+				</div>
+			) : (
+				<List>
+					{agents.slice(0, 5).map((a) => (
+						<ListItem key={a.id} asChild className="min-h-10">
+							<Link to={orgPath(`/agents/${a.id}`) as string}>
+								<span
+									className="size-2.5 shrink-0 rounded-full"
+									style={{ backgroundColor: a.accentColor }}
+								/>
+								<ListItemContent>
+									<ListItemTitle>
+										<span className="truncate">{a.name}</span>
+									</ListItemTitle>
+								</ListItemContent>
+								<ArrowRightIcon className="size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover/list-item:opacity-100" />
+							</Link>
+						</ListItem>
+					))}
+					{agents.length > 5 && (
+						<ListItem asChild className="min-h-10 text-muted-foreground">
+							<Link to={orgPath("/agents")}>See all {agents.length} agents</Link>
+						</ListItem>
+					)}
+				</List>
+			)}
+		</section>
 	);
 }

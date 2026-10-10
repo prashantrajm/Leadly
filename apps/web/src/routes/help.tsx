@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@/components/icons";
 import { PageShell, Section } from "@/components/page-shell";
 import {
 	Accordion,
@@ -77,7 +77,7 @@ function HelpPage() {
 						className="inline-flex items-center gap-2 text-sm font-medium text-accent-blue hover:underline"
 					>
 						Contact support
-						<ArrowRight className="h-4 w-4" />
+						<ArrowRightIcon className="h-4 w-4" />
 					</Link>
 				</div>
 			</Section>

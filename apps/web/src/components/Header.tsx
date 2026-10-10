@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Github, Menu } from "lucide-react";
+import { GithubIcon, MenuIcon } from "@/components/icons";
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -76,7 +76,7 @@ export function Header() {
 							rel="noopener noreferrer"
 							aria-label="GitHub"
 						>
-							<Github className="h-4 w-4" />
+							<GithubIcon className="h-4 w-4" />
 						</a>
 					</Button>
 
@@ -139,9 +139,9 @@ export function Header() {
 								<Link to="/auth">Sign in</Link>
 							</Button>
 							<Button
+								variant="accent"
 								size="sm"
 								asChild
-								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 							>
 								<Link to="/auth">Get started</Link>
 							</Button>
@@ -171,7 +171,7 @@ export function Header() {
 								className="h-9 w-9 text-muted-foreground hover:text-foreground"
 								aria-label="Open menu"
 							>
-								<Menu className="h-5 w-5" />
+								<MenuIcon className="h-5 w-5" />
 							</Button>
 						</SheetTrigger>
 						<SheetContent side="right" className="w-[300px] sm:w-[340px]">
@@ -220,8 +220,8 @@ export function Header() {
 											</Link>
 										</Button>
 										<Button
+											variant="accent"
 											asChild
-											className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 										>
 											<Link to="/auth" onClick={() => setIsOpen(false)}>
 												Get started

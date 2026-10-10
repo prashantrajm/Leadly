@@ -9,7 +9,15 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Eye, EyeOff, KeyRound, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import {
+	EyeIcon,
+	EyeOffIcon,
+	KeyIcon,
+	PlusIcon,
+	SaveIcon,
+	SpinnerIcon,
+	TrashIcon,
+} from "@/components/icons";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -23,13 +31,6 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -48,7 +49,24 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import {
+	Page,
+	PageContent,
+	PageSection,
+	PageSectionActions,
+	PageSectionDescription,
+	PageSectionHeader,
+	PageSectionTitle,
+	PageToolbar,
+} from "@/components/ui/page";
 import {
 	Select,
 	SelectContent,
@@ -57,7 +75,17 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+	SettingsCard,
+	SettingsCardFooter,
+	SettingsRow,
+	SettingsRowControl,
+	SettingsRowDescription,
+	SettingsRowLabel,
+	SettingsRowTitle,
+} from "@/components/ui/settings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { DeleteWorkspaceCard } from "@/components/dashboard/delete-workspace-card";
 import { MembersSettings } from "@/components/dashboard/members-settings";
 import { useCurrentOrg } from "@/hooks/use-current-org";
@@ -73,42 +101,49 @@ function OrgSettings() {
 
 	if (isLoading) {
 		return (
-			<div className="mx-auto max-w-3xl">
-				<Skeleton className="h-10 w-48 rounded-md" />
-				<Skeleton className="mt-6 h-72 rounded-xl" />
-			</div>
+			<Page>
+				<PageContent width="narrow">
+					<Skeleton className="h-72 rounded-xl" />
+				</PageContent>
+			</Page>
 		);
 	}
 
 	if (!currentOrg) {
 		return (
-			<div className="mx-auto max-w-3xl">
-				<p className="text-sm text-muted-foreground">No organization.</p>
-			</div>
+			<Page>
+				<PageContent width="narrow">
+					<p className="text-sm text-muted-foreground">No organization.</p>
+				</PageContent>
+			</Page>
 		);
 	}
 
 	return (
-		<div className="mx-auto max-w-3xl">
-			<Tabs defaultValue="general">
-				<TabsList>
-					<TabsTrigger value="general">General</TabsTrigger>
-					<TabsTrigger value="members">Members</TabsTrigger>
-					<TabsTrigger value="api-keys">API keys</TabsTrigger>
-				</TabsList>
+		<Page>
+			<Tabs defaultValue="general" className="flex-1 gap-0">
+				<PageToolbar>
+					<TabsList>
+						<TabsTrigger value="general">General</TabsTrigger>
+						<TabsTrigger value="members">Members</TabsTrigger>
+						<TabsTrigger value="api-keys">API keys</TabsTrigger>
+					</TabsList>
+				</PageToolbar>
 
-				<TabsContent value="general" className="mt-6 space-y-6">
-					<GeneralTab orgId={currentOrg.id} />
-					<OwnerDangerZone org={currentOrg} />
-				</TabsContent>
-				<TabsContent value="members" className="mt-6">
-					<MembersSettings orgId={currentOrg.id} />
-				</TabsContent>
-				<TabsContent value="api-keys" className="mt-6">
-					<ApiKeysTab orgId={currentOrg.id} />
-				</TabsContent>
+				<PageContent width="narrow">
+					<TabsContent value="general">
+						<GeneralTab orgId={currentOrg.id} />
+						<OwnerDangerZone org={currentOrg} />
+					</TabsContent>
+					<TabsContent value="members">
+						<MembersSettings orgId={currentOrg.id} />
+					</TabsContent>
+					<TabsContent value="api-keys">
+						<ApiKeysTab orgId={currentOrg.id} />
+					</TabsContent>
+				</PageContent>
 			</Tabs>
-		</div>
+		</Page>
 	);
 }
 
@@ -172,31 +207,41 @@ function GeneralTab({ orgId }: { orgId: string }) {
 	if (q.isError || !q.data) return <ErrorRow err={q.error} />;
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">General</CardTitle>
-				<CardDescription>How the org appears in the dashboard.</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<Form {...form}>
-					<form
-						onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
-						className="space-y-5"
-					>
+		<PageSection variant="grouped">
+			<PageSectionHeader>
+				<PageSectionTitle>General</PageSectionTitle>
+				<PageSectionDescription>
+					How the workspace appears in the dashboard.
+				</PageSectionDescription>
+			</PageSectionHeader>
+			<Form {...form}>
+				<form onSubmit={form.handleSubmit((v) => mutation.mutate(v))}>
+					<SettingsCard>
 						<FormField
 							control={form.control}
 							name="name"
 							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Name</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="Acme, Inc."
-											{...field}
-											value={field.value ?? ""}
-										/>
-									</FormControl>
-									<FormMessage />
+								<FormItem asChild>
+									<SettingsRow>
+										<SettingsRowLabel>
+											<SettingsRowTitle asChild>
+												<FormLabel>Name</FormLabel>
+											</SettingsRowTitle>
+											<SettingsRowDescription>
+												Shown in the sidebar and on invitations.
+											</SettingsRowDescription>
+										</SettingsRowLabel>
+										<SettingsRowControl>
+											<FormControl>
+												<Input
+													placeholder="Acme, Inc."
+													{...field}
+													value={field.value ?? ""}
+												/>
+											</FormControl>
+											<FormMessage />
+										</SettingsRowControl>
+									</SettingsRow>
 								</FormItem>
 							)}
 						/>
@@ -204,44 +249,59 @@ function GeneralTab({ orgId }: { orgId: string }) {
 							control={form.control}
 							name="slug"
 							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Workspace URL</FormLabel>
-									<FormControl>
-										<Input
-											className="font-mono"
-											placeholder="acme"
-											{...field}
-											value={field.value ?? ""}
-										/>
-									</FormControl>
-									<FormDescription>
-										Your dashboard lives at /{field.value || "…"}. Lowercase
-										letters, numbers, and dashes. Changing it breaks links to
-										the old URL.
-									</FormDescription>
-									<FormMessage />
+								<FormItem asChild>
+									<SettingsRow>
+										<SettingsRowLabel>
+											<SettingsRowTitle asChild>
+												<FormLabel>Workspace URL</FormLabel>
+											</SettingsRowTitle>
+											<SettingsRowDescription asChild>
+												<FormDescription>
+													Your dashboard lives at /{field.value || "…"}.
+													Lowercase letters, numbers, and dashes. Changing it
+													breaks links to the old URL.
+												</FormDescription>
+											</SettingsRowDescription>
+										</SettingsRowLabel>
+										<SettingsRowControl>
+											<FormControl>
+												<Input
+													className="font-mono"
+													placeholder="acme"
+													{...field}
+													value={field.value ?? ""}
+												/>
+											</FormControl>
+											<FormMessage />
+										</SettingsRowControl>
+									</SettingsRow>
 								</FormItem>
 							)}
 						/>
-						{mutation.isError && <ErrorRow err={mutation.error} />}
-						<div className="flex justify-end border-t border-border/60 pt-5">
+						<SettingsCardFooter>
+							{mutation.isError && (
+								<div className="mr-auto">
+									<ErrorRow err={mutation.error} />
+								</div>
+							)}
 							<Button
+								variant="accent"
 								type="submit"
+								size="sm"
 								disabled={!form.formState.isDirty || mutation.isPending}
-								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 							>
 								{mutation.isPending ? (
-									<Loader2 className="mr-2 size-4 animate-spin" />
+									<SpinnerIcon className="animate-spin" />
 								) : (
-									<Save className="mr-2 size-4" />
+									<SaveIcon />
 								)}
 								Save changes
 							</Button>
-						</div>
-					</form>
-				</Form>
-			</CardContent>
-		</Card>
+						</SettingsCardFooter>
+					</SettingsCard>
+				</form>
+			</Form>
+		</PageSection>
 	);
 }
 
@@ -266,86 +326,62 @@ function ApiKeysTab({ orgId }: { orgId: string }) {
 	});
 
 	return (
-		<div className="space-y-4">
-			<div className="flex items-center justify-between">
-				<div>
-					<h2 className="text-base font-semibold tracking-tight">
-						API keys
-					</h2>
-					<p className="text-sm text-muted-foreground">
-						Bring your own LLM credentials. Plaintext is encrypted at rest
-						and never echoed back.
-					</p>
-				</div>
-				<AddCredentialDialog orgId={orgId} />
-			</div>
-
+		<PageSection variant="grouped">
+			<PageSectionHeader>
+				<PageSectionTitle>API keys</PageSectionTitle>
+				<PageSectionDescription>
+					Bring your own LLM credentials. Plaintext is encrypted at rest and
+					never echoed back.
+				</PageSectionDescription>
+				<PageSectionActions>
+					<AddCredentialDialog orgId={orgId} />
+				</PageSectionActions>
+			</PageSectionHeader>
 			{q.isLoading ? (
-				<Skeleton className="h-40 rounded-xl" />
+				<Skeleton className="h-28 rounded-xl" />
 			) : q.isError ? (
 				<ErrorRow err={q.error} />
 			) : !q.data || q.data.length === 0 ? (
-				<Card>
-					<CardContent className="py-12 text-center">
-						<div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue">
-							<KeyRound className="size-5" />
-						</div>
-						<h3 className="text-base font-semibold tracking-tight">
-							No credentials yet.
-						</h3>
-						<p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">
-							Without a key, agents fall back to the platform default. Add
-							a credential to use your own model billing.
-						</p>
-					</CardContent>
-				</Card>
+				<SettingsCard>
+					<Empty className="p-6 md:p-8">
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<KeyIcon />
+							</EmptyMedia>
+							<EmptyTitle className="text-sm">No credentials yet</EmptyTitle>
+							<EmptyDescription>
+								Without a key, agents fall back to the platform default. Add a
+								credential to use your own model billing.
+							</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
+				</SettingsCard>
 			) : (
-				<Card>
-					<CardContent className="p-0">
-						<ul className="divide-y divide-border/60">
-							{q.data.map((c) => (
-								<li
-									key={c.id}
-									className="flex items-center gap-3 px-4 py-3"
-								>
-									<div className="flex size-9 items-center justify-center rounded-lg border border-border bg-secondary/40">
-										<KeyRound className="size-4 text-muted-foreground" />
-									</div>
-									<div className="min-w-0 flex-1">
-										<div className="flex items-center gap-2">
-											<span className="truncate text-sm font-medium">
-												{c.label}
-											</span>
-											{c.isDefault && (
-												<span className="rounded-full bg-accent-blue/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-accent-blue">
-													Default
-												</span>
-											)}
-										</div>
-										<div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-											<span className="font-mono">{c.provider}</span>
-											<span className="size-1 rounded-full bg-muted-foreground/40" />
-											<span className="font-mono">
-												••••{c.maskedSuffix}
-											</span>
-											<span className="size-1 rounded-full bg-muted-foreground/40" />
-											<span>{format(new Date(c.createdAt), "MMM d, y")}</span>
-										</div>
-									</div>
-									<Button
-										variant="ghost"
-										size="icon-sm"
-										onClick={() => setConfirmDelete(c.id)}
-										className="text-muted-foreground hover:text-destructive"
-									>
-										<Trash2 className="size-4" />
-										<span className="sr-only">Delete</span>
-									</Button>
-								</li>
-							))}
-						</ul>
-					</CardContent>
-				</Card>
+				<SettingsCard>
+					{q.data.map((c) => (
+						<SettingsRow key={c.id} className="flex-row items-center">
+							<SettingsRowLabel>
+								<SettingsRowTitle className="flex min-w-0 items-center gap-2">
+									<span className="truncate">{c.label}</span>
+									{c.isDefault && <Badge variant="outline">Default</Badge>}
+								</SettingsRowTitle>
+								<SettingsRowDescription className="font-mono text-xs">
+									{c.provider} · ••••{c.maskedSuffix} ·{" "}
+									{format(new Date(c.createdAt), "MMM d, y")}
+								</SettingsRowDescription>
+							</SettingsRowLabel>
+							<Button
+								variant="ghost"
+								size="icon-sm"
+								onClick={() => setConfirmDelete(c.id)}
+								className="text-muted-foreground hover:text-destructive"
+							>
+								<TrashIcon className="size-4" />
+								<span className="sr-only">Delete</span>
+							</Button>
+						</SettingsRow>
+					))}
+				</SettingsCard>
 			)}
 
 			<AlertDialog
@@ -374,14 +410,14 @@ function ApiKeysTab({ orgId }: { orgId: string }) {
 							className="bg-destructive text-white hover:bg-destructive/90"
 						>
 							{deleteMutation.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
+								<SpinnerIcon className="mr-2 size-4 animate-spin" />
 							)}
 							Delete
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</div>
+		</PageSection>
 	);
 }
 
@@ -433,8 +469,8 @@ function AddCredentialDialog({ orgId }: { orgId: string }) {
 			}}
 		>
 			<DialogTrigger asChild>
-				<Button className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90">
-					<Plus className="mr-1 size-4" />
+				<Button variant="accent" size="sm">
+					<PlusIcon />
 					Add credential
 				</Button>
 			</DialogTrigger>
@@ -519,9 +555,9 @@ function AddCredentialDialog({ orgId }: { orgId: string }) {
 											className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 										>
 											{showKey ? (
-												<EyeOff className="size-4" />
+												<EyeOffIcon className="size-4" />
 											) : (
-												<Eye className="size-4" />
+												<EyeIcon className="size-4" />
 											)}
 										</button>
 									</div>
@@ -539,13 +575,9 @@ function AddCredentialDialog({ orgId }: { orgId: string }) {
 							>
 								Cancel
 							</Button>
-							<Button
-								type="submit"
-								disabled={mutation.isPending}
-								className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-							>
+							<Button variant="accent" type="submit" disabled={mutation.isPending}>
 								{mutation.isPending && (
-									<Loader2 className="mr-2 size-4 animate-spin" />
+									<SpinnerIcon className="mr-2 size-4 animate-spin" />
 								)}
 								Save credential
 							</Button>
@@ -561,12 +593,12 @@ function AddCredentialDialog({ orgId }: { orgId: string }) {
 
 function ErrorRow({ err }: { err: unknown }) {
 	return (
-		<div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+		<p className="text-sm text-destructive">
 			{err instanceof LeadlyApiError
 				? `API ${err.status}: ${err.bodyText.slice(0, 200) || err.message}`
 				: err instanceof Error
 					? err.message
 					: "Action failed."}
-		</div>
+		</p>
 	);
 }

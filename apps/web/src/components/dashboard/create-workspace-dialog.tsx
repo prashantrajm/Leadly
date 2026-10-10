@@ -2,7 +2,7 @@ import { OrgSlugSchema, type Organization } from "@leadly/schemas";
 import { slugify } from "@leadly/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Check, Loader2, X } from "lucide-react";
+import { CheckIcon, SpinnerIcon, XIcon } from "@/components/icons";
 import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -174,14 +174,14 @@ export function CreateWorkspaceDialog({
 										</div>
 									</div>
 									<Button
+										variant="accent"
 										type="button"
 										size="sm"
 										disabled={busyToken === inv.token}
 										onClick={() => acceptInvite.mutate(inv)}
-										className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 									>
 										{busyToken === inv.token && acceptInvite.isPending && (
-											<Loader2 className="mr-1.5 size-3.5 animate-spin" />
+											<SpinnerIcon className="mr-1.5 size-3.5 animate-spin" />
 										)}
 										Join
 									</Button>
@@ -281,12 +281,12 @@ export function CreateWorkspaceDialog({
 							<span />
 						)}
 						<Button
+							variant="accent"
 							type="submit"
 							disabled={!canSave}
-							className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 						>
 							{create.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
+								<SpinnerIcon className="mr-2 size-4 animate-spin" />
 							)}
 							Create workspace
 						</Button>
@@ -328,15 +328,15 @@ function SlugStatus({
 	if (checking) {
 		return (
 			<p className={`${base} text-muted-foreground`}>
-				<Loader2 className="size-3 animate-spin" />
+				<SpinnerIcon className="size-3 animate-spin" />
 				Checking availability…
 			</p>
 		);
 	}
 	if (result?.available) {
 		return (
-			<p className={`${base} text-emerald-600 dark:text-emerald-400`}>
-				<Check className="size-3.5" />
+			<p className={`${base} text-success`}>
+				<CheckIcon className="size-3.5" />
 				Available
 			</p>
 		);
@@ -349,7 +349,7 @@ function SlugStatus({
 				: "That URL is taken.";
 	return (
 		<p className={`${base} text-destructive`}>
-			<X className="size-3.5" />
+			<XIcon className="size-3.5" />
 			{message}
 			{result?.suggestion && (
 				<button

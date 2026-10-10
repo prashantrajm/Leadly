@@ -1,24 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-	AlertCircle,
-	Loader2,
-	Play,
-	RotateCw,
-	Save,
-	Send,
-} from "lucide-react";
+	AlertCircleIcon,
+	PlayIcon,
+	RefreshIcon,
+	SaveIcon,
+	SendIcon,
+	SpinnerIcon,
+} from "@/components/icons";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Page, PageContent } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -42,22 +36,26 @@ function PlaygroundPage() {
 
 	if (agentQuery.isLoading) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<Skeleton className="h-10 w-48 rounded-md" />
-				<Skeleton className="mt-6 h-[560px] rounded-xl" />
-			</div>
+			<Page>
+				<PageContent className="flex flex-col gap-4">
+					<Skeleton className="h-6 w-48" />
+					<Skeleton className="h-16 w-2/3 rounded-2xl" />
+				</PageContent>
+			</Page>
 		);
 	}
 
 	if (agentQuery.isError || !agentQuery.data) {
 		return (
-			<div className="mx-auto max-w-6xl">
-				<div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-					{agentQuery.error instanceof LeadlyApiError
-						? `API ${agentQuery.error.status}: ${agentQuery.error.message}`
-						: "Could not load agent."}
-				</div>
-			</div>
+			<Page>
+				<PageContent>
+					<p className="text-sm text-destructive">
+						{agentQuery.error instanceof LeadlyApiError
+							? `API ${agentQuery.error.status}: ${agentQuery.error.message}`
+							: "Could not load agent."}
+					</p>
+				</PageContent>
+			</Page>
 		);
 	}
 
@@ -73,13 +71,15 @@ function PlaygroundBody({
 }) {
 	const conv = usePlaygroundConversation(agentId);
 
+	// Split view like the inbox: chat fills the panel, tuning sits beside it
+	// behind a hairline (below it on narrow screens).
 	return (
-		<div className="mx-auto max-w-6xl">
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+		<Page>
+			<PageContent width="flush" className="lg:flex-row">
 				<ChatPanel agent={agent} conv={conv} />
 				<TuningPanel agent={agent} agentId={agentId} />
-			</div>
-		</div>
+			</PageContent>
+		</Page>
 	);
 }
 
@@ -108,40 +108,40 @@ function ChatPanel({
 	const live = conv.status === "open";
 
 	return (
-		<Card className="flex h-[640px] flex-col overflow-hidden">
+		<section
+			aria-label="Chat"
+			className="flex min-h-0 min-w-0 flex-1 flex-col max-lg:h-[calc(100svh-3.5rem)]"
+		>
 			{/* Top bar — visitor sees something like this */}
-			<div className="flex items-center gap-3 border-b border-border/60 px-4 py-3">
+			<div className="flex h-12 shrink-0 items-center gap-3 border-b border-border/60 px-4 md:px-6">
 				<div
-					className="flex size-8 items-center justify-center rounded-full text-sm font-semibold text-white"
+					className="flex size-7 items-center justify-center rounded-full text-xs font-semibold text-white"
 					style={{ backgroundColor: agent.accentColor }}
 				>
 					{agent.name.charAt(0).toUpperCase()}
 				</div>
 				<div className="min-w-0 flex-1">
-					<div className="truncate text-sm font-semibold">{agent.name}</div>
-					<div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-						<StatusDot status={conv.status} />
-						<StatusLabel status={conv.status} />
+					<div className="flex items-center gap-2">
+						<span className="truncate text-sm font-medium">{agent.name}</span>
+						<span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+							<StatusDot status={conv.status} />
+							<StatusLabel status={conv.status} />
+						</span>
 					</div>
 				</div>
 				{!idle && (
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => conv.close()}
-						className="text-muted-foreground hover:text-foreground"
-					>
-						<RotateCw className="mr-1 size-3.5" />
+					<Button variant="ghost" size="sm" onClick={() => conv.close()}>
+						<RefreshIcon />
 						Reset
 					</Button>
 				)}
 			</div>
 
 			{/* Transcript */}
-			<div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-6">
+			<div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
 				{conv.error && (
-					<div className="mb-3 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-						<AlertCircle className="mt-0.5 size-4 shrink-0" />
+					<div className="mx-auto mb-3 flex max-w-2xl items-start gap-2 text-sm text-destructive">
+						<AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
 						<span>{conv.error}</span>
 					</div>
 				)}
@@ -154,7 +154,7 @@ function ChatPanel({
 									className="mb-4 flex size-12 items-center justify-center rounded-full text-white"
 									style={{ backgroundColor: agent.accentColor }}
 								>
-									<Play className="size-5" />
+									<PlayIcon className="size-5" />
 								</div>
 								<h3 className="text-base font-semibold tracking-tight">
 									Ready when you are.
@@ -163,16 +163,13 @@ function ChatPanel({
 									Start a conversation to see how the agent answers — same
 									flow as a real visitor.
 								</p>
-								<Button
-									onClick={() => conv.open()}
-									className="mt-5 bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-								>
+								<Button variant="accent" onClick={() => conv.open()} className="mt-5">
 									Start conversation
 								</Button>
 							</>
 						) : conv.status === "connecting" ? (
 							<div className="flex items-center gap-2 text-sm text-muted-foreground">
-								<Loader2 className="size-4 animate-spin" />
+								<SpinnerIcon className="size-4 animate-spin" />
 								Connecting…
 							</div>
 						) : live ? (
@@ -188,7 +185,7 @@ function ChatPanel({
 					</div>
 				)}
 
-				<div className="space-y-3">
+				<div className="mx-auto flex max-w-2xl flex-col gap-3">
 					{conv.turns.map((t) => (
 						<TurnBubble key={t.id} turn={t} accent={agent.accentColor} />
 					))}
@@ -203,7 +200,7 @@ function ChatPanel({
 			</div>
 
 			{/* Composer */}
-			<div className="border-t border-border/60 p-3">
+			<div className="border-t border-border/60 px-4 py-3 md:px-6">
 				<div className="flex items-end gap-2">
 					<Textarea
 						placeholder={
@@ -224,12 +221,12 @@ function ChatPanel({
 						className="min-h-[40px] resize-none"
 					/>
 					<Button
+						variant="accent"
 						onClick={handleSend}
 						disabled={!live || !input.trim()}
 						size="icon"
-						className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 					>
-						<Send className="size-4" />
+						<SendIcon className="size-4" />
 						<span className="sr-only">Send</span>
 					</Button>
 				</div>
@@ -237,7 +234,7 @@ function ChatPanel({
 					Enter to send · Shift+Enter for newline
 				</p>
 			</div>
-		</Card>
+		</section>
 	);
 }
 
@@ -286,7 +283,7 @@ function StatusDot({ status }: { status: string }) {
 		status === "open"
 			? "bg-accent-blue"
 			: status === "connecting"
-				? "bg-amber-500"
+				? "bg-warning"
 				: status === "error"
 					? "bg-destructive"
 					: "bg-muted-foreground/40";
@@ -345,95 +342,94 @@ function TuningPanel({ agent, agentId }: { agent: Agent; agentId: string }) {
 	});
 
 	return (
-		<div className="space-y-4">
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-sm">Tune live</CardTitle>
-					<CardDescription className="text-xs">
+		<aside
+			aria-label="Tune live"
+			className="flex shrink-0 flex-col border-border/60 max-lg:border-t lg:w-80 lg:overflow-y-auto lg:border-l"
+		>
+			<section className="flex flex-col gap-4 border-b border-border/60 px-5 py-5">
+				<div className="flex flex-col gap-1">
+					<h2 className="text-sm font-medium">Tune live</h2>
+					<p className="text-xs text-muted-foreground">
 						Edits save to this agent and apply on the next conversation.
 						Reset the chat to test.
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<div className="space-y-1.5">
-						<Label className="text-xs">Greeting</Label>
-						<Textarea
-							rows={3}
-							value={greeting}
-							onChange={(e) => setGreeting(e.target.value)}
-							className="text-sm"
-						/>
-					</div>
+					</p>
+				</div>
 
-					<div className="space-y-1.5">
-						<Label className="text-xs">System prompt overlay</Label>
-						<Textarea
-							rows={4}
-							placeholder="Be terse. Cite sources inline. Don't apologize."
-							value={systemPromptOverlay}
-							onChange={(e) => setSystemPromptOverlay(e.target.value)}
-							className="font-mono text-xs"
-						/>
-						<p className="text-[11px] text-muted-foreground">
-							Appended to the base system prompt. Empty = library default.
-						</p>
-					</div>
+				<div className="space-y-1.5">
+					<Label className="text-xs">Greeting</Label>
+					<Textarea
+						rows={3}
+						value={greeting}
+						onChange={(e) => setGreeting(e.target.value)}
+						className="text-sm"
+					/>
+				</div>
 
-					<div className="space-y-1.5">
-						<Label className="text-xs">Model</Label>
-						<Input
-							value={defaultModel}
-							onChange={(e) => setDefaultModel(e.target.value)}
-							className="font-mono text-xs"
-							placeholder="tencent/hy3-preview:free"
-						/>
-						<p className="text-[11px] text-muted-foreground">
-							OpenRouter model id. Free tier defaults to{" "}
-							<code className="rounded bg-secondary/60 px-1 py-0.5 font-mono">
-								tencent/hy3-preview:free
-							</code>
-							.
-						</p>
-					</div>
+				<div className="space-y-1.5">
+					<Label className="text-xs">System prompt overlay</Label>
+					<Textarea
+						rows={4}
+						placeholder="Be terse. Cite sources inline. Don't apologize."
+						value={systemPromptOverlay}
+						onChange={(e) => setSystemPromptOverlay(e.target.value)}
+						className="font-mono text-xs"
+					/>
+					<p className="text-[11px] text-muted-foreground">
+						Appended to the base system prompt. Empty = library default.
+					</p>
+				</div>
 
-					<Button
-						disabled={!dirty || mutation.isPending}
-						onClick={() => mutation.mutate()}
-						size="sm"
-						className="w-full bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-					>
-						{mutation.isPending ? (
-							<Loader2 className="mr-2 size-4 animate-spin" />
-						) : (
-							<Save className="mr-2 size-4" />
-						)}
-						Save changes
-					</Button>
+				<div className="space-y-1.5">
+					<Label className="text-xs">Model</Label>
+					<Input
+						value={defaultModel}
+						onChange={(e) => setDefaultModel(e.target.value)}
+						className="font-mono text-xs"
+						placeholder="tencent/hy3-preview:free"
+					/>
+					<p className="text-[11px] text-muted-foreground">
+						OpenRouter model id. Free tier defaults to{" "}
+						<code className="rounded bg-muted px-1 py-0.5 font-mono">
+							tencent/hy3-preview:free
+						</code>
+						.
+					</p>
+				</div>
 
-					{mutation.isError && (
-						<div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-							{mutation.error instanceof LeadlyApiError
-								? `API ${mutation.error.status}: ${mutation.error.message}`
-								: "Save failed."}
-						</div>
+				<Button
+					variant="accent"
+					disabled={!dirty || mutation.isPending}
+					onClick={() => mutation.mutate()}
+					size="sm"
+					className="w-full"
+				>
+					{mutation.isPending ? (
+						<SpinnerIcon className="animate-spin" />
+					) : (
+						<SaveIcon />
 					)}
-				</CardContent>
-			</Card>
+					Save changes
+				</Button>
 
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-sm">Tips</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-2 text-xs text-muted-foreground">
-					<p>
-						The playground hits the same retrieval pipeline as the real
-						widget — KB articles, embeddings, agent loop, all of it.
+				{mutation.isError && (
+					<p className="text-xs text-destructive">
+						{mutation.error instanceof LeadlyApiError
+							? `API ${mutation.error.status}: ${mutation.error.message}`
+							: "Save failed."}
 					</p>
-					<p>
-						Conversations created here show up in your inbox like any other.
-					</p>
-				</CardContent>
-			</Card>
-		</div>
+				)}
+			</section>
+
+			<section className="flex flex-col gap-2 px-5 py-5 text-xs text-muted-foreground">
+				<h2 className="text-xs font-medium text-muted-foreground">Tips</h2>
+				<p>
+					The playground hits the same retrieval pipeline as the real
+					widget — KB articles, embeddings, agent loop, all of it.
+				</p>
+				<p>
+					Conversations created here show up in your inbox like any other.
+				</p>
+			</section>
+		</aside>
 	);
 }
