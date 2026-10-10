@@ -41,6 +41,7 @@ import type {
 	Organization,
 	OrganizationWithMembers,
 	OrgLlmCredentialPublic,
+	OrgSlugAvailability,
 	SetAgentCredentialOverride,
 	StartWidgetConversationResponse,
 	TakeOverResponse,
@@ -129,6 +130,13 @@ export function createLeadlyClient(opts: ClientOptions) {
 					"POST",
 					`/api/orgs/${orgId}/members`,
 					body,
+				),
+			slugAvailability: (slug: string) =>
+				request<OrgSlugAvailability>(
+					"GET",
+					"/api/org-slugs/availability",
+					undefined,
+					{ slug },
 				),
 			removeMember: (orgId: string, userId: string) =>
 				request<{ success: true }>(

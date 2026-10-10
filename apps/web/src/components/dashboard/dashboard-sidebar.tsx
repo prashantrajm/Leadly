@@ -51,12 +51,13 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { useCurrentOrg } from "@/hooks/use-current-org";
+import { useCurrentOrg, useOrgPath } from "@/hooks/use-current-org";
 import { useOrgAgents } from "@/hooks/use-org-agents";
 import { api } from "@/lib/api";
 import { authClient, useSession } from "@/lib/auth-client";
 
 export function DashboardSidebar() {
+	const orgPath = useOrgPath();
 	const { currentOrg, orgs, switchOrg } = useCurrentOrg();
 	const { data: session } = useSession();
 	const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -139,11 +140,11 @@ export function DashboardSidebar() {
 				<SidebarGroup>
 					<SidebarGroupContent>
 						<SidebarMenu>
-							<NavLink to="/dashboard" pathname={pathname} icon={LayoutDashboard}>
+							<NavLink to={orgPath()} pathname={pathname} icon={LayoutDashboard}>
 								Overview
 							</NavLink>
 							<NavLink
-								to="/dashboard/inbox"
+								to={orgPath("/inbox")}
 								pathname={pathname}
 								icon={Inbox}
 								matchPrefix
@@ -151,14 +152,14 @@ export function DashboardSidebar() {
 							>
 								Inbox
 							</NavLink>
-							<NavLink to="/dashboard/leads" pathname={pathname} icon={Tags}>
+							<NavLink to={orgPath("/leads")} pathname={pathname} icon={Tags}>
 								Leads
 							</NavLink>
-							<NavLink to="/dashboard/visitors" pathname={pathname} icon={Users}>
+							<NavLink to={orgPath("/visitors")} pathname={pathname} icon={Users}>
 								Visitors
 							</NavLink>
 							<NavLink
-								to="/dashboard/analytics"
+								to={orgPath("/analytics")}
 								pathname={pathname}
 								icon={BarChart3}
 							>
@@ -170,10 +171,10 @@ export function DashboardSidebar() {
 
 				<SidebarGroup>
 					<SidebarGroupLabel asChild>
-						<Link to="/dashboard/agents">Agents</Link>
+						<Link to={orgPath("/agents")}>Agents</Link>
 					</SidebarGroupLabel>
 					<SidebarGroupAction asChild title="New agent">
-						<Link to="/dashboard/agents" search={{ new: true }}>
+						<Link to={orgPath("/agents")} search={{ new: true }}>
 							<Plus />
 							<span className="sr-only">New agent</span>
 						</Link>
@@ -185,7 +186,7 @@ export function DashboardSidebar() {
 							) : agents.length === 0 ? (
 								<SidebarMenuItem>
 									<SidebarMenuButton asChild tooltip="Create your first agent">
-										<Link to="/dashboard/agents" search={{ new: true }}>
+										<Link to={orgPath("/agents")} search={{ new: true }}>
 											<Plus className="size-4" />
 											<span>Create your first agent</span>
 										</Link>
@@ -211,7 +212,7 @@ export function DashboardSidebar() {
 					<SidebarGroupContent>
 						<SidebarMenu>
 							<NavLink
-								to="/dashboard/settings"
+								to={orgPath("/settings")}
 								pathname={pathname}
 								icon={Settings}
 								matchPrefix
@@ -269,10 +270,10 @@ export function DashboardSidebar() {
 								</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem asChild>
-									<Link to="/dashboard/settings/profile">Profile</Link>
+									<Link to={orgPath("/settings/profile")}>Profile</Link>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
-									<Link to="/dashboard/settings">Org settings</Link>
+									<Link to={orgPath("/settings")}>Org settings</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem
@@ -346,7 +347,8 @@ function AgentNavItem({
 	pathname: string;
 	defaultOpen: boolean;
 }) {
-	const base = `/dashboard/agents/${agent.id}`;
+	const orgPath = useOrgPath();
+	const base = orgPath(`/agents/${agent.id}`);
 	const [open, setOpen] = useState(defaultOpen);
 
 	// Navigating into an agent (e.g. from the Agents page) expands it.

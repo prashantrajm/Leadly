@@ -42,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { api, LeadlyApiError } from "@/lib/api";
+import { useOrgPath } from "@/hooks/use-current-org";
 
 type Mode =
 	| { kind: "create"; agentId: string }
@@ -53,6 +54,7 @@ type Mode =
 		};
 
 export function ArticleEditor({ mode }: { mode: Mode }) {
+	const orgPath = useOrgPath();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [view, setView] = useState<"edit" | "preview">("edit");
@@ -81,7 +83,7 @@ export function ArticleEditor({ mode }: { mode: Mode }) {
 				queryKey: ["kb", mode.kind === "create" ? mode.agentId : ""],
 			});
 			navigate({
-				to: `/dashboard/agents/${mode.kind === "create" ? mode.agentId : ""}/knowledge/${article.id}` as string,
+				to: orgPath(`/agents/${mode.kind === "create" ? mode.agentId : ""}/knowledge/${article.id}`) as string,
 			});
 		},
 	});
@@ -110,7 +112,7 @@ export function ArticleEditor({ mode }: { mode: Mode }) {
 			if (mode.kind !== "edit") return;
 			queryClient.invalidateQueries({ queryKey: ["kb", mode.agentId] });
 			navigate({
-				to: `/dashboard/agents/${mode.agentId}/knowledge` as string,
+				to: orgPath(`/agents/${mode.agentId}/knowledge`) as string,
 			});
 		},
 	});
@@ -136,7 +138,7 @@ export function ArticleEditor({ mode }: { mode: Mode }) {
 			<div className="mb-6 flex items-center justify-between gap-3">
 				<Button asChild variant="ghost" size="sm" className="-ml-2">
 					<Link
-						to={`/dashboard/agents/${mode.agentId}/knowledge` as string}
+						to={orgPath(`/agents/${mode.agentId}/knowledge`) as string}
 					>
 						<ArrowLeft className="mr-1 size-4" />
 						Knowledge base

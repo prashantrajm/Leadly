@@ -2,10 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useOrgPath } from "@/hooks/use-current-org";
 
 // Empty state for org-wide pages when the org has no agents yet. The
 // sidebar always shows every section, so each page explains what fills it.
 export function NoAgentsState({ what }: { what: string }) {
+	const orgPath = useOrgPath();
 	return (
 		<Card>
 			<CardContent className="flex flex-col items-center py-14 text-center">
@@ -23,7 +25,7 @@ export function NoAgentsState({ what }: { what: string }) {
 					asChild
 					className="mt-6 bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
 				>
-					<Link to="/dashboard/agents" search={{ new: true }}>
+					<Link to={orgPath("/agents")} search={{ new: true }}>
 						Create agent
 					</Link>
 				</Button>

@@ -60,8 +60,9 @@ docs/
 | Tweaking the live conversation logic | `apps/api/src/durable/conversation.ts` — `runUserTurn` is the per-turn flow |
 | Adding a workflow | `apps/api/src/workflows/<name>.ts`, export from `src/index.ts`, register in `wrangler.jsonc` |
 | Adding a cron | `apps/api/src/crons/<name>.ts`, dispatch in `src/index.ts` `scheduled()`, add to `triggers.crons` |
-| Touching auth | `apps/api/src/lib/auth.ts` (Better Auth config + post-create hook) |
-| Adding a dashboard page | `apps/web/src/routes/dashboard.tsx` is the reference (TanStack Query + zodResolver) |
+| Touching auth | `apps/api/src/lib/auth.ts` (Better Auth config). Sign-in lands on `/dashboard` (`apps/web/src/lib/dashboard-entry.ts`), which opens the last-used workspace or, for a user with none, the create-workspace dialog |
+| Adding a dashboard page | `apps/web/src/routes/$orgSlug/` — the app lives at `/<orgSlug>/…`; build links with `useOrgPath()` (`apps/web/src/hooks/use-current-org.ts`) |
+| Adding a marketing (top-level) page | `apps/web/src/routes/<page>.tsx` **and** add the path to `RESERVED_ORG_SLUGS` in `packages/schemas/src/org.ts` (a web test fails otherwise) |
 
 ## Tests, in one place
 
@@ -78,6 +79,7 @@ docs/
 3. **Browsers can't set headers on WebSocket Upgrade.** Widget tokens ride in the `?token=…` query string instead of `Authorization`. The token's payload binds (visitorId, agentId), so URL log leakage has minimal blast radius.
 4. **OpenRouter `FinishReason` is `{ unified, raw }`**, not a string, in AI SDK v6's `LanguageModelV3` interface. Mock test data needs the object shape.
 5. **`generateObject` against free-tier models** can be flaky. The `ConversationSummarize` workflow uses it; if a customer's free model can't produce structured output, summary stays null until the next end_conversation.
+6. **Workspace URLs share the root with marketing pages.** The app is `/<orgSlug>/…` and static routes win, so a slug equal to a top-level page would be unreachable. `RESERVED_ORG_SLUGS` blocks those on rename and suffixes them on create. Old `/dashboard/…` links redirect to the last-used workspace.
 
 ## Build phase notes (delete when launched)
 
