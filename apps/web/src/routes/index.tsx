@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { FeaturesSection } from "@/components/features";
@@ -10,8 +10,17 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getCachedSession } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/")({
+	// Signed-in users skip the marketing page and go straight to the app
+	// (/dashboard opens their last-used workspace, or workspace setup).
+	beforeLoad: async () => {
+		const session = await getCachedSession();
+		if (session.data?.user) {
+			throw redirect({ to: "/dashboard", replace: true });
+		}
+	},
 	component: HomePage,
 });
 
