@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { getCachedSession } from "@/lib/auth-client";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { PageTitle } from "@/components/dashboard/page-title";
 import { ModeToggle } from "@/components/mode-toggle";
 import {
 	SidebarInset,
@@ -33,7 +34,7 @@ function DashboardLayout() {
 				<header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur">
 					<SidebarTrigger className="-ml-1" />
 					<div className="h-4 w-px bg-border/60" />
-					<Breadcrumbs />
+					<PageTitle />
 					<div className="ml-auto">
 						<ModeToggle />
 					</div>
@@ -43,20 +44,5 @@ function DashboardLayout() {
 				</main>
 			</SidebarInset>
 		</SidebarProvider>
-	);
-}
-
-function Breadcrumbs() {
-	// Lightweight, derives from the URL. A real breadcrumb component can come
-	// later when nesting goes deeper. For P1 we just render the last segment.
-	if (typeof window === "undefined") return null;
-	const segments = window.location.pathname.split("/").filter(Boolean);
-	const last = segments[segments.length - 1] ?? "Dashboard";
-	const label =
-		last.length > 24 ? `${last.slice(0, 24)}…` : last.replace(/-/g, " ");
-	return (
-		<span className="text-sm font-medium capitalize text-muted-foreground">
-			{label === "dashboard" ? "Overview" : label}
-		</span>
 	);
 }

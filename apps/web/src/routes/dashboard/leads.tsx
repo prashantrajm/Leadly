@@ -104,38 +104,31 @@ function LeadsPage() {
 
 	return (
 		<div className="mx-auto max-w-6xl">
-			<header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-				<div>
-					<h1 className="text-2xl font-semibold tracking-tight">Leads</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						Contacts your agents captured during conversations.
-					</p>
-				</div>
-				<div className="flex flex-wrap items-center gap-2">
-					<AgentFilter
-						agents={agents}
-						value={agentId}
-						onChange={(agent) => navigate({ search: { agent } })}
+			<div className="mb-5 flex flex-wrap items-center gap-2">
+				<AgentFilter
+					agents={agents}
+					value={agentId}
+					onChange={(agent) => navigate({ search: { agent } })}
+				/>
+				<div className="relative">
+					<Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+					<Input
+						placeholder="Search name, email, phone…"
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+						className="w-64 pl-8"
 					/>
-					<div className="relative">
-						<Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-						<Input
-							placeholder="Search name, email, phone…"
-							value={search}
-							onChange={(e) => setSearch(e.target.value)}
-							className="w-64 pl-8"
-						/>
-					</div>
-					<Button
-						variant="outline"
-						onClick={exportCsv}
-						disabled={!q.data || q.data.length === 0}
-					>
-						<Download className="mr-1 size-4" />
-						Export CSV
-					</Button>
 				</div>
-			</header>
+				<Button
+					variant="outline"
+					onClick={exportCsv}
+					disabled={!q.data || q.data.length === 0}
+					className="ml-auto"
+				>
+					<Download className="mr-1 size-4" />
+					Export CSV
+				</Button>
+			</div>
 
 			{agentsLoading || q.isLoading ? (
 				<Skeleton className="h-80 rounded-xl" />

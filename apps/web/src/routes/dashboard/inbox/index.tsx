@@ -53,13 +53,6 @@ function InboxList() {
 
 	return (
 		<div className="mx-auto max-w-6xl">
-			<header className="mb-8">
-				<h1 className="text-2xl font-semibold tracking-tight">Inbox</h1>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Every conversation across your agents. Refreshes every 10 seconds.
-				</p>
-			</header>
-
 			<div className="mb-5 flex flex-wrap items-center gap-3">
 				<AgentFilter
 					agents={agents}

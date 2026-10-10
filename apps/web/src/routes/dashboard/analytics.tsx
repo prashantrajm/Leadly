@@ -76,31 +76,23 @@ function AnalyticsPage() {
 
 	return (
 		<div className="mx-auto max-w-6xl">
-			<header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-				<div>
-					<h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						Trends across your agents' conversations.
-					</p>
-				</div>
-				<div className="flex flex-wrap items-center gap-3">
-					<AgentFilter
-						agents={agents}
-						value={agentId}
-						onChange={(agent) => navigate({ search: { agent } })}
-					/>
-					<Tabs
-						value={String(windowDays)}
-						onValueChange={(v) => setWindowDays(Number(v) as WindowDays)}
-					>
-						<TabsList>
-							<TabsTrigger value="7">7 days</TabsTrigger>
-							<TabsTrigger value="14">14 days</TabsTrigger>
-							<TabsTrigger value="30">30 days</TabsTrigger>
-						</TabsList>
-					</Tabs>
-				</div>
-			</header>
+			<div className="mb-5 flex flex-wrap items-center gap-3">
+				<AgentFilter
+					agents={agents}
+					value={agentId}
+					onChange={(agent) => navigate({ search: { agent } })}
+				/>
+				<Tabs
+					value={String(windowDays)}
+					onValueChange={(v) => setWindowDays(Number(v) as WindowDays)}
+				>
+					<TabsList>
+						<TabsTrigger value="7">7 days</TabsTrigger>
+						<TabsTrigger value="14">14 days</TabsTrigger>
+						<TabsTrigger value="30">30 days</TabsTrigger>
+					</TabsList>
+				</Tabs>
+			</div>
 
 			<section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				<Kpi

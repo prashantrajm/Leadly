@@ -31,8 +31,7 @@ function DashboardOverview() {
 	if (orgLoading) {
 		return (
 			<div className="mx-auto max-w-6xl">
-				<HeaderShell />
-				<div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
 					{[0, 1, 2, 3].map((i) => (
 						<Skeleton key={i} className="h-28 rounded-xl" />
 					))}
@@ -44,26 +43,12 @@ function DashboardOverview() {
 	if (!currentOrg) {
 		return (
 			<div className="mx-auto max-w-6xl">
-				<HeaderShell />
 				<EmptyState />
 			</div>
 		);
 	}
 
 	return <DashboardOverviewBody orgId={currentOrg.id} />;
-}
-
-function HeaderShell({ orgName }: { orgName?: string }) {
-	return (
-		<header className="mb-8">
-			<h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-			<p className="mt-1 text-sm text-muted-foreground">
-				{orgName
-					? `What ${orgName} agents have been doing.`
-					: "What your agents have been doing."}
-			</p>
-		</header>
-	);
 }
 
 function EmptyState() {
@@ -81,8 +66,6 @@ function EmptyState() {
 }
 
 function DashboardOverviewBody({ orgId }: { orgId: string }) {
-	const { currentOrg } = useCurrentOrg();
-
 	const agentsQuery = useQuery({
 		queryKey: ["agents", orgId],
 		queryFn: () => api.agents.list(orgId),
@@ -106,8 +89,6 @@ function DashboardOverviewBody({ orgId }: { orgId: string }) {
 
 	return (
 		<div className="mx-auto max-w-6xl">
-			<HeaderShell orgName={currentOrg?.name} />
-
 			{/* KPIs */}
 			<section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
 				<Kpi
