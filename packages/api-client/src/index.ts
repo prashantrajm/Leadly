@@ -17,6 +17,7 @@
 // known, errors at compile time) without the structural change.
 
 import type {
+	AccountDeletionPreview,
 	Agent,
 	AnalyticsSummary,
 	AnalyticsTimeseries,
@@ -27,12 +28,15 @@ import type {
 	ConversationMode,
 	ConversationWithTurns,
 	CreateAgent,
+	CreateInvitation,
 	CreateKbArticle,
 	CreateLlmCredential,
 	CreateOrganization,
 	EndConversation,
 	HumanMessage,
 	InboxCounts,
+	Invitation,
+	InvitationPreview,
 	InviteMember,
 	KbArticle,
 	KbArticleListItem,
@@ -48,6 +52,7 @@ import type {
 	UpdateAgent,
 	UpdateKbArticle,
 	UpdateLead,
+	UpdateMemberRole,
 	UpdateOrganization,
 	Visitor,
 	WidgetConfig,
@@ -143,6 +148,44 @@ export function createLeadlyClient(opts: ClientOptions) {
 					"DELETE",
 					`/api/orgs/${orgId}/members/${userId}`,
 				),
+			updateMemberRole: (orgId: string, userId: string, body: UpdateMemberRole) =>
+				request<{ success: true }>(
+					"PATCH",
+					`/api/orgs/${orgId}/members/${userId}`,
+					body,
+				),
+			delete: (orgId: string) =>
+				request<{ success: true }>("DELETE", `/api/orgs/${orgId}`),
+		},
+
+		// ---------- invitations ----------
+		invitations: {
+			list: (orgId: string) =>
+				request<Invitation[]>("GET", `/api/orgs/${orgId}/invitations`),
+			create: (orgId: string, body: CreateInvitation) =>
+				request<Invitation>("POST", `/api/orgs/${orgId}/invitations`, body),
+			revoke: (orgId: string, invitationId: string) =>
+				request<{ success: true }>(
+					"DELETE",
+					`/api/orgs/${orgId}/invitations/${invitationId}`,
+				),
+			preview: (token: string) =>
+				request<InvitationPreview>(
+					"GET",
+					`/api/invitations/${encodeURIComponent(token)}`,
+				),
+			accept: (token: string) =>
+				request<Organization>(
+					"POST",
+					`/api/invitations/${encodeURIComponent(token)}/accept`,
+				),
+		},
+
+		// ---------- account ----------
+		me: {
+			deletionPreview: () =>
+				request<AccountDeletionPreview>("GET", "/api/me/deletion-preview"),
+			delete: () => request<{ success: true }>("DELETE", "/api/me"),
 		},
 
 		// ---------- agents ----------

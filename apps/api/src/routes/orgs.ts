@@ -7,10 +7,16 @@ import {
 	OrganizationSchema,
 	OrganizationWithMembersSchema,
 	SuccessSchema,
+	UpdateMemberRoleSchema,
 	UpdateOrganizationSchema,
 } from "@leadly/schemas";
 import { slugify } from "@leadly/utils";
-import { requireOrgAdmin, requireOrgMember } from "../middleware/org";
+import {
+	requireOrgAdmin,
+	requireOrgMember,
+	requireOrgOwner,
+} from "../middleware/org";
+import { deleteOrganizationCompletely } from "../lib/org-deletion";
 import { getPrisma } from "../lib/prisma";
 import { pickAvailableSlug } from "../lib/org-slug";
 import type { AppEnv, MembershipWithUser } from "../types";
@@ -380,6 +386,101 @@ orgsApp.openapi(removeMemberRoute, async (c) => {
 	}
 
 	await prisma.membership.delete({ where: { id: target.id } });
+	return c.json({ success: true as const }, 200);
+});
+
+// ---------- members: change role (owner only) ----------
+
+const updateMemberRoleRoute = createRoute({
+	method: "patch",
+	path: "/{orgId}/members/{userId}",
+	tags: ["Organizations"],
+	request: {
+		params: z.object({ orgId: z.string(), userId: z.string() }),
+		body: { content: { "application/json": { schema: UpdateMemberRoleSchema } } },
+	},
+	middleware: [requireOrgOwner] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: SuccessSchema } },
+			description: "Role updated",
+		},
+		400: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Would leave the org without an owner",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+		404: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Membership not found",
+		},
+	},
+});
+
+orgsApp.openapi(updateMemberRoleRoute, async (c) => {
+	const { orgId, userId } = c.req.valid("param");
+	const { role } = c.req.valid("json");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+
+	const target = await prisma.membership.findUnique({
+		where: { organizationId_userId: { organizationId: orgId, userId } },
+	});
+	if (!target) return c.json({ error: "Membership not found" }, 404);
+
+	if (target.role === "owner" && role !== "owner") {
+		const ownerCount = await prisma.membership.count({
+			where: { organizationId: orgId, role: "owner" },
+		});
+		if (ownerCount <= 1) {
+			return c.json(
+				{
+					error: "Cannot demote last owner",
+					message: "Make another member an owner first.",
+				},
+				400,
+			);
+		}
+	}
+
+	await prisma.membership.update({ where: { id: target.id }, data: { role } });
+	return c.json({ success: true as const }, 200);
+});
+
+// ---------- delete :orgId (owner only) ----------
+
+const deleteOrgRoute = createRoute({
+	method: "delete",
+	path: "/{orgId}",
+	tags: ["Organizations"],
+	request: { params: z.object({ orgId: z.string() }) },
+	middleware: [requireOrgOwner] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: SuccessSchema } },
+			description: "Deleted, with all agents, conversations, leads and files",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+orgsApp.openapi(deleteOrgRoute, async (c) => {
+	const { orgId } = c.req.valid("param");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+	await deleteOrganizationCompletely(prisma, c.env, orgId);
 	return c.json({ success: true as const }, 200);
 });
 

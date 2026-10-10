@@ -12,6 +12,8 @@ import {
 } from "./conversations";
 import { kbApp } from "./kb";
 import { agentLeadsApp, leadsApp, orgLeadsApp } from "./leads";
+import { invitationsApp, orgInvitationsApp } from "./invitations";
+import { meApp } from "./me";
 import { orgSlugsApp } from "./org-slugs";
 import { orgsApp } from "./orgs";
 import { agentVisitorsApp, orgVisitorsApp, visitorsApp } from "./visitors";
@@ -40,6 +42,9 @@ const authed = new OpenAPIHono<AppEnv>();
 authed.use("*", authMiddleware);
 authed.route("/orgs", orgsApp);
 authed.route("/org-slugs", orgSlugsApp);
+authed.route("/orgs/:orgId/invitations", orgInvitationsApp);
+authed.route("/invitations", invitationsApp);
+authed.route("/me", meApp);
 authed.route("/orgs/:orgId/agents", orgAgentsApp);
 authed.route("/orgs/:orgId/conversations", orgConversationsApp);
 authed.route("/orgs/:orgId/leads", orgLeadsApp);

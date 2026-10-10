@@ -9,6 +9,7 @@ model Organization {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   memberships    Membership[]
+  invitations    Invitation[]
   agents         Agent[]
   llmCredentials OrgLlmCredential[]
 
@@ -27,6 +28,28 @@ model Membership {
   @@unique([organizationId, userId])
   @@index([userId])
   @@map("membership")
+}
+
+// Pending invite to join an org. Accepted via a link carrying `token`, and
+// only by a signed-in user whose email matches `email` (lowercased). There's
+// no email provider yet, so admins share the link themselves.
+model Invitation {
+  id             String         @id @default(cuid())
+  organizationId String
+  email          String
+  role           MembershipRole @default(member)
+  token          String         @unique
+  invitedById    String?
+  createdAt      DateTime       @default(now())
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy      User?          @relation(fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
 }
 
 // ---------------------------------------------------------------------------
