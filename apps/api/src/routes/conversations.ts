@@ -22,18 +22,20 @@ import {
 	EndConversationSchema,
 	ErrorSchema,
 	HumanMessageSchema,
+	InboxCountsSchema,
 	SuccessSchema,
 	TakeOverResponseSchema,
 } from "@leadly/schemas";
 import { decodeCursor, encodeCursor } from "../lib/cursor";
 import { getPrisma } from "../lib/prisma";
 import { verifyWidgetToken } from "../lib/widget-token";
-import { requireAgentAccess } from "../middleware/org";
+import { requireAgentAccess, requireOrgMember } from "../middleware/org";
 import type { AppEnv } from "../types";
 
 export const conversationsApp = new OpenAPIHono<AppEnv>();
 export const conversationsInboxApp = new OpenAPIHono<AppEnv>();
 export const agentConversationsApp = new OpenAPIHono<AppEnv>();
+export const orgConversationsApp = new OpenAPIHono<AppEnv>();
 
 // GET /api/conversations/:id/ws
 //
@@ -316,8 +318,134 @@ const listConversationsRoute = createRoute({
 
 agentConversationsApp.openapi(listConversationsRoute, async (c) => {
 	const { agentId } = c.req.valid("param");
-	const { cursor, limit, status, mode, leadId } = c.req.valid("query");
+	const result = await listConversations(
+		c.env.DATABASE_URL,
+		{ agentId },
+		c.req.valid("query"),
+	);
+	if (!result.ok) return c.json({ error: "Invalid cursor" }, 400);
+	return c.json(result.page, 200);
+});
+
+// ---------- list (org-wide, optional agent filter) ----------
+
+const listOrgConversationsRoute = createRoute({
+	method: "get",
+	path: "/",
+	tags: ["Conversations"],
+	request: {
+		params: z.object({ orgId: z.string() }),
+		query: z.object({
+			agentId: z.string().optional(),
+			cursor: z.string().optional(),
+			limit: z.coerce.number().int().min(1).max(100).default(20),
+			status: ConversationStatus.optional(),
+			mode: ConversationMode.optional(),
+			leadId: z.string().optional(),
+		}),
+	},
+	middleware: [requireOrgMember] as const,
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						items: z.array(ConversationListItemSchema),
+						nextCursor: z.string().nullable(),
+					}),
+				},
+			},
+			description: "Conversations across the org's agents (newest first)",
+		},
+		400: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Bad cursor",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+orgConversationsApp.openapi(listOrgConversationsRoute, async (c) => {
+	const { orgId } = c.req.valid("param");
+	const { agentId, ...opts } = c.req.valid("query");
+	// organizationId stays in the filter even when agentId is set, so an
+	// agentId from another org simply matches nothing.
+	const result = await listConversations(
+		c.env.DATABASE_URL,
+		{ organizationId: orgId, ...(agentId ? { agentId } : {}) },
+		opts,
+	);
+	if (!result.ok) return c.json({ error: "Invalid cursor" }, 400);
+	return c.json(result.page, 200);
+});
+
+// ---------- counts (org-wide, for the sidebar badge) ----------
+
+const orgInboxCountsRoute = createRoute({
+	method: "get",
+	path: "/counts",
+	tags: ["Conversations"],
+	request: { params: z.object({ orgId: z.string() }) },
+	middleware: [requireOrgMember] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: InboxCountsSchema } },
+			description: "Active and waiting-on-human conversation counts",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+orgConversationsApp.openapi(orgInboxCountsRoute, async (c) => {
+	const { orgId } = c.req.valid("param");
 	const prisma = getPrisma(c.env.DATABASE_URL);
+	const [active, waitingOnHuman] = await Promise.all([
+		prisma.conversation.count({
+			where: { organizationId: orgId, status: "active" },
+		}),
+		prisma.conversation.count({
+			where: { organizationId: orgId, status: "active", mode: "paused" },
+		}),
+	]);
+	return c.json({ active, waitingOnHuman }, 200);
+});
+
+type ConversationScope =
+	| { agentId: string }
+	| { organizationId: string; agentId?: string };
+
+async function listConversations(
+	databaseUrl: string,
+	scope: ConversationScope,
+	{
+		cursor,
+		limit,
+		status,
+		mode,
+		leadId,
+	}: {
+		cursor?: string;
+		limit: number;
+		status?: ConversationStatus;
+		mode?: ConversationMode;
+		leadId?: string;
+	},
+) {
+	const prisma = getPrisma(databaseUrl);
 
 	// Cursor decodes to (createdAt, id). We page on (startedAt DESC, id DESC)
 	// so newer conversations always appear first; the id tiebreak keeps the
@@ -328,12 +456,12 @@ agentConversationsApp.openapi(listConversationsRoute, async (c) => {
 			const decoded = decodeCursor(cursor);
 			after = { startedAt: new Date(decoded.createdAt), id: decoded.id };
 		} catch {
-			return c.json({ error: "Invalid cursor" }, 400);
+			return { ok: false as const };
 		}
 	}
 
 	const where = {
-		agentId,
+		...scope,
 		...(status ? { status } : {}),
 		...(mode ? { mode } : {}),
 		...(leadId ? { leadId } : {}),
@@ -394,8 +522,9 @@ agentConversationsApp.openapi(listConversationsRoute, async (c) => {
 			})
 		: null;
 
-	return c.json(
-		{
+	return {
+		ok: true as const,
+		page: {
 			items: items.map((r) => ({
 				id: r.id,
 				organizationId: r.organizationId,
@@ -417,9 +546,8 @@ agentConversationsApp.openapi(listConversationsRoute, async (c) => {
 			})),
 			nextCursor,
 		},
-		200,
-	);
-});
+	};
+}
 
 // ---------- detail (with turns inline) ----------
 

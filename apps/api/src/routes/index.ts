@@ -2,17 +2,18 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { authMiddleware } from "../middleware/auth";
 import type { AppEnv } from "../types";
 import { agentsApp, orgAgentsApp } from "./agents";
-import { analyticsApp } from "./analytics";
+import { analyticsApp, orgAnalyticsApp } from "./analytics";
 import { byokAgentApp, byokOrgApp } from "./byok";
 import {
 	agentConversationsApp,
 	conversationsApp,
 	conversationsInboxApp,
+	orgConversationsApp,
 } from "./conversations";
 import { kbApp } from "./kb";
-import { agentLeadsApp, leadsApp } from "./leads";
+import { agentLeadsApp, leadsApp, orgLeadsApp } from "./leads";
 import { orgsApp } from "./orgs";
-import { agentVisitorsApp, visitorsApp } from "./visitors";
+import { agentVisitorsApp, orgVisitorsApp, visitorsApp } from "./visitors";
 import { widgetApp } from "./widget";
 
 export const apiApp = new OpenAPIHono<AppEnv>();
@@ -38,6 +39,10 @@ const authed = new OpenAPIHono<AppEnv>();
 authed.use("*", authMiddleware);
 authed.route("/orgs", orgsApp);
 authed.route("/orgs/:orgId/agents", orgAgentsApp);
+authed.route("/orgs/:orgId/conversations", orgConversationsApp);
+authed.route("/orgs/:orgId/leads", orgLeadsApp);
+authed.route("/orgs/:orgId/visitors", orgVisitorsApp);
+authed.route("/orgs/:orgId/analytics", orgAnalyticsApp);
 authed.route("/agents", agentsApp);
 authed.route("/agents/:agentId/kb", kbApp);
 authed.route("/agents/:agentId/visitors", agentVisitorsApp);

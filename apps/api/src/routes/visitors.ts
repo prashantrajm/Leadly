@@ -5,11 +5,12 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { ErrorSchema, VisitorSchema } from "@leadly/schemas";
 import { getPrisma } from "../lib/prisma";
-import { requireAgentAccess } from "../middleware/org";
+import { requireAgentAccess, requireOrgMember } from "../middleware/org";
 import type { AppEnv } from "../types";
 
 export const agentVisitorsApp = new OpenAPIHono<AppEnv>();
 export const visitorsApp = new OpenAPIHono<AppEnv>();
+export const orgVisitorsApp = new OpenAPIHono<AppEnv>();
 
 // ---------- list (per-agent) ----------
 
@@ -43,13 +44,49 @@ const listVisitorsRoute = createRoute({
 agentVisitorsApp.openapi(listVisitorsRoute, async (c) => {
 	const { agentId } = c.req.valid("param");
 	const { limit } = c.req.valid("query");
-	const prisma = getPrisma(c.env.DATABASE_URL);
-	const visitors = await prisma.visitor.findMany({
-		where: { agentId },
-		orderBy: { lastSeenAt: "desc" },
-		take: limit,
-	});
-	return c.json(visitors.map(toWire), 200);
+	const visitors = await listVisitors(c.env.DATABASE_URL, { agentId }, limit);
+	return c.json(visitors, 200);
+});
+
+// ---------- list (org-wide, optional agent filter) ----------
+
+const listOrgVisitorsRoute = createRoute({
+	method: "get",
+	path: "/",
+	tags: ["Visitors"],
+	request: {
+		params: z.object({ orgId: z.string() }),
+		query: z.object({
+			agentId: z.string().optional(),
+			limit: z.coerce.number().int().min(1).max(100).default(50),
+		}),
+	},
+	middleware: [requireOrgMember] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: z.array(VisitorSchema) } },
+			description: "Visitors across the org's agents (most recently seen first)",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+orgVisitorsApp.openapi(listOrgVisitorsRoute, async (c) => {
+	const { orgId } = c.req.valid("param");
+	const { agentId, limit } = c.req.valid("query");
+	const visitors = await listVisitors(
+		c.env.DATABASE_URL,
+		{ organizationId: orgId, ...(agentId ? { agentId } : {}) },
+		limit,
+	);
+	return c.json(visitors, 200);
 });
 
 // ---------- get :visitorId ----------
@@ -106,6 +143,20 @@ visitorsApp.openapi(getVisitorRoute, async (c) => {
 });
 
 // ---------- helpers ----------
+
+async function listVisitors(
+	databaseUrl: string,
+	scope: { agentId: string } | { organizationId: string; agentId?: string },
+	limit: number,
+) {
+	const prisma = getPrisma(databaseUrl);
+	const visitors = await prisma.visitor.findMany({
+		where: scope,
+		orderBy: { lastSeenAt: "desc" },
+		take: limit,
+	});
+	return visitors.map(toWire);
+}
 
 function toWire(v: {
 	id: string;

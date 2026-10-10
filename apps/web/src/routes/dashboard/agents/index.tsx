@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateAgentSchema, type CreateAgent } from "@leadly/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
 	ArrowRight,
 	Bot,
@@ -10,7 +10,7 @@ import {
 	Plus,
 	Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
 	AlertDialog,
@@ -54,6 +54,9 @@ import { api, LeadlyApiError } from "@/lib/api";
 import type { Agent } from "@leadly/api-client";
 
 export const Route = createFileRoute("/dashboard/agents/")({
+	// ?new=true opens the create dialog — the sidebar's "New agent" links here.
+	validateSearch: (search: Record<string, unknown>): { new?: boolean } =>
+		search.new === true || search.new === "true" ? { new: true } : {},
 	component: AgentsList,
 });
 
@@ -104,7 +107,7 @@ function AgentsListBody({ orgId }: { orgId: string }) {
 	return (
 		<div className="mx-auto max-w-6xl">
 			<Header>
-				<CreateAgentDialog orgId={orgId} />
+				<CreateAgentDialog orgId={orgId} openFromSearch />
 			</Header>
 
 			{q.isLoading ? (
@@ -266,9 +269,31 @@ function AgentCard({ agent, orgId }: { agent: Agent; orgId: string }) {
 	);
 }
 
-function CreateAgentDialog({ orgId }: { orgId: string }) {
-	const [open, setOpen] = useState(false);
+function CreateAgentDialog({
+	orgId,
+	openFromSearch = false,
+}: {
+	orgId: string;
+	openFromSearch?: boolean;
+}) {
+	const search = Route.useSearch();
+	const navigate = useNavigate();
+	const [open, setOpenState] = useState(false);
 	const queryClient = useQueryClient();
+
+	// Effect rather than initial state so the sidebar link also works while
+	// this page is already open.
+	useEffect(() => {
+		if (openFromSearch && search.new) setOpenState(true);
+	}, [openFromSearch, search.new]);
+
+	function setOpen(next: boolean) {
+		setOpenState(next);
+		// Drop ?new so a refresh doesn't reopen the dialog.
+		if (!next && search.new) {
+			navigate({ to: "/dashboard/agents", search: {}, replace: true });
+		}
+	}
 
 	const form = useForm<CreateAgent>({
 		resolver: zodResolver(CreateAgentSchema),
@@ -277,10 +302,15 @@ function CreateAgentDialog({ orgId }: { orgId: string }) {
 
 	const mutation = useMutation({
 		mutationFn: (body: CreateAgent) => api.agents.create(orgId, body),
-		onSuccess: () => {
+		onSuccess: (agent) => {
 			queryClient.invalidateQueries({ queryKey: ["agents", orgId] });
 			form.reset();
-			setOpen(false);
+			setOpenState(false);
+			// Land on the new agent so its setup steps are one click away.
+			navigate({
+				to: "/dashboard/agents/$agentId",
+				params: { agentId: agent.id },
+			});
 		},
 	});
 
