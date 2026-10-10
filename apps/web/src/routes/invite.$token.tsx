@@ -36,6 +36,14 @@ function InvitePage() {
 		retry: false,
 	});
 
+	const decline = useMutation({
+		mutationFn: () => api.invitations.decline(token),
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["invitation", token] });
+			queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
+		},
+	});
+
 	const accept = useMutation({
 		mutationFn: () => api.invitations.accept(token),
 		onSuccess: (org) => {
@@ -43,6 +51,7 @@ function InvitePage() {
 				orgs?.some((o) => o.id === org.id) ? orgs : [...(orgs ?? []), org],
 			);
 			queryClient.invalidateQueries({ queryKey: ["orgs"] });
+			queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
 			navigate({ to: "/$orgSlug", params: { orgSlug: org.slug } });
 		},
 	});
@@ -100,6 +109,7 @@ function InvitePage() {
 	if (inv.status !== "pending") {
 		const why = {
 			accepted: "This invitation has already been used.",
+			declined: "You declined this invitation.",
 			revoked: "This invitation was revoked.",
 			expired: "This invitation has expired.",
 		}[inv.status];
@@ -141,17 +151,31 @@ function InvitePage() {
 				</span>{" "}
 				as {inv.role === "admin" ? "an admin" : `a ${inv.role}`}.
 			</p>
-			{accept.isError && (
-				<p className="text-destructive">{apiErrorMessage(accept.error)}</p>
+			{(accept.isError || decline.isError) && (
+				<p className="text-destructive">
+					{apiErrorMessage(accept.error ?? decline.error)}
+				</p>
 			)}
-			<Button
-				onClick={() => accept.mutate()}
-				disabled={accept.isPending}
-				className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-			>
-				{accept.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-				Accept invitation
-			</Button>
+			<div className="flex gap-2">
+				<Button
+					variant="outline"
+					onClick={() => decline.mutate()}
+					disabled={accept.isPending || decline.isPending}
+				>
+					{decline.isPending && (
+						<Loader2 className="mr-2 size-4 animate-spin" />
+					)}
+					Decline
+				</Button>
+				<Button
+					onClick={() => accept.mutate()}
+					disabled={accept.isPending || decline.isPending}
+					className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
+				>
+					{accept.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+					Accept invitation
+				</Button>
+			</div>
 		</Shell>
 	);
 }

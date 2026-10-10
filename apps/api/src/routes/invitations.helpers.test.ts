@@ -18,6 +18,12 @@ describe("statusOf", () => {
 		).toBe("expired");
 	});
 
+	it("reports a declined invitation as declined", () => {
+		expect(
+			statusOf({ acceptedAt: null, revokedAt: null, declinedAt: new Date(), expiresAt: future }),
+		).toBe("declined");
+	});
+
 	it("treats revoked as final, even if also accepted or expired", () => {
 		expect(
 			statusOf({

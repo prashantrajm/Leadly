@@ -1,14 +1,15 @@
 // Workspace invitations.
 //
 //   orgInvitationsApp — /orgs/:orgId/invitations (admins)
-//     GET    /                 pending invitations
+//     GET    /                 pending (and declined) invitations
 //     POST   /                 invite an email (re-inviting refreshes the
 //                              existing pending invite and keeps its link)
-//     DELETE /{invitationId}   revoke
+//     DELETE /{invitationId}   revoke a pending invite / clear a declined one
 //
 //   invitationsApp — /invitations (any signed-in user holding the link)
 //     GET  /{token}            preview: workspace, role, status
 //     POST /{token}/accept     join — only if your email is the invited one
+//     POST /{token}/decline    turn it down (admins stop seeing it pending)
 //
 // The token is the secret in the /invite/<token> link. Requiring the
 // invitee's email on top means a forwarded link is useless to anyone else.
@@ -42,6 +43,7 @@ type InvitationRow = {
 	expiresAt: Date;
 	acceptedAt: Date | null;
 	revokedAt: Date | null;
+	declinedAt: Date | null;
 	invitedBy: { name: string; email: string } | null;
 };
 
@@ -56,7 +58,7 @@ const listRoute = createRoute({
 	responses: {
 		200: {
 			content: { "application/json": { schema: z.array(InvitationSchema) } },
-			description: "Pending invitations, newest first",
+			description: "Pending and declined invitations, newest first",
 		},
 		401: {
 			content: { "application/json": { schema: ErrorSchema } },
@@ -157,6 +159,7 @@ orgInvitationsApp.openapi(createInvitationRoute, async (c) => {
 			email,
 			acceptedAt: null,
 			revokedAt: null,
+			declinedAt: null,
 			expiresAt: { gt: new Date() },
 		},
 		select: { id: true },
@@ -370,6 +373,59 @@ invitationsApp.openapi(acceptRoute, async (c) => {
 	);
 });
 
+// ---------- decline (invitee) ----------
+
+const declineRoute = createRoute({
+	method: "post",
+	path: "/{token}/decline",
+	tags: ["Invitations"],
+	request: { params: z.object({ token: z.string() }) },
+	responses: {
+		200: {
+			content: { "application/json": { schema: SuccessSchema } },
+			description: "Declined",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+		404: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "No such invitation",
+		},
+		410: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Revoked, expired, or already used",
+		},
+	},
+});
+
+invitationsApp.openapi(declineRoute, async (c) => {
+	const { token } = c.req.valid("param");
+	const user = c.get("user");
+	const prisma = getPrisma(c.env.DATABASE_URL);
+	const invite = await loadByToken(prisma, token);
+	if (!invite) return c.json({ error: "Invitation not found" }, 404);
+
+	const status = statusOf(invite);
+	if (status !== "pending") {
+		return c.json({ error: `This invitation is ${status}.` }, 410);
+	}
+	if (!emailMatches(user.email, invite.email)) {
+		return c.json({ error: "Forbidden", message: "This invitation isn't for you." }, 403);
+	}
+
+	await prisma.invitation.update({
+		where: { id: invite.id },
+		data: { declinedAt: new Date() },
+	});
+	return c.json({ success: true as const }, 200);
+});
+
 // ---------- helpers ----------
 
 async function loadByToken(
@@ -390,10 +446,12 @@ async function loadByToken(
 export function statusOf(invite: {
 	acceptedAt: Date | null;
 	revokedAt: Date | null;
+	declinedAt?: Date | null;
 	expiresAt: Date;
 }): InvitationStatus {
 	if (invite.revokedAt) return "revoked";
 	if (invite.acceptedAt) return "accepted";
+	if (invite.declinedAt) return "declined";
 	if (invite.expiresAt.getTime() <= Date.now()) return "expired";
 	return "pending";
 }
@@ -421,5 +479,6 @@ function toWire(row: InvitationRow) {
 		createdAt: row.createdAt.toISOString(),
 		expiresAt: row.expiresAt.toISOString(),
 		invitedBy: row.invitedBy,
+		status: statusOf(row),
 	};
 }
