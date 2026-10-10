@@ -41,20 +41,15 @@ function VisitorsPage() {
 
 	return (
 		<div className="mx-auto max-w-6xl">
-			<header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-				<div>
-					<h1 className="text-2xl font-semibold tracking-tight">Visitors</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						Every browser that opened a widget. Useful for debugging "did
-						this person actually reach the agent?"
-					</p>
+			{agents.length > 1 && (
+				<div className="mb-5 flex flex-wrap items-center gap-2">
+					<AgentFilter
+						agents={agents}
+						value={agentId}
+						onChange={(agent) => navigate({ search: { agent } })}
+					/>
 				</div>
-				<AgentFilter
-					agents={agents}
-					value={agentId}
-					onChange={(agent) => navigate({ search: { agent } })}
-				/>
-			</header>
+			)}
 
 			{agentsLoading || q.isLoading ? (
 				<Skeleton className="h-80 rounded-xl" />
