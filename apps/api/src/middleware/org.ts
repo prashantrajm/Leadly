@@ -79,6 +79,25 @@ export const requireOrgAdmin = async (c: Ctx, next: Next) => {
 	return next();
 };
 
+// requireOrgOwner — caller must be an `owner` of :orgId. Used for
+// destructive / ownership actions: deleting the org, changing roles.
+export const requireOrgOwner = async (c: Ctx, next: Next) => {
+	const user = getUser(c);
+	if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+	const orgId = c.req.param("orgId");
+	if (!orgId) return c.json({ error: "Missing orgId in path" }, 400);
+
+	const membership = await loadMembership(c, user.id, orgId);
+	if (!membership) return c.json({ error: "Forbidden" }, 403);
+	if (membership.role !== "owner") {
+		return c.json({ error: "Forbidden", message: "Org owner required" }, 403);
+	}
+
+	c.set("membership", membership);
+	return next();
+};
+
 // requireAgentAccess — derives orgId from :agentId, then checks membership.
 // Used by every per-agent route (KB, conversations, leads, settings, …).
 export const requireAgentAccess = async (c: Ctx, next: Next) => {

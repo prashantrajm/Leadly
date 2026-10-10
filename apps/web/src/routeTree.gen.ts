@@ -28,6 +28,7 @@ import { Route as OrgSlugRouteImport } from './routes/$orgSlug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as OrgSlugIndexRouteImport } from './routes/$orgSlug/index'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as DashboardSplatRouteImport } from './routes/dashboard/$'
 import { Route as OrgSlugVisitorsRouteImport } from './routes/$orgSlug/visitors'
 import { Route as OrgSlugLeadsRouteImport } from './routes/$orgSlug/leads'
@@ -145,6 +146,11 @@ const OrgSlugIndexRoute = OrgSlugIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => OrgSlugRoute,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardSplatRoute = DashboardSplatRouteImport.update({
   id: '/dashboard/$',
@@ -293,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/leads': typeof OrgSlugLeadsRoute
   '/$orgSlug/visitors': typeof OrgSlugVisitorsRoute
   '/dashboard/$': typeof DashboardSplatRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/$orgSlug/': typeof OrgSlugIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$orgSlug/inbox/$conversationId': typeof OrgSlugInboxConversationIdRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/$orgSlug/leads': typeof OrgSlugLeadsRoute
   '/$orgSlug/visitors': typeof OrgSlugVisitorsRoute
   '/dashboard/$': typeof DashboardSplatRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/$orgSlug': typeof OrgSlugIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/$orgSlug/inbox/$conversationId': typeof OrgSlugInboxConversationIdRoute
@@ -379,6 +387,7 @@ export interface FileRoutesById {
   '/$orgSlug/leads': typeof OrgSlugLeadsRoute
   '/$orgSlug/visitors': typeof OrgSlugVisitorsRoute
   '/dashboard/$': typeof DashboardSplatRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/$orgSlug/': typeof OrgSlugIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$orgSlug/inbox/$conversationId': typeof OrgSlugInboxConversationIdRoute
@@ -424,6 +433,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/leads'
     | '/$orgSlug/visitors'
     | '/dashboard/$'
+    | '/invite/$token'
     | '/$orgSlug/'
     | '/dashboard/'
     | '/$orgSlug/inbox/$conversationId'
@@ -466,6 +476,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/leads'
     | '/$orgSlug/visitors'
     | '/dashboard/$'
+    | '/invite/$token'
     | '/$orgSlug'
     | '/dashboard'
     | '/$orgSlug/inbox/$conversationId'
@@ -509,6 +520,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/leads'
     | '/$orgSlug/visitors'
     | '/dashboard/$'
+    | '/invite/$token'
     | '/$orgSlug/'
     | '/dashboard/'
     | '/$orgSlug/inbox/$conversationId'
@@ -550,6 +562,7 @@ export interface RootRouteChildren {
   RefundPolicyRoute: typeof RefundPolicyRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   DashboardSplatRoute: typeof DashboardSplatRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
@@ -687,6 +700,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$orgSlug/'
       preLoaderRoute: typeof OrgSlugIndexRouteImport
       parentRoute: typeof OrgSlugRoute
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/$': {
       id: '/dashboard/$'
@@ -921,6 +941,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundPolicyRoute: RefundPolicyRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   DashboardSplatRoute: DashboardSplatRoute,
+  InviteTokenRoute: InviteTokenRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 export const routeTree = rootRouteImport

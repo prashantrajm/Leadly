@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
+import { DeleteAccountCard } from "@/components/dashboard/delete-account-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,7 +65,7 @@ function ProfilePage() {
 				</CardContent>
 			</Card>
 
-			<Card className="mt-6 border-destructive/30">
+			<Card className="mt-6">
 				<CardHeader>
 					<CardTitle className="text-base">Sign out</CardTitle>
 					<CardDescription>
@@ -79,13 +80,18 @@ function ProfilePage() {
 							await authClient.signOut();
 							window.location.href = "/";
 						}}
-						className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
 					>
 						<LogOut className="mr-2 size-4" />
 						Sign out
 					</Button>
 				</CardContent>
 			</Card>
+
+			{session?.user && (
+				<div className="mt-6">
+					<DeleteAccountCard email={session.user.email} />
+				</div>
+			)}
 		</div>
 	);
 }

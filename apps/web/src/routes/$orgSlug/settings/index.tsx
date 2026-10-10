@@ -9,7 +9,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Eye, EyeOff, KeyRound, Loader2, Mail, Plus, Save, Trash2, UserMinus } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -22,7 +22,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -59,8 +58,11 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DeleteWorkspaceCard } from "@/components/dashboard/delete-workspace-card";
+import { MembersSettings } from "@/components/dashboard/members-settings";
 import { useCurrentOrg } from "@/hooks/use-current-org";
 import { api, LeadlyApiError } from "@/lib/api";
+import { useSession } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/$orgSlug/settings/")({
 	component: OrgSettings,
@@ -95,11 +97,12 @@ function OrgSettings() {
 					<TabsTrigger value="api-keys">API keys</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value="general" className="mt-6">
+				<TabsContent value="general" className="mt-6 space-y-6">
 					<GeneralTab orgId={currentOrg.id} />
+					<OwnerDangerZone org={currentOrg} />
 				</TabsContent>
 				<TabsContent value="members" className="mt-6">
-					<MembersTab orgId={currentOrg.id} />
+					<MembersSettings orgId={currentOrg.id} />
 				</TabsContent>
 				<TabsContent value="api-keys" className="mt-6">
 					<ApiKeysTab orgId={currentOrg.id} />
@@ -107,6 +110,19 @@ function OrgSettings() {
 			</Tabs>
 		</div>
 	);
+}
+
+// Only owners can delete the workspace (the API enforces it too).
+function OwnerDangerZone({ org }: { org: Organization }) {
+	const { data: session } = useSession();
+	const q = useQuery({
+		queryKey: ["org", org.id],
+		queryFn: () => api.orgs.get(org.id),
+	});
+	const isOwner =
+		q.data?.memberships.find((m) => m.userId === session?.user?.id)?.role ===
+		"owner";
+	return isOwner ? <DeleteWorkspaceCard org={org} /> : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -226,228 +242,6 @@ function GeneralTab({ orgId }: { orgId: string }) {
 				</Form>
 			</CardContent>
 		</Card>
-	);
-}
-
-// ---------------------------------------------------------------------------
-// Members — invite + remove
-// ---------------------------------------------------------------------------
-
-function MembersTab({ orgId }: { orgId: string }) {
-	const queryClient = useQueryClient();
-	const q = useQuery({
-		queryKey: ["org", orgId],
-		queryFn: () => api.orgs.get(orgId),
-	});
-
-	const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
-
-	const removeMutation = useMutation({
-		mutationFn: (userId: string) => api.orgs.removeMember(orgId, userId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["org", orgId] });
-			setConfirmRemove(null);
-		},
-	});
-
-	return (
-		<div className="space-y-4">
-			<div className="flex items-center justify-between">
-				<div>
-					<h2 className="text-base font-semibold tracking-tight">
-						Members
-					</h2>
-					<p className="text-sm text-muted-foreground">
-						Everyone with access to this org.
-					</p>
-				</div>
-				<InviteMemberDialog orgId={orgId} />
-			</div>
-
-			{q.isLoading ? (
-				<Skeleton className="h-40 rounded-xl" />
-			) : q.isError || !q.data ? (
-				<ErrorRow err={q.error} />
-			) : (
-				<Card>
-					<CardContent className="p-0">
-						<ul className="divide-y divide-border/60">
-							{q.data.memberships.map((m) => (
-								<li
-									key={m.id}
-									className="flex items-center gap-3 px-4 py-3"
-								>
-									<Avatar className="size-9">
-										<AvatarImage src={m.user.image ?? undefined} />
-										<AvatarFallback>
-											{m.user.name.charAt(0).toUpperCase()}
-										</AvatarFallback>
-									</Avatar>
-									<div className="min-w-0 flex-1">
-										<div className="truncate text-sm font-medium">
-											{m.user.name}
-										</div>
-										<div className="truncate text-xs text-muted-foreground">
-											{m.user.email}
-										</div>
-									</div>
-									<span className="rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-										{m.role}
-									</span>
-									{m.role !== "owner" && (
-										<Button
-											variant="ghost"
-											size="icon-sm"
-											onClick={() => setConfirmRemove(m.user.id)}
-											className="text-muted-foreground hover:text-destructive"
-										>
-											<UserMinus className="size-4" />
-											<span className="sr-only">Remove</span>
-										</Button>
-									)}
-								</li>
-							))}
-						</ul>
-					</CardContent>
-				</Card>
-			)}
-
-			<AlertDialog
-				open={Boolean(confirmRemove)}
-				onOpenChange={(o) => !o && setConfirmRemove(null)}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Remove this member?</AlertDialogTitle>
-						<AlertDialogDescription>
-							They lose access to every agent in this org. They can be
-							re-invited later.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={removeMutation.isPending}>
-							Cancel
-						</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={(e) => {
-								e.preventDefault();
-								if (confirmRemove)
-									removeMutation.mutate(confirmRemove);
-							}}
-							disabled={removeMutation.isPending}
-							className="bg-destructive text-white hover:bg-destructive/90"
-						>
-							{removeMutation.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
-							)}
-							Remove
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</div>
-	);
-}
-
-function InviteMemberDialog({ orgId }: { orgId: string }) {
-	const queryClient = useQueryClient();
-	const [open, setOpen] = useState(false);
-	const [email, setEmail] = useState("");
-	const [role, setRole] = useState<"admin" | "member">("member");
-
-	const mutation = useMutation({
-		mutationFn: () => api.orgs.invite(orgId, { email, role }),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["org", orgId] });
-			setOpen(false);
-			setEmail("");
-			setRole("member");
-		},
-	});
-
-	return (
-		<Dialog
-			open={open}
-			onOpenChange={(o) => {
-				setOpen(o);
-				if (!o) mutation.reset();
-			}}
-		>
-			<DialogTrigger asChild>
-				<Button className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90">
-					<Plus className="mr-1 size-4" />
-					Invite member
-				</Button>
-			</DialogTrigger>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>Invite a teammate</DialogTitle>
-					<DialogDescription>
-						They'll get access to every agent in this org. Owner role can
-						only be assigned by another owner.
-					</DialogDescription>
-				</DialogHeader>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						mutation.mutate();
-					}}
-					className="space-y-4"
-				>
-					<div className="space-y-1.5">
-						<FormLabel>Email</FormLabel>
-						<div className="relative">
-							<Mail className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-							<Input
-								type="email"
-								placeholder="teammate@yourco.com"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								required
-								className="pl-8"
-								autoFocus
-							/>
-						</div>
-					</div>
-					<div className="space-y-1.5">
-						<FormLabel>Role</FormLabel>
-						<Select
-							value={role}
-							onValueChange={(v) => setRole(v as "admin" | "member")}
-						>
-							<SelectTrigger>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="member">Member</SelectItem>
-								<SelectItem value="admin">Admin</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-					{mutation.isError && <ErrorRow err={mutation.error} />}
-					<DialogFooter>
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => setOpen(false)}
-							disabled={mutation.isPending}
-						>
-							Cancel
-						</Button>
-						<Button
-							type="submit"
-							disabled={!email || mutation.isPending}
-							className="bg-accent-blue text-accent-blue-foreground hover:bg-accent-blue/90"
-						>
-							{mutation.isPending && (
-								<Loader2 className="mr-2 size-4 animate-spin" />
-							)}
-							Send invite
-						</Button>
-					</DialogFooter>
-				</form>
-			</DialogContent>
-		</Dialog>
 	);
 }
 

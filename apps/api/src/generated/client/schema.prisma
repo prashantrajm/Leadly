@@ -1,15 +1,16 @@
 model User {
-  id            String       @id
-  name          String
-  email         String
-  emailVerified Boolean      @default(false)
-  image         String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  isOnboarded   Boolean      @default(false)
-  sessions      Session[]
-  accounts      Account[]
-  memberships   Membership[]
+  id              String       @id
+  name            String
+  email           String
+  emailVerified   Boolean      @default(false)
+  image           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  isOnboarded     Boolean      @default(false)
+  sessions        Session[]
+  accounts        Account[]
+  memberships     Membership[]
+  invitationsSent Invitation[]
 
   @@unique([email])
   @@map("user")
@@ -116,6 +117,7 @@ model Organization {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   memberships    Membership[]
+  invitations    Invitation[]
   agents         Agent[]
   llmCredentials OrgLlmCredential[]
 
@@ -136,6 +138,28 @@ model Membership {
   @@map("membership")
 }
 
+// Pending invite to join an org. Accepted via a link carrying `token`, and
+// only by a signed-in user whose email matches `email` (lowercased). There's
+// no email provider yet, so admins share the link themselves.
+model Invitation {
+  id             String         @id @default(cuid())
+  organizationId String
+  email          String
+  role           MembershipRole @default(member)
+  token          String         @unique
+  invitedById    String?
+  createdAt      DateTime       @default(now())
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy      User?          @relation(fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
+}
+
 // ---------------------------------------------------------------------------
 // Agent: one per website/brand under an Organization
 // ---------------------------------------------------------------------------
@@ -149,7 +173,7 @@ model Agent {
   accentColor         String              @default("#0F172A")
   identityPolicy      AgentIdentityPolicy @default(optional)
   defaultProvider     LlmProvider         @default(openrouter)
-  defaultModel        String              @default("openai/gpt-4o-mini")
+  defaultModel        String              @default("tencent/hy3-preview:free")
   systemPromptOverlay String?
   fallbackMessage     String              @default("I don't have that information yet.")
   maxTurns            Int                 @default(50)
@@ -258,6 +282,7 @@ model Visitor {
   @@unique([agentId, externalId])
   @@index([agentId])
   @@index([leadId])
+  @@index([organizationId, lastSeenAt])
   @@map("visitor")
 }
 
@@ -279,6 +304,7 @@ model Lead {
   // Partial unique indexes (agentId, email) and (agentId, phone) live in the
   // init migration — Prisma can't express partial indexes natively.
   @@index([agentId])
+  @@index([organizationId, createdAt])
   @@map("lead")
 }
 
@@ -309,6 +335,8 @@ model Conversation {
 
   @@index([agentId, startedAt])
   @@index([agentId, status])
+  @@index([organizationId, startedAt])
+  @@index([organizationId, status, mode])
   @@index([visitorId])
   @@index([leadId])
   @@map("conversation")

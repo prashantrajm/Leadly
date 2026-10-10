@@ -18,6 +18,7 @@ import {
 	Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CreateWorkspaceDialog } from "@/components/dashboard/create-workspace-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	Collapsible,
@@ -65,6 +66,7 @@ export function DashboardSidebar() {
 	const params = useParams({ strict: false }) as { agentId?: string };
 	const agentId = params.agentId;
 	const { agents, isLoading: agentsLoading } = useOrgAgents();
+	const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
 
 	// Conversations paused for a human (handoff requested or taken over).
 	// Polled so the badge is useful from any page, not just the inbox.
@@ -130,8 +132,22 @@ export function DashboardSidebar() {
 										)}
 									</DropdownMenuItem>
 								))}
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									onClick={() => setCreateWorkspaceOpen(true)}
+									className="gap-2"
+								>
+									<div className="flex size-6 items-center justify-center rounded-md border border-dashed border-border">
+										<Plus className="size-3.5" />
+									</div>
+									New workspace
+								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
+						<CreateWorkspaceDialog
+							open={createWorkspaceOpen}
+							onOpenChange={setCreateWorkspaceOpen}
+						/>
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarHeader>

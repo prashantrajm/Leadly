@@ -62,6 +62,7 @@ docs/
 | Adding a cron | `apps/api/src/crons/<name>.ts`, dispatch in `src/index.ts` `scheduled()`, add to `triggers.crons` |
 | Touching auth | `apps/api/src/lib/auth.ts` (Better Auth config). Sign-in lands on `/dashboard` (`apps/web/src/lib/dashboard-entry.ts`), which opens the last-used workspace or, for a user with none, the create-workspace dialog |
 | Adding a dashboard page | `apps/web/src/routes/$orgSlug/` — the app lives at `/<orgSlug>/…`; build links with `useOrgPath()` (`apps/web/src/hooks/use-current-org.ts`) |
+| Members, invites, deleting workspaces/accounts | API: `routes/invitations.ts`, `routes/me.ts`, `lib/org-deletion.ts` (R2/KV cleanup lives here); web: `components/dashboard/members-settings.tsx`, `routes/invite.$token.tsx` |
 | Adding a marketing (top-level) page | `apps/web/src/routes/<page>.tsx` **and** add the path to `RESERVED_ORG_SLUGS` in `packages/schemas/src/org.ts` (a web test fails otherwise) |
 
 ## Tests, in one place

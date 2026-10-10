@@ -22,3 +22,23 @@ const API_BASE_URL = RAW.replace(/\/api\/?$/, "");
 export const api = createLeadlyClient({ baseUrl: API_BASE_URL });
 
 export { LeadlyApiError };
+
+// Human-readable message from a failed call: the API's `message`, else its
+// `error`, else the fallback.
+export function apiErrorMessage(
+	err: unknown,
+	fallback = "Something went wrong.",
+): string {
+	if (err instanceof LeadlyApiError) {
+		try {
+			const body = JSON.parse(err.bodyText) as {
+				error?: string;
+				message?: string;
+			};
+			return body.message ?? body.error ?? fallback;
+		} catch {
+			return fallback;
+		}
+	}
+	return err instanceof Error ? err.message : fallback;
+}

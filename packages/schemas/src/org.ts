@@ -117,6 +117,77 @@ export const InviteMemberSchema = z
 	.openapi("InviteMember");
 export type InviteMember = z.infer<typeof InviteMemberSchema>;
 
+// Owners can change anyone's role (incl. making someone else owner);
+// the last owner can't be demoted.
+export const UpdateMemberRoleSchema = z
+	.object({ role: MembershipRole })
+	.openapi("UpdateMemberRole");
+export type UpdateMemberRole = z.infer<typeof UpdateMemberRoleSchema>;
+
+// ---------- Invitations ----------
+//
+// An admin invites an email; the API returns a token the dashboard turns
+// into a /invite/<token> link. Only a signed-in user with that email can
+// accept it. No email provider yet, so the admin shares the link.
+
+export const CreateInvitationSchema = z
+	.object({
+		email: z.string().trim().toLowerCase().email(),
+		role: MembershipRole.default("member"),
+	})
+	.openapi("CreateInvitation");
+export type CreateInvitation = z.infer<typeof CreateInvitationSchema>;
+
+export const InvitationSchema = z
+	.object({
+		id: Cuid,
+		organizationId: Cuid,
+		email: z.string(),
+		role: MembershipRole,
+		token: z.string(),
+		createdAt: IsoDate,
+		expiresAt: IsoDate,
+		invitedBy: z.object({ name: z.string(), email: z.string() }).nullable(),
+	})
+	.openapi("Invitation");
+export type Invitation = z.infer<typeof InvitationSchema>;
+
+export const InvitationStatus = z
+	.enum(["pending", "accepted", "revoked", "expired"])
+	.openapi("InvitationStatus");
+export type InvitationStatus = z.infer<typeof InvitationStatus>;
+
+// What the invite page shows before accepting.
+export const InvitationPreviewSchema = z
+	.object({
+		organization: z.object({ name: z.string(), slug: z.string() }),
+		email: z.string(),
+		role: MembershipRole,
+		invitedByName: z.string().nullable(),
+		status: InvitationStatus,
+		// Whether the signed-in user's email is the invited one.
+		emailMatches: z.boolean(),
+		alreadyMember: z.boolean(),
+	})
+	.openapi("InvitationPreview");
+export type InvitationPreview = z.infer<typeof InvitationPreviewSchema>;
+
+// ---------- Account deletion ----------
+
+const WorkspaceRefSchema = z.object({ id: Cuid, name: z.string(), slug: z.string() });
+
+// What deleting your account would do. `blocking` are shared workspaces
+// where you're the only owner: hand ownership over (or delete the
+// workspace) first.
+export const AccountDeletionPreviewSchema = z
+	.object({
+		deleteWorkspaces: z.array(WorkspaceRefSchema),
+		leaveWorkspaces: z.array(WorkspaceRefSchema),
+		blocking: z.array(WorkspaceRefSchema),
+	})
+	.openapi("AccountDeletionPreview");
+export type AccountDeletionPreview = z.infer<typeof AccountDeletionPreviewSchema>;
+
 // ---------- Composed views ----------
 
 export const OrganizationWithMembersSchema = OrganizationSchema.extend({

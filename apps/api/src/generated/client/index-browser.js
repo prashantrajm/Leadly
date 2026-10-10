@@ -204,6 +204,19 @@ exports.Prisma.MembershipScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.InvitationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  email: 'email',
+  role: 'role',
+  token: 'token',
+  invitedById: 'invitedById',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt',
+  acceptedAt: 'acceptedAt',
+  revokedAt: 'revokedAt'
+};
+
 exports.Prisma.AgentScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -424,6 +437,7 @@ exports.Prisma.ModelName = {
   AgentLlmOverride: 'AgentLlmOverride',
   Organization: 'Organization',
   Membership: 'Membership',
+  Invitation: 'Invitation',
   Agent: 'Agent',
   KbArticle: 'KbArticle',
   KbChunk: 'KbChunk',

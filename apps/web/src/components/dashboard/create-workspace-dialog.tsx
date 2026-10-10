@@ -52,13 +52,21 @@ export function CreateWorkspaceDialog({
 	const [slugTouched, setSlugTouched] = useState(false);
 	const [prefilled, setPrefilled] = useState(false);
 
-	// Suggest "<Name>'s workspace" at /<name> once the session is known.
+	// First workspace: suggest "<Name>'s workspace" at /<name> once the
+	// session is known. Additional workspaces start blank.
 	useEffect(() => {
-		if (prefilled || !open || sessionPending) return;
+		if (!firstWorkspace || prefilled || !open || sessionPending) return;
 		setName(userName ? `${userName}'s workspace` : "My workspace");
 		setSlug(slugify(userName) || "workspace");
 		setPrefilled(true);
-	}, [open, prefilled, sessionPending, userName]);
+	}, [firstWorkspace, open, prefilled, sessionPending, userName]);
+
+	function reset() {
+		setName("");
+		setSlug("");
+		setSlugTouched(false);
+		create.reset();
+	}
 
 	const debouncedSlug = useDebounced(slug, CHECK_DEBOUNCE_MS);
 	const formatError = slug
@@ -91,6 +99,7 @@ export function CreateWorkspaceDialog({
 			]);
 			queryClient.invalidateQueries({ queryKey: ["orgs"] });
 			onOpenChange?.(false);
+			reset();
 			navigate({ to: "/$orgSlug", params: { orgSlug: org.slug } });
 		},
 		onError: (err) => {
@@ -111,7 +120,9 @@ export function CreateWorkspaceDialog({
 		<Dialog
 			open={open}
 			onOpenChange={(next) => {
-				if (!firstWorkspace) onOpenChange?.(next);
+				if (firstWorkspace) return;
+				onOpenChange?.(next);
+				if (!next) reset();
 			}}
 		>
 			<DialogContent

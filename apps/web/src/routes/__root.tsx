@@ -14,9 +14,9 @@ interface MyRouterContext {
 	queryClient: QueryClient;
 }
 
-// Routes that render without the marketing header/footer: auth, the legacy
+// Routes that render without the marketing header/footer: auth, invites, the
 // /dashboard redirects, and the whole app under /<orgSlug>.
-const BARE_ROUTE_PREFIXES = ["/auth", "/dashboard", "/$orgSlug"];
+const BARE_ROUTE_PREFIXES = ["/auth", "/dashboard", "/invite", "/$orgSlug"];
 
 function RootLayout() {
 	const bare = useRouterState({
