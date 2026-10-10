@@ -73,6 +73,17 @@ export const ConversationListItemSchema = ConversationSchema.extend({
 }).openapi("ConversationListItem");
 export type ConversationListItem = z.infer<typeof ConversationListItemSchema>;
 
+// Org-wide inbox counters for the sidebar badge. `waitingOnHuman` is active
+// conversations in paused mode — a handoff was requested or an operator
+// took over, so the agent is silent until someone replies or releases it.
+export const InboxCountsSchema = z
+	.object({
+		active: z.number().int().nonnegative(),
+		waitingOnHuman: z.number().int().nonnegative(),
+	})
+	.openapi("InboxCounts");
+export type InboxCounts = z.infer<typeof InboxCountsSchema>;
+
 // Detail view — turns inline.
 export const ConversationWithTurnsSchema = ConversationSchema.extend({
 	turns: z.array(TurnSchema),

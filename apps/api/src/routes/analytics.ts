@@ -10,10 +10,11 @@ import {
 	ErrorSchema,
 } from "@leadly/schemas";
 import { getPrisma } from "../lib/prisma";
-import { requireAgentAccess } from "../middleware/org";
+import { requireAgentAccess, requireOrgMember } from "../middleware/org";
 import type { AppEnv } from "../types";
 
 export const analyticsApp = new OpenAPIHono<AppEnv>();
+export const orgAnalyticsApp = new OpenAPIHono<AppEnv>();
 
 // "Days ago" → an aligned UTC start-of-day boundary.
 function daysAgoUtc(days: number, now: Date = new Date()): Date {
@@ -65,47 +66,8 @@ const summaryRoute = createRoute({
 analyticsApp.openapi(summaryRoute, async (c) => {
 	const { agentId } = c.req.valid("param");
 	const { windowDays } = c.req.valid("query");
-	const prisma = getPrisma(c.env.DATABASE_URL);
-
-	const since = daysAgoUtc(windowDays);
-	const [conversations, leadsCaptured, handoffRows, turnCount] =
-		await Promise.all([
-			prisma.conversation.count({
-				where: { agentId, startedAt: { gte: since } },
-			}),
-			prisma.lead.count({
-				where: { agentId, createdAt: { gte: since } },
-			}),
-			prisma.turn.findMany({
-				where: {
-					role: "tool",
-					toolName: "request_handoff",
-					createdAt: { gte: since },
-					conversation: { agentId },
-				},
-				distinct: ["conversationId"],
-				select: { conversationId: true },
-			}),
-			prisma.turn.count({
-				where: {
-					createdAt: { gte: since },
-					conversation: { agentId, startedAt: { gte: since } },
-				},
-			}),
-		]);
-	const handoffs = handoffRows.length;
-	const avgTurnsPerConv =
-		conversations > 0 ? turnCount / conversations : 0;
-
 	return c.json(
-		{
-			windowDays,
-			conversations,
-			leadsCaptured,
-			handoffs,
-			avgTurnsPerConv,
-			topCitedArticles: [],
-		},
+		await computeSummary(c.env.DATABASE_URL, { agentId }, windowDays),
 		200,
 	);
 });
@@ -142,18 +104,166 @@ const timeseriesRoute = createRoute({
 analyticsApp.openapi(timeseriesRoute, async (c) => {
 	const { agentId } = c.req.valid("param");
 	const { windowDays } = c.req.valid("query");
-	const prisma = getPrisma(c.env.DATABASE_URL);
+	return c.json(
+		await computeTimeseries(c.env.DATABASE_URL, { agentId }, windowDays),
+		200,
+	);
+});
+
+// ---------- org-wide (optional agent filter) ----------
+//
+// Same numbers as the per-agent routes, summed across every agent in the
+// org. organizationId stays in the filter even when agentId is set, so an
+// agentId from another org simply matches nothing.
+
+const orgAnalyticsRequest = {
+	params: z.object({ orgId: z.string() }),
+	query: z.object({
+		agentId: z.string().optional(),
+		windowDays: z.coerce.number().int().min(1).max(90).default(30),
+	}),
+};
+
+const orgSummaryRoute = createRoute({
+	method: "get",
+	path: "/summary",
+	tags: ["Analytics"],
+	request: orgAnalyticsRequest,
+	middleware: [requireOrgMember] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: AnalyticsSummarySchema } },
+			description: "Org-wide summary over the requested window",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+orgAnalyticsApp.openapi(orgSummaryRoute, async (c) => {
+	const { orgId } = c.req.valid("param");
+	const { agentId, windowDays } = c.req.valid("query");
+	return c.json(
+		await computeSummary(
+			c.env.DATABASE_URL,
+			{ organizationId: orgId, ...(agentId ? { agentId } : {}) },
+			windowDays,
+		),
+		200,
+	);
+});
+
+const orgTimeseriesRoute = createRoute({
+	method: "get",
+	path: "/timeseries",
+	tags: ["Analytics"],
+	request: orgAnalyticsRequest,
+	middleware: [requireOrgMember] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: AnalyticsTimeseriesSchema } },
+			description: "Org-wide per-day points over the requested window",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+orgAnalyticsApp.openapi(orgTimeseriesRoute, async (c) => {
+	const { orgId } = c.req.valid("param");
+	const { agentId, windowDays } = c.req.valid("query");
+	return c.json(
+		await computeTimeseries(
+			c.env.DATABASE_URL,
+			{ organizationId: orgId, ...(agentId ? { agentId } : {}) },
+			windowDays,
+		),
+		200,
+	);
+});
+
+// ---------- helpers ----------
+
+type AnalyticsScope =
+	| { agentId: string }
+	| { organizationId: string; agentId?: string };
+
+async function computeSummary(
+	databaseUrl: string,
+	scope: AnalyticsScope,
+	windowDays: number,
+) {
+	const prisma = getPrisma(databaseUrl);
+
+	const since = daysAgoUtc(windowDays);
+	const [conversations, leadsCaptured, handoffRows, turnCount] =
+		await Promise.all([
+			prisma.conversation.count({
+				where: { ...scope, startedAt: { gte: since } },
+			}),
+			prisma.lead.count({
+				where: { ...scope, createdAt: { gte: since } },
+			}),
+			prisma.turn.findMany({
+				where: {
+					role: "tool",
+					toolName: "request_handoff",
+					createdAt: { gte: since },
+					conversation: scope,
+				},
+				distinct: ["conversationId"],
+				select: { conversationId: true },
+			}),
+			prisma.turn.count({
+				where: {
+					createdAt: { gte: since },
+					conversation: { ...scope, startedAt: { gte: since } },
+				},
+			}),
+		]);
+	const handoffs = handoffRows.length;
+	const avgTurnsPerConv =
+		conversations > 0 ? turnCount / conversations : 0;
+
+	return {
+		windowDays,
+		conversations,
+		leadsCaptured,
+		handoffs,
+		avgTurnsPerConv,
+		topCitedArticles: [],
+	};
+}
+
+async function computeTimeseries(
+	databaseUrl: string,
+	scope: AnalyticsScope,
+	windowDays: number,
+) {
+	const prisma = getPrisma(databaseUrl);
 
 	const since = daysAgoUtc(windowDays);
 	const today = utcDayStart(new Date());
 	const until = addUtcDays(today, 1);
 	const [conversations, leads, handoffTurns] = await Promise.all([
 		prisma.conversation.findMany({
-			where: { agentId, startedAt: { gte: since, lt: until } },
+			where: { ...scope, startedAt: { gte: since, lt: until } },
 			select: { id: true, startedAt: true },
 		}),
 		prisma.lead.findMany({
-			where: { agentId, createdAt: { gte: since, lt: until } },
+			where: { ...scope, createdAt: { gte: since, lt: until } },
 			select: { id: true, createdAt: true },
 		}),
 		prisma.turn.findMany({
@@ -161,7 +271,7 @@ analyticsApp.openapi(timeseriesRoute, async (c) => {
 				role: "tool",
 				toolName: "request_handoff",
 				createdAt: { gte: since, lt: until },
-				conversation: { agentId },
+				conversation: scope,
 			},
 			distinct: ["conversationId"],
 			select: { conversationId: true, createdAt: true },
@@ -216,5 +326,5 @@ analyticsApp.openapi(timeseriesRoute, async (c) => {
 		});
 	}
 
-	return c.json({ points }, 200);
-});
+	return { points };
+}

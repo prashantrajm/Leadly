@@ -151,6 +151,7 @@ model Visitor {
   @@unique([agentId, externalId])
   @@index([agentId])
   @@index([leadId])
+  @@index([organizationId, lastSeenAt])
   @@map("visitor")
 }
 
@@ -172,6 +173,7 @@ model Lead {
   // Partial unique indexes (agentId, email) and (agentId, phone) live in the
   // init migration — Prisma can't express partial indexes natively.
   @@index([agentId])
+  @@index([organizationId, createdAt])
   @@map("lead")
 }
 
@@ -202,6 +204,8 @@ model Conversation {
 
   @@index([agentId, startedAt])
   @@index([agentId, status])
+  @@index([organizationId, startedAt])
+  @@index([organizationId, status, mode])
   @@index([visitorId])
   @@index([leadId])
   @@map("conversation")

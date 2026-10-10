@@ -32,6 +32,7 @@ import type {
 	CreateOrganization,
 	EndConversation,
 	HumanMessage,
+	InboxCounts,
 	InviteMember,
 	KbArticle,
 	KbArticleListItem,
@@ -220,6 +221,16 @@ export function createLeadlyClient(opts: ClientOptions) {
 					undefined,
 					params,
 				),
+			listForOrg: (
+				orgId: string,
+				params?: { agentId?: string; limit?: number },
+			) =>
+				request<Visitor[]>(
+					"GET",
+					`/api/orgs/${orgId}/visitors`,
+					undefined,
+					params,
+				),
 			get: (visitorId: string) =>
 				request<Visitor>("GET", `/api/visitors/${visitorId}`),
 		},
@@ -228,6 +239,16 @@ export function createLeadlyClient(opts: ClientOptions) {
 				request<Lead[]>(
 					"GET",
 					`/api/agents/${agentId}/leads`,
+					undefined,
+					params,
+				),
+			listForOrg: (
+				orgId: string,
+				params?: { agentId?: string; limit?: number; search?: string },
+			) =>
+				request<Lead[]>(
+					"GET",
+					`/api/orgs/${orgId}/leads`,
 					undefined,
 					params,
 				),
@@ -258,6 +279,31 @@ export function createLeadlyClient(opts: ClientOptions) {
 					`/api/agents/${agentId}/conversations`,
 					undefined,
 					params,
+				),
+			listForOrg: (
+				orgId: string,
+				params?: {
+					agentId?: string;
+					cursor?: string;
+					limit?: number;
+					status?: ConversationStatus;
+					mode?: ConversationMode;
+					leadId?: string;
+				},
+			) =>
+				request<{
+					items: ConversationListItem[];
+					nextCursor: string | null;
+				}>(
+					"GET",
+					`/api/orgs/${orgId}/conversations`,
+					undefined,
+					params,
+				),
+			counts: (orgId: string) =>
+				request<InboxCounts>(
+					"GET",
+					`/api/orgs/${orgId}/conversations/counts`,
 				),
 			get: (id: string) =>
 				request<ConversationWithTurns>("GET", `/api/conversations/${id}`),
@@ -298,6 +344,26 @@ export function createLeadlyClient(opts: ClientOptions) {
 				request<AnalyticsTimeseries>(
 					"GET",
 					`/api/agents/${agentId}/analytics/timeseries`,
+					undefined,
+					params,
+				),
+			orgSummary: (
+				orgId: string,
+				params?: { agentId?: string; windowDays?: number },
+			) =>
+				request<AnalyticsSummary>(
+					"GET",
+					`/api/orgs/${orgId}/analytics/summary`,
+					undefined,
+					params,
+				),
+			orgTimeseries: (
+				orgId: string,
+				params?: { agentId?: string; windowDays?: number },
+			) =>
+				request<AnalyticsTimeseries>(
+					"GET",
+					`/api/orgs/${orgId}/analytics/timeseries`,
 					undefined,
 					params,
 				),
@@ -382,6 +448,7 @@ export type {
 	ConversationWithTurns,
 	CreateAgent,
 	CreateKbArticle,
+	InboxCounts,
 	KbArticle,
 	KbArticleListItem,
 	Lead,

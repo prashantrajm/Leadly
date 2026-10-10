@@ -1,19 +1,29 @@
+import type { Agent } from "@leadly/api-client";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useRouterState } from "@tanstack/react-router";
 import {
 	BarChart3,
 	BookOpen,
-	Bot,
+	ChevronRight,
 	ChevronsUpDown,
 	Code,
 	Inbox,
 	LayoutDashboard,
+	LifeBuoy,
 	LogOut,
 	Play,
+	Plus,
 	Settings,
 	Tags,
 	Users,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -27,15 +37,23 @@ import {
 	SidebarContent,
 	SidebarFooter,
 	SidebarGroup,
+	SidebarGroupAction,
 	SidebarGroupContent,
 	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarMenu,
+	SidebarMenuAction,
+	SidebarMenuBadge,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	SidebarSeparator,
+	SidebarMenuSkeleton,
+	SidebarMenuSub,
+	SidebarMenuSubButton,
+	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useCurrentOrg } from "@/hooks/use-current-org";
+import { useOrgAgents } from "@/hooks/use-org-agents";
+import { api } from "@/lib/api";
 import { authClient, useSession } from "@/lib/auth-client";
 
 export function DashboardSidebar() {
@@ -45,6 +63,17 @@ export function DashboardSidebar() {
 	// agentId may or may not be in scope depending on which subroute we're on.
 	const params = useParams({ strict: false }) as { agentId?: string };
 	const agentId = params.agentId;
+	const { agents, isLoading: agentsLoading } = useOrgAgents();
+
+	// Conversations paused for a human (handoff requested or taken over).
+	// Polled so the badge is useful from any page, not just the inbox.
+	const countsQuery = useQuery({
+		queryKey: ["inbox-counts", currentOrg?.id],
+		queryFn: () => api.conversations.counts(currentOrg?.id as string),
+		enabled: Boolean(currentOrg),
+		refetchInterval: 15_000,
+	});
+	const waitingOnHuman = countsQuery.data?.waitingOnHuman ?? 0;
 
 	return (
 		<Sidebar collapsible="icon">
@@ -114,93 +143,87 @@ export function DashboardSidebar() {
 								Overview
 							</NavLink>
 							<NavLink
-								to="/dashboard/agents"
+								to="/dashboard/inbox"
 								pathname={pathname}
-								icon={Bot}
+								icon={Inbox}
 								matchPrefix
+								badge={waitingOnHuman}
 							>
-								Agents
+								Inbox
+							</NavLink>
+							<NavLink to="/dashboard/leads" pathname={pathname} icon={Tags}>
+								Leads
+							</NavLink>
+							<NavLink to="/dashboard/visitors" pathname={pathname} icon={Users}>
+								Visitors
+							</NavLink>
+							<NavLink
+								to="/dashboard/analytics"
+								pathname={pathname}
+								icon={BarChart3}
+							>
+								Analytics
 							</NavLink>
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>
 
-				{agentId && (
-					<>
-						<SidebarSeparator />
-						<SidebarGroup>
-							<SidebarGroupLabel>Current agent</SidebarGroupLabel>
-							<SidebarGroupContent>
-								<SidebarMenu>
-									<NavLink
-										to={`/dashboard/agents/${agentId}/inbox`}
+				<SidebarGroup>
+					<SidebarGroupLabel asChild>
+						<Link to="/dashboard/agents">Agents</Link>
+					</SidebarGroupLabel>
+					<SidebarGroupAction asChild title="New agent">
+						<Link to="/dashboard/agents" search={{ new: true }}>
+							<Plus />
+							<span className="sr-only">New agent</span>
+						</Link>
+					</SidebarGroupAction>
+					<SidebarGroupContent>
+						<SidebarMenu>
+							{agentsLoading ? (
+								<SidebarMenuSkeleton showIcon />
+							) : agents.length === 0 ? (
+								<SidebarMenuItem>
+									<SidebarMenuButton asChild tooltip="Create your first agent">
+										<Link to="/dashboard/agents" search={{ new: true }}>
+											<Plus className="size-4" />
+											<span>Create your first agent</span>
+										</Link>
+									</SidebarMenuButton>
+								</SidebarMenuItem>
+							) : (
+								agents.map((agent) => (
+									<AgentNavItem
+										key={agent.id}
+										agent={agent}
 										pathname={pathname}
-										icon={Inbox}
-										matchPrefix
-									>
-										Inbox
-									</NavLink>
-									<NavLink
-										to={`/dashboard/agents/${agentId}/knowledge`}
-										pathname={pathname}
-										icon={BookOpen}
-										matchPrefix
-									>
-										Knowledge
-									</NavLink>
-									<NavLink
-										to={`/dashboard/agents/${agentId}/leads`}
-										pathname={pathname}
-										icon={Tags}
-										matchPrefix
-									>
-										Leads
-									</NavLink>
-									<NavLink
-										to={`/dashboard/agents/${agentId}/visitors`}
-										pathname={pathname}
-										icon={Users}
-										matchPrefix
-									>
-										Visitors
-									</NavLink>
-									<NavLink
-										to={`/dashboard/agents/${agentId}/analytics`}
-										pathname={pathname}
-										icon={BarChart3}
-										matchPrefix
-									>
-										Analytics
-									</NavLink>
-									<NavLink
-										to={`/dashboard/agents/${agentId}/playground`}
-										pathname={pathname}
-										icon={Play}
-										matchPrefix
-									>
-										Playground
-									</NavLink>
-									<NavLink
-										to={`/dashboard/agents/${agentId}/install`}
-										pathname={pathname}
-										icon={Code}
-										matchPrefix
-									>
-										Install
-									</NavLink>
-									<NavLink
-										to={`/dashboard/agents/${agentId}/settings`}
-										pathname={pathname}
-										icon={Settings}
-										matchPrefix
-									>
-										Settings
-									</NavLink>
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</SidebarGroup>
-					</>
-				)}
+										// A lone agent is always expanded; otherwise expand
+										// the one you're working in.
+										defaultOpen={agents.length === 1 || agent.id === agentId}
+									/>
+								))
+							)}
+						</SidebarMenu>
+					</SidebarGroupContent>
+				</SidebarGroup>
+
+				<SidebarGroup className="mt-auto">
+					<SidebarGroupContent>
+						<SidebarMenu>
+							<NavLink
+								to="/dashboard/settings"
+								pathname={pathname}
+								icon={Settings}
+								matchPrefix
+							>
+								Settings
+							</NavLink>
+							<NavLink to="/docs" pathname={pathname} icon={LifeBuoy}>
+								Docs &amp; help
+							</NavLink>
+						</SidebarMenu>
+					</SidebarGroupContent>
+				</SidebarGroup>
 			</SidebarContent>
 
 			<SidebarFooter>
@@ -275,25 +298,103 @@ function NavLink({
 	pathname,
 	icon: Icon,
 	matchPrefix,
+	badge,
 	children,
 }: {
 	to: string;
 	pathname: string;
 	icon: React.ComponentType<{ className?: string }>;
 	matchPrefix?: boolean;
-	children: React.ReactNode;
+	badge?: number;
+	children: string;
 }) {
 	const isActive = matchPrefix
 		? pathname === to || pathname.startsWith(`${to}/`)
 		: pathname === to;
 	return (
 		<SidebarMenuItem>
-			<SidebarMenuButton asChild isActive={isActive}>
+			<SidebarMenuButton asChild isActive={isActive} tooltip={children}>
 				<Link to={to}>
 					<Icon className="size-4" />
 					<span>{children}</span>
 				</Link>
 			</SidebarMenuButton>
+			{badge ? (
+				<SidebarMenuBadge className="bg-accent-blue text-accent-blue-foreground">
+					{badge}
+				</SidebarMenuBadge>
+			) : null}
 		</SidebarMenuItem>
+	);
+}
+
+// The setup pages that belong to one agent. Inbox, leads, visitors and
+// analytics live at the top level with an agent filter instead.
+const AGENT_PAGES = [
+	{ segment: "knowledge", label: "Knowledge", icon: BookOpen },
+	{ segment: "playground", label: "Playground", icon: Play },
+	{ segment: "install", label: "Install", icon: Code },
+	{ segment: "settings", label: "Settings", icon: Settings },
+] as const;
+
+function AgentNavItem({
+	agent,
+	pathname,
+	defaultOpen,
+}: {
+	agent: Agent;
+	pathname: string;
+	defaultOpen: boolean;
+}) {
+	const base = `/dashboard/agents/${agent.id}`;
+	const [open, setOpen] = useState(defaultOpen);
+
+	// Navigating into an agent (e.g. from the Agents page) expands it.
+	useEffect(() => {
+		if (defaultOpen) setOpen(true);
+	}, [defaultOpen]);
+
+	return (
+		<Collapsible asChild open={open} onOpenChange={setOpen}>
+			<SidebarMenuItem>
+				<SidebarMenuButton asChild isActive={pathname === base} tooltip={agent.name}>
+					<Link to={base}>
+						<span
+							className="flex size-4 shrink-0 items-center justify-center rounded text-[10px] font-semibold text-white"
+							style={{ backgroundColor: agent.accentColor }}
+						>
+							{agent.name.charAt(0).toUpperCase()}
+						</span>
+						<span>{agent.name}</span>
+					</Link>
+				</SidebarMenuButton>
+				<CollapsibleTrigger asChild>
+					<SidebarMenuAction className="data-[state=open]:rotate-90">
+						<ChevronRight />
+						<span className="sr-only">Toggle {agent.name}</span>
+					</SidebarMenuAction>
+				</CollapsibleTrigger>
+				<CollapsibleContent>
+					<SidebarMenuSub>
+						{AGENT_PAGES.map(({ segment, label, icon: Icon }) => {
+							const to = `${base}/${segment}`;
+							return (
+								<SidebarMenuSubItem key={segment}>
+									<SidebarMenuSubButton
+										asChild
+										isActive={pathname === to || pathname.startsWith(`${to}/`)}
+									>
+										<Link to={to}>
+											<Icon />
+											<span>{label}</span>
+										</Link>
+									</SidebarMenuSubButton>
+								</SidebarMenuSubItem>
+							);
+						})}
+					</SidebarMenuSub>
+				</CollapsibleContent>
+			</SidebarMenuItem>
+		</Collapsible>
 	);
 }

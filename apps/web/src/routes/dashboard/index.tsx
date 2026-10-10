@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
 	ArrowRight,
@@ -90,32 +90,19 @@ function DashboardOverviewBody({ orgId }: { orgId: string }) {
 
 	const agents = agentsQuery.data ?? [];
 
-	// One analytics query per agent, summed client-side. Cheap because the
-	// summary endpoint is fast and we cache aggressively.
-	const summaryResults = useQueries({
-		queries: agents.map((a) => ({
-			queryKey: ["analytics-summary", a.id, 7],
-			queryFn: () => api.analytics.summary(a.id, { windowDays: 7 }),
-			staleTime: 60_000,
-		})),
+	const summaryQuery = useQuery({
+		queryKey: ["org-analytics-summary", orgId, undefined, 7],
+		queryFn: () => api.analytics.orgSummary(orgId, { windowDays: 7 }),
+		staleTime: 60_000,
 	});
 
-	const summariesLoading = summaryResults.some((r) => r.isLoading);
-	const summaries = summaryResults
-		.map((r) => r.data)
-		.filter((s): s is NonNullable<typeof s> => Boolean(s));
-
-	const totals = summaries.reduce(
-		(acc, s) => ({
-			conversations: acc.conversations + s.conversations,
-			leadsCaptured: acc.leadsCaptured + s.leadsCaptured,
-			handoffs: acc.handoffs + s.handoffs,
-			turnsSum: acc.turnsSum + s.avgTurnsPerConv * s.conversations,
-		}),
-		{ conversations: 0, leadsCaptured: 0, handoffs: 0, turnsSum: 0 },
-	);
-	const avgTurns =
-		totals.conversations > 0 ? totals.turnsSum / totals.conversations : 0;
+	const summariesLoading = summaryQuery.isLoading;
+	const totals = {
+		conversations: summaryQuery.data?.conversations ?? 0,
+		leadsCaptured: summaryQuery.data?.leadsCaptured ?? 0,
+		handoffs: summaryQuery.data?.handoffs ?? 0,
+	};
+	const avgTurns = summaryQuery.data?.avgTurnsPerConv ?? 0;
 
 	return (
 		<div className="mx-auto max-w-6xl">
@@ -268,7 +255,7 @@ function SetupChecklist({
 				hasAgent && firstAgent
 					? {
 							label: "Open inbox",
-							to: `/dashboard/agents/${firstAgent.id}/inbox`,
+							to: "/dashboard/inbox",
 						}
 					: null,
 			disabled: !hasAgent,

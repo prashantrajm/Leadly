@@ -10,11 +10,12 @@ import {
 	UpdateLeadSchema,
 } from "@leadly/schemas";
 import { getPrisma } from "../lib/prisma";
-import { requireAgentAccess } from "../middleware/org";
+import { requireAgentAccess, requireOrgMember } from "../middleware/org";
 import type { AppEnv } from "../types";
 
 export const agentLeadsApp = new OpenAPIHono<AppEnv>();
 export const leadsApp = new OpenAPIHono<AppEnv>();
+export const orgLeadsApp = new OpenAPIHono<AppEnv>();
 
 // ---------- list (per-agent) ----------
 
@@ -48,29 +49,52 @@ const listLeadsRoute = createRoute({
 
 agentLeadsApp.openapi(listLeadsRoute, async (c) => {
 	const { agentId } = c.req.valid("param");
-	const { limit, search } = c.req.valid("query");
-	const prisma = getPrisma(c.env.DATABASE_URL);
+	const leads = await listLeads(c.env.DATABASE_URL, { agentId }, c.req.valid("query"));
+	return c.json(leads, 200);
+});
 
-	// `search` matches email / phone / name with case-insensitive contains.
-	// Postgres handles ILIKE well; on a per-agent index we'd never blow past
-	// hundreds of leads in v1, so a sequential scan is fine.
-	const where = search
-		? {
-				agentId,
-				OR: [
-					{ email: { contains: search, mode: "insensitive" as const } },
-					{ phone: { contains: search } },
-					{ name: { contains: search, mode: "insensitive" as const } },
-				],
-			}
-		: { agentId };
+// ---------- list (org-wide, optional agent filter) ----------
 
-	const leads = await prisma.lead.findMany({
-		where,
-		orderBy: { createdAt: "desc" },
-		take: limit,
-	});
-	return c.json(leads.map(toWire), 200);
+const listOrgLeadsRoute = createRoute({
+	method: "get",
+	path: "/",
+	tags: ["Leads"],
+	request: {
+		params: z.object({ orgId: z.string() }),
+		query: z.object({
+			agentId: z.string().optional(),
+			limit: z.coerce.number().int().min(1).max(100).default(50),
+			search: z.string().optional(),
+		}),
+	},
+	middleware: [requireOrgMember] as const,
+	responses: {
+		200: {
+			content: { "application/json": { schema: z.array(LeadSchema) } },
+			description: "Leads across the org's agents (newest first)",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Unauthorized",
+		},
+		403: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Forbidden",
+		},
+	},
+});
+
+orgLeadsApp.openapi(listOrgLeadsRoute, async (c) => {
+	const { orgId } = c.req.valid("param");
+	const { agentId, ...opts } = c.req.valid("query");
+	// organizationId stays in the filter even when agentId is set, so an
+	// agentId from another org simply matches nothing.
+	const leads = await listLeads(
+		c.env.DATABASE_URL,
+		{ organizationId: orgId, ...(agentId ? { agentId } : {}) },
+		opts,
+	);
+	return c.json(leads, 200);
 });
 
 // ---------- get :leadId ----------
@@ -160,6 +184,37 @@ leadsApp.openapi(deleteLeadRoute, async (c) => {
 });
 
 // ---------- helpers ----------
+
+type LeadScope = { agentId: string } | { organizationId: string; agentId?: string };
+
+async function listLeads(
+	databaseUrl: string,
+	scope: LeadScope,
+	{ limit, search }: { limit: number; search?: string },
+) {
+	const prisma = getPrisma(databaseUrl);
+
+	// `search` matches email / phone / name with case-insensitive contains.
+	// Postgres handles ILIKE well; v1 orgs never blow past hundreds of
+	// leads, so a scan within the scope is fine.
+	const where = search
+		? {
+				...scope,
+				OR: [
+					{ email: { contains: search, mode: "insensitive" as const } },
+					{ phone: { contains: search } },
+					{ name: { contains: search, mode: "insensitive" as const } },
+				],
+			}
+		: scope;
+
+	const leads = await prisma.lead.findMany({
+		where,
+		orderBy: { createdAt: "desc" },
+		take: limit,
+	});
+	return leads.map(toWire);
+}
 
 // biome-ignore lint/suspicious/noExplicitAny: shared inline guard across three OpenAPIHono routes whose Context types are distinct generics
 async function checkLeadAccess(c: any, leadId: string) {

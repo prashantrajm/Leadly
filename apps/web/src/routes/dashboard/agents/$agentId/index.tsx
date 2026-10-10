@@ -139,7 +139,8 @@ function AgentOverview() {
 						title="Inbox"
 						description="Live conversations + transcripts"
 						icon={Inbox}
-						to={`/dashboard/agents/${agentId}/inbox`}
+						to="/dashboard/inbox"
+						search={{ agent: agentId }}
 					/>
 					<QuickLink
 						title="Knowledge"
@@ -164,13 +165,15 @@ function AgentOverview() {
 						title="Leads"
 						description="Captured contacts"
 						icon={UserPlus}
-						to={`/dashboard/agents/${agentId}/leads`}
+						to="/dashboard/leads"
+						search={{ agent: agentId }}
 					/>
 					<QuickLink
 						title="Analytics"
 						description="Trends over time"
 						icon={BarChart3}
-						to={`/dashboard/agents/${agentId}/analytics`}
+						to="/dashboard/analytics"
+						search={{ agent: agentId }}
 					/>
 				</div>
 			</section>
@@ -236,17 +239,21 @@ function QuickLink({
 	description,
 	icon: Icon,
 	to,
+	search,
 	accent,
 }: {
 	title: string;
 	description: string;
 	icon: React.ComponentType<{ className?: string }>;
 	to: string;
+	// Org-wide pages (inbox, leads, analytics) take the agent as a filter.
+	search?: { agent: string };
 	accent?: boolean;
 }) {
 	return (
 		<Link
 			to={to as string}
+			search={search}
 			className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-accent-blue/30"
 		>
 			<div
