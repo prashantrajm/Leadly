@@ -17,7 +17,6 @@ import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GuidesRouteImport } from './routes/guides'
 import { Route as DocsRouteImport } from './routes/docs'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactUsRouteImport } from './routes/contact-us'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChangelogRouteImport } from './routes/changelog'
@@ -25,29 +24,32 @@ import { Route as CareersRouteImport } from './routes/careers'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as OrgSlugRouteImport } from './routes/$orgSlug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as DashboardVisitorsRouteImport } from './routes/dashboard/visitors'
-import { Route as DashboardLeadsRouteImport } from './routes/dashboard/leads'
-import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard/analytics'
-import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
-import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
-import { Route as DashboardAgentsIndexRouteImport } from './routes/dashboard/agents/index'
-import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard/settings/profile'
-import { Route as DashboardInboxConversationIdRouteImport } from './routes/dashboard/inbox/$conversationId'
-import { Route as DashboardAgentsAgentIdIndexRouteImport } from './routes/dashboard/agents/$agentId/index'
-import { Route as DashboardAgentsAgentIdVisitorsRouteImport } from './routes/dashboard/agents/$agentId/visitors'
-import { Route as DashboardAgentsAgentIdSettingsRouteImport } from './routes/dashboard/agents/$agentId/settings'
-import { Route as DashboardAgentsAgentIdPlaygroundRouteImport } from './routes/dashboard/agents/$agentId/playground'
-import { Route as DashboardAgentsAgentIdLeadsRouteImport } from './routes/dashboard/agents/$agentId/leads'
-import { Route as DashboardAgentsAgentIdInstallRouteImport } from './routes/dashboard/agents/$agentId/install'
-import { Route as DashboardAgentsAgentIdAnalyticsRouteImport } from './routes/dashboard/agents/$agentId/analytics'
-import { Route as DashboardAgentsAgentIdKnowledgeIndexRouteImport } from './routes/dashboard/agents/$agentId/knowledge/index'
-import { Route as DashboardAgentsAgentIdInboxIndexRouteImport } from './routes/dashboard/agents/$agentId/inbox/index'
-import { Route as DashboardAgentsAgentIdKnowledgeUploadRouteImport } from './routes/dashboard/agents/$agentId/knowledge/upload'
-import { Route as DashboardAgentsAgentIdKnowledgeNewRouteImport } from './routes/dashboard/agents/$agentId/knowledge/new'
-import { Route as DashboardAgentsAgentIdKnowledgeArticleIdRouteImport } from './routes/dashboard/agents/$agentId/knowledge/$articleId'
-import { Route as DashboardAgentsAgentIdInboxConversationIdRouteImport } from './routes/dashboard/agents/$agentId/inbox/$conversationId'
+import { Route as OrgSlugIndexRouteImport } from './routes/$orgSlug/index'
+import { Route as DashboardSplatRouteImport } from './routes/dashboard/$'
+import { Route as OrgSlugVisitorsRouteImport } from './routes/$orgSlug/visitors'
+import { Route as OrgSlugLeadsRouteImport } from './routes/$orgSlug/leads'
+import { Route as OrgSlugAnalyticsRouteImport } from './routes/$orgSlug/analytics'
+import { Route as OrgSlugSettingsIndexRouteImport } from './routes/$orgSlug/settings/index'
+import { Route as OrgSlugInboxIndexRouteImport } from './routes/$orgSlug/inbox/index'
+import { Route as OrgSlugAgentsIndexRouteImport } from './routes/$orgSlug/agents/index'
+import { Route as OrgSlugSettingsProfileRouteImport } from './routes/$orgSlug/settings/profile'
+import { Route as OrgSlugInboxConversationIdRouteImport } from './routes/$orgSlug/inbox/$conversationId'
+import { Route as OrgSlugAgentsAgentIdIndexRouteImport } from './routes/$orgSlug/agents/$agentId/index'
+import { Route as OrgSlugAgentsAgentIdVisitorsRouteImport } from './routes/$orgSlug/agents/$agentId/visitors'
+import { Route as OrgSlugAgentsAgentIdSettingsRouteImport } from './routes/$orgSlug/agents/$agentId/settings'
+import { Route as OrgSlugAgentsAgentIdPlaygroundRouteImport } from './routes/$orgSlug/agents/$agentId/playground'
+import { Route as OrgSlugAgentsAgentIdLeadsRouteImport } from './routes/$orgSlug/agents/$agentId/leads'
+import { Route as OrgSlugAgentsAgentIdInstallRouteImport } from './routes/$orgSlug/agents/$agentId/install'
+import { Route as OrgSlugAgentsAgentIdAnalyticsRouteImport } from './routes/$orgSlug/agents/$agentId/analytics'
+import { Route as OrgSlugAgentsAgentIdKnowledgeIndexRouteImport } from './routes/$orgSlug/agents/$agentId/knowledge/index'
+import { Route as OrgSlugAgentsAgentIdInboxIndexRouteImport } from './routes/$orgSlug/agents/$agentId/inbox/index'
+import { Route as OrgSlugAgentsAgentIdKnowledgeUploadRouteImport } from './routes/$orgSlug/agents/$agentId/knowledge/upload'
+import { Route as OrgSlugAgentsAgentIdKnowledgeNewRouteImport } from './routes/$orgSlug/agents/$agentId/knowledge/new'
+import { Route as OrgSlugAgentsAgentIdKnowledgeArticleIdRouteImport } from './routes/$orgSlug/agents/$agentId/knowledge/$articleId'
+import { Route as OrgSlugAgentsAgentIdInboxConversationIdRouteImport } from './routes/$orgSlug/agents/$agentId/inbox/$conversationId'
 
 const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
   id: '/terms-and-conditions',
@@ -89,11 +91,6 @@ const DocsRoute = DocsRouteImport.update({
   path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ContactUsRoute = ContactUsRouteImport.update({
   id: '/contact-us',
   path: '/contact-us',
@@ -129,139 +126,154 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrgSlugRoute = OrgSlugRouteImport.update({
+  id: '/$orgSlug',
+  path: '/$orgSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgSlugIndexRoute = OrgSlugIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => OrgSlugRoute,
 } as any)
-const DashboardVisitorsRoute = DashboardVisitorsRouteImport.update({
+const DashboardSplatRoute = DashboardSplatRouteImport.update({
+  id: '/dashboard/$',
+  path: '/dashboard/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgSlugVisitorsRoute = OrgSlugVisitorsRouteImport.update({
   id: '/visitors',
   path: '/visitors',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => OrgSlugRoute,
 } as any)
-const DashboardLeadsRoute = DashboardLeadsRouteImport.update({
+const OrgSlugLeadsRoute = OrgSlugLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => OrgSlugRoute,
 } as any)
-const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
+const OrgSlugAnalyticsRoute = OrgSlugAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => OrgSlugRoute,
 } as any)
-const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
+const OrgSlugSettingsIndexRoute = OrgSlugSettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => OrgSlugRoute,
 } as any)
-const DashboardInboxIndexRoute = DashboardInboxIndexRouteImport.update({
+const OrgSlugInboxIndexRoute = OrgSlugInboxIndexRouteImport.update({
   id: '/inbox/',
   path: '/inbox/',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => OrgSlugRoute,
 } as any)
-const DashboardAgentsIndexRoute = DashboardAgentsIndexRouteImport.update({
+const OrgSlugAgentsIndexRoute = OrgSlugAgentsIndexRouteImport.update({
   id: '/agents/',
   path: '/agents/',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => OrgSlugRoute,
 } as any)
-const DashboardSettingsProfileRoute =
-  DashboardSettingsProfileRouteImport.update({
-    id: '/settings/profile',
-    path: '/settings/profile',
-    getParentRoute: () => DashboardRoute,
-  } as any)
-const DashboardInboxConversationIdRoute =
-  DashboardInboxConversationIdRouteImport.update({
+const OrgSlugSettingsProfileRoute = OrgSlugSettingsProfileRouteImport.update({
+  id: '/settings/profile',
+  path: '/settings/profile',
+  getParentRoute: () => OrgSlugRoute,
+} as any)
+const OrgSlugInboxConversationIdRoute =
+  OrgSlugInboxConversationIdRouteImport.update({
     id: '/inbox/$conversationId',
     path: '/inbox/$conversationId',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdIndexRoute =
-  DashboardAgentsAgentIdIndexRouteImport.update({
+const OrgSlugAgentsAgentIdIndexRoute =
+  OrgSlugAgentsAgentIdIndexRouteImport.update({
     id: '/agents/$agentId/',
     path: '/agents/$agentId/',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdVisitorsRoute =
-  DashboardAgentsAgentIdVisitorsRouteImport.update({
+const OrgSlugAgentsAgentIdVisitorsRoute =
+  OrgSlugAgentsAgentIdVisitorsRouteImport.update({
     id: '/agents/$agentId/visitors',
     path: '/agents/$agentId/visitors',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdSettingsRoute =
-  DashboardAgentsAgentIdSettingsRouteImport.update({
+const OrgSlugAgentsAgentIdSettingsRoute =
+  OrgSlugAgentsAgentIdSettingsRouteImport.update({
     id: '/agents/$agentId/settings',
     path: '/agents/$agentId/settings',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdPlaygroundRoute =
-  DashboardAgentsAgentIdPlaygroundRouteImport.update({
+const OrgSlugAgentsAgentIdPlaygroundRoute =
+  OrgSlugAgentsAgentIdPlaygroundRouteImport.update({
     id: '/agents/$agentId/playground',
     path: '/agents/$agentId/playground',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdLeadsRoute =
-  DashboardAgentsAgentIdLeadsRouteImport.update({
+const OrgSlugAgentsAgentIdLeadsRoute =
+  OrgSlugAgentsAgentIdLeadsRouteImport.update({
     id: '/agents/$agentId/leads',
     path: '/agents/$agentId/leads',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdInstallRoute =
-  DashboardAgentsAgentIdInstallRouteImport.update({
+const OrgSlugAgentsAgentIdInstallRoute =
+  OrgSlugAgentsAgentIdInstallRouteImport.update({
     id: '/agents/$agentId/install',
     path: '/agents/$agentId/install',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdAnalyticsRoute =
-  DashboardAgentsAgentIdAnalyticsRouteImport.update({
+const OrgSlugAgentsAgentIdAnalyticsRoute =
+  OrgSlugAgentsAgentIdAnalyticsRouteImport.update({
     id: '/agents/$agentId/analytics',
     path: '/agents/$agentId/analytics',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdKnowledgeIndexRoute =
-  DashboardAgentsAgentIdKnowledgeIndexRouteImport.update({
+const OrgSlugAgentsAgentIdKnowledgeIndexRoute =
+  OrgSlugAgentsAgentIdKnowledgeIndexRouteImport.update({
     id: '/agents/$agentId/knowledge/',
     path: '/agents/$agentId/knowledge/',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdInboxIndexRoute =
-  DashboardAgentsAgentIdInboxIndexRouteImport.update({
+const OrgSlugAgentsAgentIdInboxIndexRoute =
+  OrgSlugAgentsAgentIdInboxIndexRouteImport.update({
     id: '/agents/$agentId/inbox/',
     path: '/agents/$agentId/inbox/',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdKnowledgeUploadRoute =
-  DashboardAgentsAgentIdKnowledgeUploadRouteImport.update({
+const OrgSlugAgentsAgentIdKnowledgeUploadRoute =
+  OrgSlugAgentsAgentIdKnowledgeUploadRouteImport.update({
     id: '/agents/$agentId/knowledge/upload',
     path: '/agents/$agentId/knowledge/upload',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdKnowledgeNewRoute =
-  DashboardAgentsAgentIdKnowledgeNewRouteImport.update({
+const OrgSlugAgentsAgentIdKnowledgeNewRoute =
+  OrgSlugAgentsAgentIdKnowledgeNewRouteImport.update({
     id: '/agents/$agentId/knowledge/new',
     path: '/agents/$agentId/knowledge/new',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdKnowledgeArticleIdRoute =
-  DashboardAgentsAgentIdKnowledgeArticleIdRouteImport.update({
+const OrgSlugAgentsAgentIdKnowledgeArticleIdRoute =
+  OrgSlugAgentsAgentIdKnowledgeArticleIdRouteImport.update({
     id: '/agents/$agentId/knowledge/$articleId',
     path: '/agents/$agentId/knowledge/$articleId',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
-const DashboardAgentsAgentIdInboxConversationIdRoute =
-  DashboardAgentsAgentIdInboxConversationIdRouteImport.update({
+const OrgSlugAgentsAgentIdInboxConversationIdRoute =
+  OrgSlugAgentsAgentIdInboxConversationIdRouteImport.update({
     id: '/agents/$agentId/inbox/$conversationId',
     path: '/agents/$agentId/inbox/$conversationId',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => OrgSlugRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$orgSlug': typeof OrgSlugRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRoute
@@ -269,7 +281,6 @@ export interface FileRoutesByFullPath {
   '/changelog': typeof ChangelogRoute
   '/community': typeof CommunityRoute
   '/contact-us': typeof ContactUsRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/docs': typeof DocsRoute
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
@@ -278,28 +289,30 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
-  '/dashboard/analytics': typeof DashboardAnalyticsRoute
-  '/dashboard/leads': typeof DashboardLeadsRoute
-  '/dashboard/visitors': typeof DashboardVisitorsRoute
+  '/$orgSlug/analytics': typeof OrgSlugAnalyticsRoute
+  '/$orgSlug/leads': typeof OrgSlugLeadsRoute
+  '/$orgSlug/visitors': typeof OrgSlugVisitorsRoute
+  '/dashboard/$': typeof DashboardSplatRoute
+  '/$orgSlug/': typeof OrgSlugIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/inbox/$conversationId': typeof DashboardInboxConversationIdRoute
-  '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
-  '/dashboard/agents/': typeof DashboardAgentsIndexRoute
-  '/dashboard/inbox/': typeof DashboardInboxIndexRoute
-  '/dashboard/settings/': typeof DashboardSettingsIndexRoute
-  '/dashboard/agents/$agentId/analytics': typeof DashboardAgentsAgentIdAnalyticsRoute
-  '/dashboard/agents/$agentId/install': typeof DashboardAgentsAgentIdInstallRoute
-  '/dashboard/agents/$agentId/leads': typeof DashboardAgentsAgentIdLeadsRoute
-  '/dashboard/agents/$agentId/playground': typeof DashboardAgentsAgentIdPlaygroundRoute
-  '/dashboard/agents/$agentId/settings': typeof DashboardAgentsAgentIdSettingsRoute
-  '/dashboard/agents/$agentId/visitors': typeof DashboardAgentsAgentIdVisitorsRoute
-  '/dashboard/agents/$agentId/': typeof DashboardAgentsAgentIdIndexRoute
-  '/dashboard/agents/$agentId/inbox/$conversationId': typeof DashboardAgentsAgentIdInboxConversationIdRoute
-  '/dashboard/agents/$agentId/knowledge/$articleId': typeof DashboardAgentsAgentIdKnowledgeArticleIdRoute
-  '/dashboard/agents/$agentId/knowledge/new': typeof DashboardAgentsAgentIdKnowledgeNewRoute
-  '/dashboard/agents/$agentId/knowledge/upload': typeof DashboardAgentsAgentIdKnowledgeUploadRoute
-  '/dashboard/agents/$agentId/inbox/': typeof DashboardAgentsAgentIdInboxIndexRoute
-  '/dashboard/agents/$agentId/knowledge/': typeof DashboardAgentsAgentIdKnowledgeIndexRoute
+  '/$orgSlug/inbox/$conversationId': typeof OrgSlugInboxConversationIdRoute
+  '/$orgSlug/settings/profile': typeof OrgSlugSettingsProfileRoute
+  '/$orgSlug/agents/': typeof OrgSlugAgentsIndexRoute
+  '/$orgSlug/inbox/': typeof OrgSlugInboxIndexRoute
+  '/$orgSlug/settings/': typeof OrgSlugSettingsIndexRoute
+  '/$orgSlug/agents/$agentId/analytics': typeof OrgSlugAgentsAgentIdAnalyticsRoute
+  '/$orgSlug/agents/$agentId/install': typeof OrgSlugAgentsAgentIdInstallRoute
+  '/$orgSlug/agents/$agentId/leads': typeof OrgSlugAgentsAgentIdLeadsRoute
+  '/$orgSlug/agents/$agentId/playground': typeof OrgSlugAgentsAgentIdPlaygroundRoute
+  '/$orgSlug/agents/$agentId/settings': typeof OrgSlugAgentsAgentIdSettingsRoute
+  '/$orgSlug/agents/$agentId/visitors': typeof OrgSlugAgentsAgentIdVisitorsRoute
+  '/$orgSlug/agents/$agentId/': typeof OrgSlugAgentsAgentIdIndexRoute
+  '/$orgSlug/agents/$agentId/inbox/$conversationId': typeof OrgSlugAgentsAgentIdInboxConversationIdRoute
+  '/$orgSlug/agents/$agentId/knowledge/$articleId': typeof OrgSlugAgentsAgentIdKnowledgeArticleIdRoute
+  '/$orgSlug/agents/$agentId/knowledge/new': typeof OrgSlugAgentsAgentIdKnowledgeNewRoute
+  '/$orgSlug/agents/$agentId/knowledge/upload': typeof OrgSlugAgentsAgentIdKnowledgeUploadRoute
+  '/$orgSlug/agents/$agentId/inbox/': typeof OrgSlugAgentsAgentIdInboxIndexRoute
+  '/$orgSlug/agents/$agentId/knowledge/': typeof OrgSlugAgentsAgentIdKnowledgeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -318,32 +331,35 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
-  '/dashboard/analytics': typeof DashboardAnalyticsRoute
-  '/dashboard/leads': typeof DashboardLeadsRoute
-  '/dashboard/visitors': typeof DashboardVisitorsRoute
+  '/$orgSlug/analytics': typeof OrgSlugAnalyticsRoute
+  '/$orgSlug/leads': typeof OrgSlugLeadsRoute
+  '/$orgSlug/visitors': typeof OrgSlugVisitorsRoute
+  '/dashboard/$': typeof DashboardSplatRoute
+  '/$orgSlug': typeof OrgSlugIndexRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/dashboard/inbox/$conversationId': typeof DashboardInboxConversationIdRoute
-  '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
-  '/dashboard/agents': typeof DashboardAgentsIndexRoute
-  '/dashboard/inbox': typeof DashboardInboxIndexRoute
-  '/dashboard/settings': typeof DashboardSettingsIndexRoute
-  '/dashboard/agents/$agentId/analytics': typeof DashboardAgentsAgentIdAnalyticsRoute
-  '/dashboard/agents/$agentId/install': typeof DashboardAgentsAgentIdInstallRoute
-  '/dashboard/agents/$agentId/leads': typeof DashboardAgentsAgentIdLeadsRoute
-  '/dashboard/agents/$agentId/playground': typeof DashboardAgentsAgentIdPlaygroundRoute
-  '/dashboard/agents/$agentId/settings': typeof DashboardAgentsAgentIdSettingsRoute
-  '/dashboard/agents/$agentId/visitors': typeof DashboardAgentsAgentIdVisitorsRoute
-  '/dashboard/agents/$agentId': typeof DashboardAgentsAgentIdIndexRoute
-  '/dashboard/agents/$agentId/inbox/$conversationId': typeof DashboardAgentsAgentIdInboxConversationIdRoute
-  '/dashboard/agents/$agentId/knowledge/$articleId': typeof DashboardAgentsAgentIdKnowledgeArticleIdRoute
-  '/dashboard/agents/$agentId/knowledge/new': typeof DashboardAgentsAgentIdKnowledgeNewRoute
-  '/dashboard/agents/$agentId/knowledge/upload': typeof DashboardAgentsAgentIdKnowledgeUploadRoute
-  '/dashboard/agents/$agentId/inbox': typeof DashboardAgentsAgentIdInboxIndexRoute
-  '/dashboard/agents/$agentId/knowledge': typeof DashboardAgentsAgentIdKnowledgeIndexRoute
+  '/$orgSlug/inbox/$conversationId': typeof OrgSlugInboxConversationIdRoute
+  '/$orgSlug/settings/profile': typeof OrgSlugSettingsProfileRoute
+  '/$orgSlug/agents': typeof OrgSlugAgentsIndexRoute
+  '/$orgSlug/inbox': typeof OrgSlugInboxIndexRoute
+  '/$orgSlug/settings': typeof OrgSlugSettingsIndexRoute
+  '/$orgSlug/agents/$agentId/analytics': typeof OrgSlugAgentsAgentIdAnalyticsRoute
+  '/$orgSlug/agents/$agentId/install': typeof OrgSlugAgentsAgentIdInstallRoute
+  '/$orgSlug/agents/$agentId/leads': typeof OrgSlugAgentsAgentIdLeadsRoute
+  '/$orgSlug/agents/$agentId/playground': typeof OrgSlugAgentsAgentIdPlaygroundRoute
+  '/$orgSlug/agents/$agentId/settings': typeof OrgSlugAgentsAgentIdSettingsRoute
+  '/$orgSlug/agents/$agentId/visitors': typeof OrgSlugAgentsAgentIdVisitorsRoute
+  '/$orgSlug/agents/$agentId': typeof OrgSlugAgentsAgentIdIndexRoute
+  '/$orgSlug/agents/$agentId/inbox/$conversationId': typeof OrgSlugAgentsAgentIdInboxConversationIdRoute
+  '/$orgSlug/agents/$agentId/knowledge/$articleId': typeof OrgSlugAgentsAgentIdKnowledgeArticleIdRoute
+  '/$orgSlug/agents/$agentId/knowledge/new': typeof OrgSlugAgentsAgentIdKnowledgeNewRoute
+  '/$orgSlug/agents/$agentId/knowledge/upload': typeof OrgSlugAgentsAgentIdKnowledgeUploadRoute
+  '/$orgSlug/agents/$agentId/inbox': typeof OrgSlugAgentsAgentIdInboxIndexRoute
+  '/$orgSlug/agents/$agentId/knowledge': typeof OrgSlugAgentsAgentIdKnowledgeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$orgSlug': typeof OrgSlugRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRoute
@@ -351,7 +367,6 @@ export interface FileRoutesById {
   '/changelog': typeof ChangelogRoute
   '/community': typeof CommunityRoute
   '/contact-us': typeof ContactUsRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/docs': typeof DocsRoute
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
@@ -360,33 +375,36 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
-  '/dashboard/analytics': typeof DashboardAnalyticsRoute
-  '/dashboard/leads': typeof DashboardLeadsRoute
-  '/dashboard/visitors': typeof DashboardVisitorsRoute
+  '/$orgSlug/analytics': typeof OrgSlugAnalyticsRoute
+  '/$orgSlug/leads': typeof OrgSlugLeadsRoute
+  '/$orgSlug/visitors': typeof OrgSlugVisitorsRoute
+  '/dashboard/$': typeof DashboardSplatRoute
+  '/$orgSlug/': typeof OrgSlugIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/inbox/$conversationId': typeof DashboardInboxConversationIdRoute
-  '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
-  '/dashboard/agents/': typeof DashboardAgentsIndexRoute
-  '/dashboard/inbox/': typeof DashboardInboxIndexRoute
-  '/dashboard/settings/': typeof DashboardSettingsIndexRoute
-  '/dashboard/agents/$agentId/analytics': typeof DashboardAgentsAgentIdAnalyticsRoute
-  '/dashboard/agents/$agentId/install': typeof DashboardAgentsAgentIdInstallRoute
-  '/dashboard/agents/$agentId/leads': typeof DashboardAgentsAgentIdLeadsRoute
-  '/dashboard/agents/$agentId/playground': typeof DashboardAgentsAgentIdPlaygroundRoute
-  '/dashboard/agents/$agentId/settings': typeof DashboardAgentsAgentIdSettingsRoute
-  '/dashboard/agents/$agentId/visitors': typeof DashboardAgentsAgentIdVisitorsRoute
-  '/dashboard/agents/$agentId/': typeof DashboardAgentsAgentIdIndexRoute
-  '/dashboard/agents/$agentId/inbox/$conversationId': typeof DashboardAgentsAgentIdInboxConversationIdRoute
-  '/dashboard/agents/$agentId/knowledge/$articleId': typeof DashboardAgentsAgentIdKnowledgeArticleIdRoute
-  '/dashboard/agents/$agentId/knowledge/new': typeof DashboardAgentsAgentIdKnowledgeNewRoute
-  '/dashboard/agents/$agentId/knowledge/upload': typeof DashboardAgentsAgentIdKnowledgeUploadRoute
-  '/dashboard/agents/$agentId/inbox/': typeof DashboardAgentsAgentIdInboxIndexRoute
-  '/dashboard/agents/$agentId/knowledge/': typeof DashboardAgentsAgentIdKnowledgeIndexRoute
+  '/$orgSlug/inbox/$conversationId': typeof OrgSlugInboxConversationIdRoute
+  '/$orgSlug/settings/profile': typeof OrgSlugSettingsProfileRoute
+  '/$orgSlug/agents/': typeof OrgSlugAgentsIndexRoute
+  '/$orgSlug/inbox/': typeof OrgSlugInboxIndexRoute
+  '/$orgSlug/settings/': typeof OrgSlugSettingsIndexRoute
+  '/$orgSlug/agents/$agentId/analytics': typeof OrgSlugAgentsAgentIdAnalyticsRoute
+  '/$orgSlug/agents/$agentId/install': typeof OrgSlugAgentsAgentIdInstallRoute
+  '/$orgSlug/agents/$agentId/leads': typeof OrgSlugAgentsAgentIdLeadsRoute
+  '/$orgSlug/agents/$agentId/playground': typeof OrgSlugAgentsAgentIdPlaygroundRoute
+  '/$orgSlug/agents/$agentId/settings': typeof OrgSlugAgentsAgentIdSettingsRoute
+  '/$orgSlug/agents/$agentId/visitors': typeof OrgSlugAgentsAgentIdVisitorsRoute
+  '/$orgSlug/agents/$agentId/': typeof OrgSlugAgentsAgentIdIndexRoute
+  '/$orgSlug/agents/$agentId/inbox/$conversationId': typeof OrgSlugAgentsAgentIdInboxConversationIdRoute
+  '/$orgSlug/agents/$agentId/knowledge/$articleId': typeof OrgSlugAgentsAgentIdKnowledgeArticleIdRoute
+  '/$orgSlug/agents/$agentId/knowledge/new': typeof OrgSlugAgentsAgentIdKnowledgeNewRoute
+  '/$orgSlug/agents/$agentId/knowledge/upload': typeof OrgSlugAgentsAgentIdKnowledgeUploadRoute
+  '/$orgSlug/agents/$agentId/inbox/': typeof OrgSlugAgentsAgentIdInboxIndexRoute
+  '/$orgSlug/agents/$agentId/knowledge/': typeof OrgSlugAgentsAgentIdKnowledgeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$orgSlug'
     | '/about'
     | '/auth'
     | '/blog'
@@ -394,7 +412,6 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/community'
     | '/contact-us'
-    | '/dashboard'
     | '/docs'
     | '/guides'
     | '/help'
@@ -403,28 +420,30 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/refund-policy'
     | '/terms-and-conditions'
-    | '/dashboard/analytics'
-    | '/dashboard/leads'
-    | '/dashboard/visitors'
+    | '/$orgSlug/analytics'
+    | '/$orgSlug/leads'
+    | '/$orgSlug/visitors'
+    | '/dashboard/$'
+    | '/$orgSlug/'
     | '/dashboard/'
-    | '/dashboard/inbox/$conversationId'
-    | '/dashboard/settings/profile'
-    | '/dashboard/agents/'
-    | '/dashboard/inbox/'
-    | '/dashboard/settings/'
-    | '/dashboard/agents/$agentId/analytics'
-    | '/dashboard/agents/$agentId/install'
-    | '/dashboard/agents/$agentId/leads'
-    | '/dashboard/agents/$agentId/playground'
-    | '/dashboard/agents/$agentId/settings'
-    | '/dashboard/agents/$agentId/visitors'
-    | '/dashboard/agents/$agentId/'
-    | '/dashboard/agents/$agentId/inbox/$conversationId'
-    | '/dashboard/agents/$agentId/knowledge/$articleId'
-    | '/dashboard/agents/$agentId/knowledge/new'
-    | '/dashboard/agents/$agentId/knowledge/upload'
-    | '/dashboard/agents/$agentId/inbox/'
-    | '/dashboard/agents/$agentId/knowledge/'
+    | '/$orgSlug/inbox/$conversationId'
+    | '/$orgSlug/settings/profile'
+    | '/$orgSlug/agents/'
+    | '/$orgSlug/inbox/'
+    | '/$orgSlug/settings/'
+    | '/$orgSlug/agents/$agentId/analytics'
+    | '/$orgSlug/agents/$agentId/install'
+    | '/$orgSlug/agents/$agentId/leads'
+    | '/$orgSlug/agents/$agentId/playground'
+    | '/$orgSlug/agents/$agentId/settings'
+    | '/$orgSlug/agents/$agentId/visitors'
+    | '/$orgSlug/agents/$agentId/'
+    | '/$orgSlug/agents/$agentId/inbox/$conversationId'
+    | '/$orgSlug/agents/$agentId/knowledge/$articleId'
+    | '/$orgSlug/agents/$agentId/knowledge/new'
+    | '/$orgSlug/agents/$agentId/knowledge/upload'
+    | '/$orgSlug/agents/$agentId/inbox/'
+    | '/$orgSlug/agents/$agentId/knowledge/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -443,31 +462,34 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/refund-policy'
     | '/terms-and-conditions'
-    | '/dashboard/analytics'
-    | '/dashboard/leads'
-    | '/dashboard/visitors'
+    | '/$orgSlug/analytics'
+    | '/$orgSlug/leads'
+    | '/$orgSlug/visitors'
+    | '/dashboard/$'
+    | '/$orgSlug'
     | '/dashboard'
-    | '/dashboard/inbox/$conversationId'
-    | '/dashboard/settings/profile'
-    | '/dashboard/agents'
-    | '/dashboard/inbox'
-    | '/dashboard/settings'
-    | '/dashboard/agents/$agentId/analytics'
-    | '/dashboard/agents/$agentId/install'
-    | '/dashboard/agents/$agentId/leads'
-    | '/dashboard/agents/$agentId/playground'
-    | '/dashboard/agents/$agentId/settings'
-    | '/dashboard/agents/$agentId/visitors'
-    | '/dashboard/agents/$agentId'
-    | '/dashboard/agents/$agentId/inbox/$conversationId'
-    | '/dashboard/agents/$agentId/knowledge/$articleId'
-    | '/dashboard/agents/$agentId/knowledge/new'
-    | '/dashboard/agents/$agentId/knowledge/upload'
-    | '/dashboard/agents/$agentId/inbox'
-    | '/dashboard/agents/$agentId/knowledge'
+    | '/$orgSlug/inbox/$conversationId'
+    | '/$orgSlug/settings/profile'
+    | '/$orgSlug/agents'
+    | '/$orgSlug/inbox'
+    | '/$orgSlug/settings'
+    | '/$orgSlug/agents/$agentId/analytics'
+    | '/$orgSlug/agents/$agentId/install'
+    | '/$orgSlug/agents/$agentId/leads'
+    | '/$orgSlug/agents/$agentId/playground'
+    | '/$orgSlug/agents/$agentId/settings'
+    | '/$orgSlug/agents/$agentId/visitors'
+    | '/$orgSlug/agents/$agentId'
+    | '/$orgSlug/agents/$agentId/inbox/$conversationId'
+    | '/$orgSlug/agents/$agentId/knowledge/$articleId'
+    | '/$orgSlug/agents/$agentId/knowledge/new'
+    | '/$orgSlug/agents/$agentId/knowledge/upload'
+    | '/$orgSlug/agents/$agentId/inbox'
+    | '/$orgSlug/agents/$agentId/knowledge'
   id:
     | '__root__'
     | '/'
+    | '/$orgSlug'
     | '/about'
     | '/auth'
     | '/blog'
@@ -475,7 +497,6 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/community'
     | '/contact-us'
-    | '/dashboard'
     | '/docs'
     | '/guides'
     | '/help'
@@ -484,32 +505,35 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/refund-policy'
     | '/terms-and-conditions'
-    | '/dashboard/analytics'
-    | '/dashboard/leads'
-    | '/dashboard/visitors'
+    | '/$orgSlug/analytics'
+    | '/$orgSlug/leads'
+    | '/$orgSlug/visitors'
+    | '/dashboard/$'
+    | '/$orgSlug/'
     | '/dashboard/'
-    | '/dashboard/inbox/$conversationId'
-    | '/dashboard/settings/profile'
-    | '/dashboard/agents/'
-    | '/dashboard/inbox/'
-    | '/dashboard/settings/'
-    | '/dashboard/agents/$agentId/analytics'
-    | '/dashboard/agents/$agentId/install'
-    | '/dashboard/agents/$agentId/leads'
-    | '/dashboard/agents/$agentId/playground'
-    | '/dashboard/agents/$agentId/settings'
-    | '/dashboard/agents/$agentId/visitors'
-    | '/dashboard/agents/$agentId/'
-    | '/dashboard/agents/$agentId/inbox/$conversationId'
-    | '/dashboard/agents/$agentId/knowledge/$articleId'
-    | '/dashboard/agents/$agentId/knowledge/new'
-    | '/dashboard/agents/$agentId/knowledge/upload'
-    | '/dashboard/agents/$agentId/inbox/'
-    | '/dashboard/agents/$agentId/knowledge/'
+    | '/$orgSlug/inbox/$conversationId'
+    | '/$orgSlug/settings/profile'
+    | '/$orgSlug/agents/'
+    | '/$orgSlug/inbox/'
+    | '/$orgSlug/settings/'
+    | '/$orgSlug/agents/$agentId/analytics'
+    | '/$orgSlug/agents/$agentId/install'
+    | '/$orgSlug/agents/$agentId/leads'
+    | '/$orgSlug/agents/$agentId/playground'
+    | '/$orgSlug/agents/$agentId/settings'
+    | '/$orgSlug/agents/$agentId/visitors'
+    | '/$orgSlug/agents/$agentId/'
+    | '/$orgSlug/agents/$agentId/inbox/$conversationId'
+    | '/$orgSlug/agents/$agentId/knowledge/$articleId'
+    | '/$orgSlug/agents/$agentId/knowledge/new'
+    | '/$orgSlug/agents/$agentId/knowledge/upload'
+    | '/$orgSlug/agents/$agentId/inbox/'
+    | '/$orgSlug/agents/$agentId/knowledge/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OrgSlugRoute: typeof OrgSlugRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   BlogRoute: typeof BlogRoute
@@ -517,7 +541,6 @@ export interface RootRouteChildren {
   ChangelogRoute: typeof ChangelogRoute
   CommunityRoute: typeof CommunityRoute
   ContactUsRoute: typeof ContactUsRoute
-  DashboardRoute: typeof DashboardRouteWithChildren
   DocsRoute: typeof DocsRoute
   GuidesRoute: typeof GuidesRoute
   HelpRoute: typeof HelpRoute
@@ -526,6 +549,8 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
+  DashboardSplatRoute: typeof DashboardSplatRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -586,13 +611,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/contact-us': {
       id: '/contact-us'
       path: '/contact-us'
@@ -642,6 +660,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$orgSlug': {
+      id: '/$orgSlug'
+      path: '/$orgSlug'
+      fullPath: '/$orgSlug'
+      preLoaderRoute: typeof OrgSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -651,222 +676,235 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/': {
       id: '/dashboard/'
-      path: '/'
+      path: '/dashboard'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/dashboard/visitors': {
-      id: '/dashboard/visitors'
+    '/$orgSlug/': {
+      id: '/$orgSlug/'
+      path: '/'
+      fullPath: '/$orgSlug/'
+      preLoaderRoute: typeof OrgSlugIndexRouteImport
+      parentRoute: typeof OrgSlugRoute
+    }
+    '/dashboard/$': {
+      id: '/dashboard/$'
+      path: '/dashboard/$'
+      fullPath: '/dashboard/$'
+      preLoaderRoute: typeof DashboardSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$orgSlug/visitors': {
+      id: '/$orgSlug/visitors'
       path: '/visitors'
-      fullPath: '/dashboard/visitors'
-      preLoaderRoute: typeof DashboardVisitorsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/visitors'
+      preLoaderRoute: typeof OrgSlugVisitorsRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/leads': {
-      id: '/dashboard/leads'
+    '/$orgSlug/leads': {
+      id: '/$orgSlug/leads'
       path: '/leads'
-      fullPath: '/dashboard/leads'
-      preLoaderRoute: typeof DashboardLeadsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/leads'
+      preLoaderRoute: typeof OrgSlugLeadsRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/analytics': {
-      id: '/dashboard/analytics'
+    '/$orgSlug/analytics': {
+      id: '/$orgSlug/analytics'
       path: '/analytics'
-      fullPath: '/dashboard/analytics'
-      preLoaderRoute: typeof DashboardAnalyticsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/analytics'
+      preLoaderRoute: typeof OrgSlugAnalyticsRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/settings/': {
-      id: '/dashboard/settings/'
+    '/$orgSlug/settings/': {
+      id: '/$orgSlug/settings/'
       path: '/settings'
-      fullPath: '/dashboard/settings/'
-      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/settings/'
+      preLoaderRoute: typeof OrgSlugSettingsIndexRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/inbox/': {
-      id: '/dashboard/inbox/'
+    '/$orgSlug/inbox/': {
+      id: '/$orgSlug/inbox/'
       path: '/inbox'
-      fullPath: '/dashboard/inbox/'
-      preLoaderRoute: typeof DashboardInboxIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/inbox/'
+      preLoaderRoute: typeof OrgSlugInboxIndexRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/': {
-      id: '/dashboard/agents/'
+    '/$orgSlug/agents/': {
+      id: '/$orgSlug/agents/'
       path: '/agents'
-      fullPath: '/dashboard/agents/'
-      preLoaderRoute: typeof DashboardAgentsIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/'
+      preLoaderRoute: typeof OrgSlugAgentsIndexRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/settings/profile': {
-      id: '/dashboard/settings/profile'
+    '/$orgSlug/settings/profile': {
+      id: '/$orgSlug/settings/profile'
       path: '/settings/profile'
-      fullPath: '/dashboard/settings/profile'
-      preLoaderRoute: typeof DashboardSettingsProfileRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/settings/profile'
+      preLoaderRoute: typeof OrgSlugSettingsProfileRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/inbox/$conversationId': {
-      id: '/dashboard/inbox/$conversationId'
+    '/$orgSlug/inbox/$conversationId': {
+      id: '/$orgSlug/inbox/$conversationId'
       path: '/inbox/$conversationId'
-      fullPath: '/dashboard/inbox/$conversationId'
-      preLoaderRoute: typeof DashboardInboxConversationIdRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/inbox/$conversationId'
+      preLoaderRoute: typeof OrgSlugInboxConversationIdRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/': {
-      id: '/dashboard/agents/$agentId/'
+    '/$orgSlug/agents/$agentId/': {
+      id: '/$orgSlug/agents/$agentId/'
       path: '/agents/$agentId'
-      fullPath: '/dashboard/agents/$agentId/'
-      preLoaderRoute: typeof DashboardAgentsAgentIdIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdIndexRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/visitors': {
-      id: '/dashboard/agents/$agentId/visitors'
+    '/$orgSlug/agents/$agentId/visitors': {
+      id: '/$orgSlug/agents/$agentId/visitors'
       path: '/agents/$agentId/visitors'
-      fullPath: '/dashboard/agents/$agentId/visitors'
-      preLoaderRoute: typeof DashboardAgentsAgentIdVisitorsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/visitors'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdVisitorsRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/settings': {
-      id: '/dashboard/agents/$agentId/settings'
+    '/$orgSlug/agents/$agentId/settings': {
+      id: '/$orgSlug/agents/$agentId/settings'
       path: '/agents/$agentId/settings'
-      fullPath: '/dashboard/agents/$agentId/settings'
-      preLoaderRoute: typeof DashboardAgentsAgentIdSettingsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/settings'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdSettingsRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/playground': {
-      id: '/dashboard/agents/$agentId/playground'
+    '/$orgSlug/agents/$agentId/playground': {
+      id: '/$orgSlug/agents/$agentId/playground'
       path: '/agents/$agentId/playground'
-      fullPath: '/dashboard/agents/$agentId/playground'
-      preLoaderRoute: typeof DashboardAgentsAgentIdPlaygroundRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/playground'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdPlaygroundRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/leads': {
-      id: '/dashboard/agents/$agentId/leads'
+    '/$orgSlug/agents/$agentId/leads': {
+      id: '/$orgSlug/agents/$agentId/leads'
       path: '/agents/$agentId/leads'
-      fullPath: '/dashboard/agents/$agentId/leads'
-      preLoaderRoute: typeof DashboardAgentsAgentIdLeadsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/leads'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdLeadsRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/install': {
-      id: '/dashboard/agents/$agentId/install'
+    '/$orgSlug/agents/$agentId/install': {
+      id: '/$orgSlug/agents/$agentId/install'
       path: '/agents/$agentId/install'
-      fullPath: '/dashboard/agents/$agentId/install'
-      preLoaderRoute: typeof DashboardAgentsAgentIdInstallRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/install'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdInstallRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/analytics': {
-      id: '/dashboard/agents/$agentId/analytics'
+    '/$orgSlug/agents/$agentId/analytics': {
+      id: '/$orgSlug/agents/$agentId/analytics'
       path: '/agents/$agentId/analytics'
-      fullPath: '/dashboard/agents/$agentId/analytics'
-      preLoaderRoute: typeof DashboardAgentsAgentIdAnalyticsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/analytics'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdAnalyticsRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/knowledge/': {
-      id: '/dashboard/agents/$agentId/knowledge/'
+    '/$orgSlug/agents/$agentId/knowledge/': {
+      id: '/$orgSlug/agents/$agentId/knowledge/'
       path: '/agents/$agentId/knowledge'
-      fullPath: '/dashboard/agents/$agentId/knowledge/'
-      preLoaderRoute: typeof DashboardAgentsAgentIdKnowledgeIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/knowledge/'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdKnowledgeIndexRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/inbox/': {
-      id: '/dashboard/agents/$agentId/inbox/'
+    '/$orgSlug/agents/$agentId/inbox/': {
+      id: '/$orgSlug/agents/$agentId/inbox/'
       path: '/agents/$agentId/inbox'
-      fullPath: '/dashboard/agents/$agentId/inbox/'
-      preLoaderRoute: typeof DashboardAgentsAgentIdInboxIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/inbox/'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdInboxIndexRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/knowledge/upload': {
-      id: '/dashboard/agents/$agentId/knowledge/upload'
+    '/$orgSlug/agents/$agentId/knowledge/upload': {
+      id: '/$orgSlug/agents/$agentId/knowledge/upload'
       path: '/agents/$agentId/knowledge/upload'
-      fullPath: '/dashboard/agents/$agentId/knowledge/upload'
-      preLoaderRoute: typeof DashboardAgentsAgentIdKnowledgeUploadRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/knowledge/upload'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdKnowledgeUploadRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/knowledge/new': {
-      id: '/dashboard/agents/$agentId/knowledge/new'
+    '/$orgSlug/agents/$agentId/knowledge/new': {
+      id: '/$orgSlug/agents/$agentId/knowledge/new'
       path: '/agents/$agentId/knowledge/new'
-      fullPath: '/dashboard/agents/$agentId/knowledge/new'
-      preLoaderRoute: typeof DashboardAgentsAgentIdKnowledgeNewRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/knowledge/new'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdKnowledgeNewRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/knowledge/$articleId': {
-      id: '/dashboard/agents/$agentId/knowledge/$articleId'
+    '/$orgSlug/agents/$agentId/knowledge/$articleId': {
+      id: '/$orgSlug/agents/$agentId/knowledge/$articleId'
       path: '/agents/$agentId/knowledge/$articleId'
-      fullPath: '/dashboard/agents/$agentId/knowledge/$articleId'
-      preLoaderRoute: typeof DashboardAgentsAgentIdKnowledgeArticleIdRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/knowledge/$articleId'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdKnowledgeArticleIdRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
-    '/dashboard/agents/$agentId/inbox/$conversationId': {
-      id: '/dashboard/agents/$agentId/inbox/$conversationId'
+    '/$orgSlug/agents/$agentId/inbox/$conversationId': {
+      id: '/$orgSlug/agents/$agentId/inbox/$conversationId'
       path: '/agents/$agentId/inbox/$conversationId'
-      fullPath: '/dashboard/agents/$agentId/inbox/$conversationId'
-      preLoaderRoute: typeof DashboardAgentsAgentIdInboxConversationIdRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/$orgSlug/agents/$agentId/inbox/$conversationId'
+      preLoaderRoute: typeof OrgSlugAgentsAgentIdInboxConversationIdRouteImport
+      parentRoute: typeof OrgSlugRoute
     }
   }
 }
 
-interface DashboardRouteChildren {
-  DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
-  DashboardLeadsRoute: typeof DashboardLeadsRoute
-  DashboardVisitorsRoute: typeof DashboardVisitorsRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardInboxConversationIdRoute: typeof DashboardInboxConversationIdRoute
-  DashboardSettingsProfileRoute: typeof DashboardSettingsProfileRoute
-  DashboardAgentsIndexRoute: typeof DashboardAgentsIndexRoute
-  DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
-  DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
-  DashboardAgentsAgentIdAnalyticsRoute: typeof DashboardAgentsAgentIdAnalyticsRoute
-  DashboardAgentsAgentIdInstallRoute: typeof DashboardAgentsAgentIdInstallRoute
-  DashboardAgentsAgentIdLeadsRoute: typeof DashboardAgentsAgentIdLeadsRoute
-  DashboardAgentsAgentIdPlaygroundRoute: typeof DashboardAgentsAgentIdPlaygroundRoute
-  DashboardAgentsAgentIdSettingsRoute: typeof DashboardAgentsAgentIdSettingsRoute
-  DashboardAgentsAgentIdVisitorsRoute: typeof DashboardAgentsAgentIdVisitorsRoute
-  DashboardAgentsAgentIdIndexRoute: typeof DashboardAgentsAgentIdIndexRoute
-  DashboardAgentsAgentIdInboxConversationIdRoute: typeof DashboardAgentsAgentIdInboxConversationIdRoute
-  DashboardAgentsAgentIdKnowledgeArticleIdRoute: typeof DashboardAgentsAgentIdKnowledgeArticleIdRoute
-  DashboardAgentsAgentIdKnowledgeNewRoute: typeof DashboardAgentsAgentIdKnowledgeNewRoute
-  DashboardAgentsAgentIdKnowledgeUploadRoute: typeof DashboardAgentsAgentIdKnowledgeUploadRoute
-  DashboardAgentsAgentIdInboxIndexRoute: typeof DashboardAgentsAgentIdInboxIndexRoute
-  DashboardAgentsAgentIdKnowledgeIndexRoute: typeof DashboardAgentsAgentIdKnowledgeIndexRoute
+interface OrgSlugRouteChildren {
+  OrgSlugAnalyticsRoute: typeof OrgSlugAnalyticsRoute
+  OrgSlugLeadsRoute: typeof OrgSlugLeadsRoute
+  OrgSlugVisitorsRoute: typeof OrgSlugVisitorsRoute
+  OrgSlugIndexRoute: typeof OrgSlugIndexRoute
+  OrgSlugInboxConversationIdRoute: typeof OrgSlugInboxConversationIdRoute
+  OrgSlugSettingsProfileRoute: typeof OrgSlugSettingsProfileRoute
+  OrgSlugAgentsIndexRoute: typeof OrgSlugAgentsIndexRoute
+  OrgSlugInboxIndexRoute: typeof OrgSlugInboxIndexRoute
+  OrgSlugSettingsIndexRoute: typeof OrgSlugSettingsIndexRoute
+  OrgSlugAgentsAgentIdAnalyticsRoute: typeof OrgSlugAgentsAgentIdAnalyticsRoute
+  OrgSlugAgentsAgentIdInstallRoute: typeof OrgSlugAgentsAgentIdInstallRoute
+  OrgSlugAgentsAgentIdLeadsRoute: typeof OrgSlugAgentsAgentIdLeadsRoute
+  OrgSlugAgentsAgentIdPlaygroundRoute: typeof OrgSlugAgentsAgentIdPlaygroundRoute
+  OrgSlugAgentsAgentIdSettingsRoute: typeof OrgSlugAgentsAgentIdSettingsRoute
+  OrgSlugAgentsAgentIdVisitorsRoute: typeof OrgSlugAgentsAgentIdVisitorsRoute
+  OrgSlugAgentsAgentIdIndexRoute: typeof OrgSlugAgentsAgentIdIndexRoute
+  OrgSlugAgentsAgentIdInboxConversationIdRoute: typeof OrgSlugAgentsAgentIdInboxConversationIdRoute
+  OrgSlugAgentsAgentIdKnowledgeArticleIdRoute: typeof OrgSlugAgentsAgentIdKnowledgeArticleIdRoute
+  OrgSlugAgentsAgentIdKnowledgeNewRoute: typeof OrgSlugAgentsAgentIdKnowledgeNewRoute
+  OrgSlugAgentsAgentIdKnowledgeUploadRoute: typeof OrgSlugAgentsAgentIdKnowledgeUploadRoute
+  OrgSlugAgentsAgentIdInboxIndexRoute: typeof OrgSlugAgentsAgentIdInboxIndexRoute
+  OrgSlugAgentsAgentIdKnowledgeIndexRoute: typeof OrgSlugAgentsAgentIdKnowledgeIndexRoute
 }
 
-const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardAnalyticsRoute: DashboardAnalyticsRoute,
-  DashboardLeadsRoute: DashboardLeadsRoute,
-  DashboardVisitorsRoute: DashboardVisitorsRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
-  DashboardInboxConversationIdRoute: DashboardInboxConversationIdRoute,
-  DashboardSettingsProfileRoute: DashboardSettingsProfileRoute,
-  DashboardAgentsIndexRoute: DashboardAgentsIndexRoute,
-  DashboardInboxIndexRoute: DashboardInboxIndexRoute,
-  DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
-  DashboardAgentsAgentIdAnalyticsRoute: DashboardAgentsAgentIdAnalyticsRoute,
-  DashboardAgentsAgentIdInstallRoute: DashboardAgentsAgentIdInstallRoute,
-  DashboardAgentsAgentIdLeadsRoute: DashboardAgentsAgentIdLeadsRoute,
-  DashboardAgentsAgentIdPlaygroundRoute: DashboardAgentsAgentIdPlaygroundRoute,
-  DashboardAgentsAgentIdSettingsRoute: DashboardAgentsAgentIdSettingsRoute,
-  DashboardAgentsAgentIdVisitorsRoute: DashboardAgentsAgentIdVisitorsRoute,
-  DashboardAgentsAgentIdIndexRoute: DashboardAgentsAgentIdIndexRoute,
-  DashboardAgentsAgentIdInboxConversationIdRoute:
-    DashboardAgentsAgentIdInboxConversationIdRoute,
-  DashboardAgentsAgentIdKnowledgeArticleIdRoute:
-    DashboardAgentsAgentIdKnowledgeArticleIdRoute,
-  DashboardAgentsAgentIdKnowledgeNewRoute:
-    DashboardAgentsAgentIdKnowledgeNewRoute,
-  DashboardAgentsAgentIdKnowledgeUploadRoute:
-    DashboardAgentsAgentIdKnowledgeUploadRoute,
-  DashboardAgentsAgentIdInboxIndexRoute: DashboardAgentsAgentIdInboxIndexRoute,
-  DashboardAgentsAgentIdKnowledgeIndexRoute:
-    DashboardAgentsAgentIdKnowledgeIndexRoute,
+const OrgSlugRouteChildren: OrgSlugRouteChildren = {
+  OrgSlugAnalyticsRoute: OrgSlugAnalyticsRoute,
+  OrgSlugLeadsRoute: OrgSlugLeadsRoute,
+  OrgSlugVisitorsRoute: OrgSlugVisitorsRoute,
+  OrgSlugIndexRoute: OrgSlugIndexRoute,
+  OrgSlugInboxConversationIdRoute: OrgSlugInboxConversationIdRoute,
+  OrgSlugSettingsProfileRoute: OrgSlugSettingsProfileRoute,
+  OrgSlugAgentsIndexRoute: OrgSlugAgentsIndexRoute,
+  OrgSlugInboxIndexRoute: OrgSlugInboxIndexRoute,
+  OrgSlugSettingsIndexRoute: OrgSlugSettingsIndexRoute,
+  OrgSlugAgentsAgentIdAnalyticsRoute: OrgSlugAgentsAgentIdAnalyticsRoute,
+  OrgSlugAgentsAgentIdInstallRoute: OrgSlugAgentsAgentIdInstallRoute,
+  OrgSlugAgentsAgentIdLeadsRoute: OrgSlugAgentsAgentIdLeadsRoute,
+  OrgSlugAgentsAgentIdPlaygroundRoute: OrgSlugAgentsAgentIdPlaygroundRoute,
+  OrgSlugAgentsAgentIdSettingsRoute: OrgSlugAgentsAgentIdSettingsRoute,
+  OrgSlugAgentsAgentIdVisitorsRoute: OrgSlugAgentsAgentIdVisitorsRoute,
+  OrgSlugAgentsAgentIdIndexRoute: OrgSlugAgentsAgentIdIndexRoute,
+  OrgSlugAgentsAgentIdInboxConversationIdRoute:
+    OrgSlugAgentsAgentIdInboxConversationIdRoute,
+  OrgSlugAgentsAgentIdKnowledgeArticleIdRoute:
+    OrgSlugAgentsAgentIdKnowledgeArticleIdRoute,
+  OrgSlugAgentsAgentIdKnowledgeNewRoute: OrgSlugAgentsAgentIdKnowledgeNewRoute,
+  OrgSlugAgentsAgentIdKnowledgeUploadRoute:
+    OrgSlugAgentsAgentIdKnowledgeUploadRoute,
+  OrgSlugAgentsAgentIdInboxIndexRoute: OrgSlugAgentsAgentIdInboxIndexRoute,
+  OrgSlugAgentsAgentIdKnowledgeIndexRoute:
+    OrgSlugAgentsAgentIdKnowledgeIndexRoute,
 }
 
-const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
-  DashboardRouteChildren,
-)
+const OrgSlugRouteWithChildren =
+  OrgSlugRoute._addFileChildren(OrgSlugRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OrgSlugRoute: OrgSlugRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   BlogRoute: BlogRoute,
@@ -874,7 +912,6 @@ const rootRouteChildren: RootRouteChildren = {
   ChangelogRoute: ChangelogRoute,
   CommunityRoute: CommunityRoute,
   ContactUsRoute: ContactUsRoute,
-  DashboardRoute: DashboardRouteWithChildren,
   DocsRoute: DocsRoute,
   GuidesRoute: GuidesRoute,
   HelpRoute: HelpRoute,
@@ -883,6 +920,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
+  DashboardSplatRoute: DashboardSplatRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

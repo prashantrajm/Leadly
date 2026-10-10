@@ -2,6 +2,37 @@ import { z } from "@hono/zod-openapi";
 import { Cuid, IsoDate } from "./common.ts";
 import { MembershipRole } from "./enums.ts";
 
+// ---------- Organization slugs ----------
+//
+// The dashboard lives at /<orgSlug>/… on the same domain as the marketing
+// site, and the router resolves static routes before the slug. A slug equal
+// to a top-level page (/pricing, /docs, …) would therefore be unreachable,
+// so these are refused on rename and suffixed on create. Every new
+// top-level web route must be added here — a web test enforces it.
+export const RESERVED_ORG_SLUGS: ReadonlySet<string> = new Set([
+	// current top-level web routes
+	"about", "auth", "blog", "careers", "changelog", "community", "contact-us",
+	"dashboard", "docs", "guides", "help", "integrations", "pricing",
+	"privacy-policy", "refund-policy", "terms-and-conditions",
+	// likely future marketing / legal pages
+	"contact", "customers", "enterprise", "features", "legal", "partners",
+	"press", "privacy", "security", "status", "support", "terms", "jobs",
+	"team", "templates", "use-cases", "compare", "solutions", "demo",
+	// auth & account flows
+	"login", "logout", "signin", "sign-in", "signup", "sign-up", "register",
+	"oauth", "callback", "verify", "invite", "invitations", "onboarding",
+	"account", "billing", "new", "join",
+	// app sections and infrastructure
+	"agents", "analytics", "inbox", "leads", "visitors", "overview", "home",
+	"settings", "profile", "admin", "api", "app", "assets", "cdn", "embed",
+	"static", "public", "widget", "www", "mail", "org", "orgs", "sitemap",
+	"robots",
+]);
+
+export function isReservedOrgSlug(slug: string): boolean {
+	return RESERVED_ORG_SLUGS.has(slug);
+}
+
 // ---------- Organization ----------
 
 export const OrganizationSchema = z
@@ -15,10 +46,22 @@ export const OrganizationSchema = z
 	.openapi("Organization");
 export type Organization = z.infer<typeof OrganizationSchema>;
 
+// The workspace URL segment: /<slug>/inbox. Reserved words would shadow a
+// top-level page, so they're refused here and in the availability check.
+export const OrgSlugSchema = z
+	.string()
+	.min(2, "At least 2 characters")
+	.max(64, "At most 64 characters")
+	.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Lowercase letters, numbers and single dashes")
+	.refine((s) => !isReservedOrgSlug(s), {
+		message: "This URL is reserved. Pick another.",
+	});
+
 export const CreateOrganizationSchema = z
 	.object({
-		name: z.string().min(2).max(100),
-		// slug is derived server-side from name on create; updates can override.
+		name: z.string().trim().min(2).max(100),
+		// Optional: derived from name server-side when omitted.
+		slug: OrgSlugSchema.optional(),
 	})
 	.openapi("CreateOrganization");
 export type CreateOrganization = z.infer<typeof CreateOrganizationSchema>;
@@ -26,10 +69,22 @@ export type CreateOrganization = z.infer<typeof CreateOrganizationSchema>;
 export const UpdateOrganizationSchema = z
 	.object({
 		name: z.string().min(2).max(100).optional(),
-		slug: z.string().min(2).max(64).regex(/^[a-z0-9-]+$/).optional(),
+		slug: OrgSlugSchema.optional(),
 	})
 	.openapi("UpdateOrganization");
 export type UpdateOrganization = z.infer<typeof UpdateOrganizationSchema>;
+
+// Live "is this workspace URL free?" check for the create / rename forms.
+// When unavailable, `suggestion` is a nearby slug that is free.
+export const OrgSlugAvailabilitySchema = z
+	.object({
+		slug: z.string(),
+		available: z.boolean(),
+		reason: z.enum(["invalid", "reserved", "taken"]).nullable(),
+		suggestion: z.string().nullable(),
+	})
+	.openapi("OrgSlugAvailability");
+export type OrgSlugAvailability = z.infer<typeof OrgSlugAvailabilitySchema>;
 
 // ---------- Membership ----------
 

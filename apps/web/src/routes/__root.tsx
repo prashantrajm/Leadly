@@ -14,13 +14,19 @@ interface MyRouterContext {
 	queryClient: QueryClient;
 }
 
-const BARE_ROUTES = ["/auth", "/dashboard"];
+// Routes that render without the marketing header/footer: auth, the legacy
+// /dashboard redirects, and the whole app under /<orgSlug>.
+const BARE_ROUTE_PREFIXES = ["/auth", "/dashboard", "/$orgSlug"];
 
 function RootLayout() {
-	const pathname = useRouterState({ select: (s) => s.location.pathname });
-	const bare = BARE_ROUTES.some(
-		(p) => pathname === p || pathname.startsWith(`${p}/`),
-	);
+	const bare = useRouterState({
+		select: (s) =>
+			s.matches.some((m) =>
+				BARE_ROUTE_PREFIXES.some(
+					(p) => m.routeId === p || m.routeId.startsWith(`${p}/`),
+				),
+			),
+	});
 
 	return (
 		<>

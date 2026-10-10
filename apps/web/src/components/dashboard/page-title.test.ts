@@ -6,24 +6,24 @@ const agentName = (id: string) => names[id];
 
 describe("titleFor", () => {
 	it.each([
-		["/dashboard", ["Overview"]],
-		["/dashboard/", ["Overview"]],
-		["/dashboard/inbox", ["Inbox"]],
-		["/dashboard/inbox/c1", ["Inbox", "Conversation"]],
-		["/dashboard/leads", ["Leads"]],
-		["/dashboard/visitors", ["Visitors"]],
-		["/dashboard/analytics", ["Analytics"]],
-		["/dashboard/agents", ["Agents"]],
-		["/dashboard/settings", ["Settings"]],
-		["/dashboard/settings/profile", ["Settings", "Profile"]],
-		["/dashboard/agents/a1", ["Suri"]],
-		["/dashboard/agents/a1/install", ["Suri", "Install"]],
+		["/acme", ["Overview"]],
+		["/acme/", ["Overview"]],
+		["/acme/inbox", ["Inbox"]],
+		["/acme/inbox/c1", ["Inbox", "Conversation"]],
+		["/acme/leads", ["Leads"]],
+		["/acme/visitors", ["Visitors"]],
+		["/acme/analytics", ["Analytics"]],
+		["/acme/agents", ["Agents"]],
+		["/acme/settings", ["Settings"]],
+		["/acme/settings/profile", ["Settings", "Profile"]],
+		["/acme/agents/a1", ["Suri"]],
+		["/acme/agents/a1/install", ["Suri", "Install"]],
 		[
-			"/dashboard/agents/a1/knowledge/new",
+			"/acme/agents/a1/knowledge/new",
 			["Suri", "Knowledge", "New article"],
 		],
-		["/dashboard/agents/a1/knowledge/art1", ["Suri", "Knowledge", "Article"]],
-		["/dashboard/agents/unknown/playground", ["Agent", "Playground"]],
+		["/acme/agents/a1/knowledge/art1", ["Suri", "Knowledge", "Article"]],
+		["/acme/agents/unknown/playground", ["Agent", "Playground"]],
 	])("%s → %j", (pathname, expected) => {
 		expect(titleFor(pathname, agentName)).toEqual(expected);
 	});

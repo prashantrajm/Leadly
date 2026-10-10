@@ -2,7 +2,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { useOrgAgents } from "@/hooks/use-org-agents";
 
-// Top-level dashboard pages, keyed by the first segment after /dashboard.
+// Top-level app pages, keyed by the first segment after /<orgSlug>.
 const SECTION_TITLES: Record<string, string> = {
 	"": "Overview",
 	inbox: "Inbox",
@@ -57,7 +57,7 @@ export function titleFor(
 	pathname: string,
 	agentName: (agentId: string) => string | undefined,
 ): string[] {
-	// "/dashboard/agents/abc/knowledge/new" → section, id, page, sub
+	// "/<orgSlug>/agents/abc/knowledge/new" → section, id, page, sub
 	const [, section = "", id, page, sub] = pathname.split("/").filter(Boolean);
 
 	if (section === "inbox" && id) return ["Inbox", "Conversation"];

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -15,11 +15,36 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { authClient } from "@/lib/auth-client";
+import { authClient, getCachedSession } from "@/lib/auth-client";
+import { postAuthPath } from "@/lib/dashboard-entry";
 
 export const Route = createFileRoute("/auth")({
+	validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
+		typeof search.redirect === "string" ? { redirect: search.redirect } : {},
+	// Already signed in → skip the form.
+	beforeLoad: async ({ search }) => {
+		const session = await getCachedSession();
+		if (session.data?.user) {
+			throw redirect({ href: postAuthPath(search.redirect), replace: true });
+		}
+	},
 	component: AuthPage,
 });
+
+// Better Auth navigates to callbackURL itself when its response says
+// `redirect: true` (email sign-in); sign-up doesn't, so go there ourselves.
+// A full page load, not router navigation: getCachedSession may still hold
+// the signed-out session from before the form was submitted.
+function goAfterAuth(data: unknown, callbackURL: string) {
+	if ((data as { redirect?: boolean } | null)?.redirect) return;
+	window.location.assign(callbackURL);
+}
+
+// Absolute URL Better Auth sends the browser to once sign-in succeeds.
+function useCallbackURL() {
+	const { redirect: redirectTo } = Route.useSearch();
+	return `${window.location.origin}${postAuthPath(redirectTo)}`;
+}
 
 const signInSchema = z.object({
 	email: z.string().email("Enter a valid email"),
@@ -204,6 +229,7 @@ function FormPane() {
 }
 
 function GoogleButton() {
+	const callbackURL = useCallbackURL();
 	const [loading, setLoading] = useState(false);
 	return (
 		<Button
@@ -215,7 +241,7 @@ function GoogleButton() {
 				try {
 					await authClient.signIn.social({
 						provider: "google",
-						callbackURL: window.location.origin,
+						callbackURL,
 					});
 				} finally {
 					setLoading(false);
@@ -257,6 +283,7 @@ function GoogleGlyph() {
 }
 
 function SignInForm() {
+	const callbackURL = useCallbackURL();
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const form = useForm<z.infer<typeof signInSchema>>({
@@ -271,10 +298,12 @@ function SignInForm() {
 			const res = await authClient.signIn.email({
 				email: values.email,
 				password: values.password,
-				callbackURL: window.location.origin,
+				callbackURL,
 			});
 			if (res?.error) {
 				setError(res.error.message ?? "Could not sign in.");
+			} else {
+				goAfterAuth(res?.data, callbackURL);
 			}
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Could not sign in.");
@@ -349,6 +378,7 @@ function SignInForm() {
 }
 
 function SignUpForm() {
+	const callbackURL = useCallbackURL();
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const form = useForm<z.infer<typeof signUpSchema>>({
@@ -364,10 +394,12 @@ function SignUpForm() {
 				name: values.name,
 				email: values.email,
 				password: values.password,
-				callbackURL: window.location.origin,
+				callbackURL,
 			});
 			if (res?.error) {
 				setError(res.error.message ?? "Could not create account.");
+			} else {
+				goAfterAuth(res?.data, callbackURL);
 			}
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Could not create account.");

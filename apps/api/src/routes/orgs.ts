@@ -12,6 +12,7 @@ import {
 import { slugify } from "@leadly/utils";
 import { requireOrgAdmin, requireOrgMember } from "../middleware/org";
 import { getPrisma } from "../lib/prisma";
+import { pickAvailableSlug } from "../lib/org-slug";
 import type { AppEnv, MembershipWithUser } from "../types";
 
 // authMiddleware is applied at the parent mount in routes/index.ts so tests
@@ -70,15 +71,31 @@ const createOrgRoute = createRoute({
 			content: { "application/json": { schema: ErrorSchema } },
 			description: "Unauthorized",
 		},
+		409: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Requested slug already taken",
+		},
 	},
 });
 
 orgsApp.openapi(createOrgRoute, async (c) => {
 	const user = c.get("user");
-	const { name } = c.req.valid("json");
+	const { name, slug: requestedSlug } = c.req.valid("json");
 	const prisma = getPrisma(c.env.DATABASE_URL);
 
-	const slug = await pickAvailableSlug(prisma, slugify(name) || "org");
+	// A chosen slug is what the user saw as "available" — if someone grabbed
+	// it since, say so rather than silently suffixing it.
+	let slug: string;
+	if (requestedSlug) {
+		const taken = await prisma.organization.findUnique({
+			where: { slug: requestedSlug },
+			select: { id: true },
+		});
+		if (taken) return c.json({ error: "That URL is already taken." }, 409);
+		slug = requestedSlug;
+	} else {
+		slug = await pickAvailableSlug(prisma, slugify(name) || "org");
+	}
 	const org = await prisma.organization.create({
 		data: {
 			name,
@@ -188,6 +205,10 @@ const patchOrgRoute = createRoute({
 			content: { "application/json": { schema: ErrorSchema } },
 			description: "Forbidden",
 		},
+		409: {
+			content: { "application/json": { schema: ErrorSchema } },
+			description: "Slug already taken",
+		},
 	},
 });
 
@@ -195,6 +216,17 @@ orgsApp.openapi(patchOrgRoute, async (c) => {
 	const { orgId } = c.req.valid("param");
 	const patch = c.req.valid("json");
 	const prisma = getPrisma(c.env.DATABASE_URL);
+	// The slug is the dashboard URL, so a clash must be a clear 409 rather
+	// than a unique-index 500.
+	if (patch.slug) {
+		const owner = await prisma.organization.findUnique({
+			where: { slug: patch.slug },
+			select: { id: true },
+		});
+		if (owner && owner.id !== orgId) {
+			return c.json({ error: "That URL is already taken." }, 409);
+		}
+	}
 	const updated = await prisma.organization.update({
 		where: { id: orgId },
 		data: patch,
@@ -369,15 +401,3 @@ function toWire(org: {
 	};
 }
 
-async function pickAvailableSlug(
-	prisma: ReturnType<typeof getPrisma>,
-	base: string,
-) {
-	const existing = await prisma.organization.findUnique({
-		where: { slug: base },
-		select: { id: true },
-	});
-	if (!existing) return base;
-	const suffix = Math.random().toString(36).slice(2, 8);
-	return `${base}-${suffix}`;
-}
