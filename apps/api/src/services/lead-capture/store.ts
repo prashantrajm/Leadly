@@ -6,34 +6,26 @@
 //   fill      — existing values win (post-chat extraction fills gaps only,
 //               never overriding a live capture or a teammate's edit)
 
-import { Prisma } from "../../generated/client/client";
 import type { ExtendedPrismaClient } from "../../lib/prisma";
 
 export type MergeMode = "overwrite" | "fill";
 
-function mergeExpr(
-	column: Prisma.Sql,
-	values: Record<string, string>,
-	mode: MergeMode,
-) {
-	const incoming = Prisma.sql`${JSON.stringify(values)}::jsonb`;
-	const current = Prisma.sql`COALESCE(${column}, '{}'::jsonb)`;
-	return mode === "overwrite"
-		? Prisma.sql`${current} || ${incoming}`
-		: Prisma.sql`${incoming} || ${current}`;
-}
-
-// Returns the conversation's leadId so callers can keep the lead in sync.
+// Plain parameters only: nested Prisma.sql fragments aren't expanded through
+// the Accelerate client and would be bound as JSON values instead.
 export async function mergeConversationDetails(
 	prisma: ExtendedPrismaClient,
 	conversationId: string,
 	values: Record<string, string>,
 	mode: MergeMode,
 ): Promise<{ leadId: string | null }> {
-	const column = Prisma.raw(`"leadDetails"`);
+	const incoming = JSON.stringify(values);
+	const fill = mode === "fill";
 	const rows = await prisma.$queryRaw<Array<{ leadId: string | null }>>`
 		UPDATE "conversation"
-		SET "leadDetails" = ${mergeExpr(column, values, mode)}
+		SET "leadDetails" = CASE WHEN ${fill}::boolean
+			THEN ${incoming}::jsonb || COALESCE("leadDetails", '{}'::jsonb)
+			ELSE COALESCE("leadDetails", '{}'::jsonb) || ${incoming}::jsonb
+		END
 		WHERE "id" = ${conversationId}
 		RETURNING "leadId"
 	`;
@@ -47,11 +39,15 @@ export async function mergeLeadFields(
 	mode: MergeMode,
 ): Promise<void> {
 	if (Object.keys(values).length === 0) return;
-	const column = Prisma.raw(`"customFields"`);
+	const incoming = JSON.stringify(values);
+	const fill = mode === "fill";
 	await prisma.$executeRaw`
 		UPDATE "lead"
-		SET "customFields" = ${mergeExpr(column, values, mode)},
-		    "updatedAt" = now()
+		SET "customFields" = CASE WHEN ${fill}::boolean
+			THEN ${incoming}::jsonb || "customFields"
+			ELSE "customFields" || ${incoming}::jsonb
+		END,
+		"updatedAt" = now()
 		WHERE "id" = ${leadId}
 	`;
 }
