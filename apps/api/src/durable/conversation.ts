@@ -20,18 +20,20 @@ import {
 	type ServerFrame,
 	parseInbound,
 } from "@leadly/wire";
-import type { ToolSet } from "ai";
 import {
 	assembleSystemPrompt,
-	type ConversationMessage,
+	buildHistory,
 	makeOpenRouterModel,
 	runTurn,
 } from "../services/agent-loop";
+import { ReplyStream } from "../services/natural-messaging";
 import { retrieveForQuery } from "../lib/retrieval";
 import { getPrisma } from "../lib/prisma";
 import { configureLangSmith } from "../lib/langsmith";
 import { resolveCredentialForAgent } from "../services/credential-resolver";
-import { SYSTEM_TOOLS } from "../services/system-tools";
+import { asStringRecord } from "../lib/json";
+import { parseLeadFields } from "../services/lead-capture";
+import { buildLiveTools } from "./conversation-tools";
 import type { Bindings } from "../types";
 
 type WsRole = "visitor" | "observer";
@@ -257,12 +259,16 @@ export class ConversationDO extends DurableObject<Bindings> {
 			await this.bumpIdleAlarm();
 			return;
 		}
-		await prisma.conversation
+		const abandoned = await prisma.conversation
 			.update({
 				where: { id: conversationId },
 				data: { status: "abandoned", endedAt: new Date() },
 			})
-			.catch(() => {});
+			.then(() => true)
+			.catch(() => false);
+		// Visitors usually just leave; analyze those chats too. The workflow
+		// skips conversations with no turns.
+		if (abandoned) await this.scheduleSummary(conversationId);
 	}
 
 	// ---------- visitor frame dispatch ----------
@@ -369,6 +375,7 @@ export class ConversationDO extends DurableObject<Bindings> {
 			organizationId: string;
 			visitorId: string;
 			leadId: string | null;
+			leadDetails: unknown;
 			agent: {
 				id: string;
 				name: string;
@@ -380,8 +387,17 @@ export class ConversationDO extends DurableObject<Bindings> {
 					| "optional"
 					| "required_before_chat"
 					| "identified_only";
+				naturalMessaging: boolean;
+				leadCaptureEnabled: boolean;
+				contactFields: Array<"name" | "email" | "phone">;
+				leadFields: unknown;
 			};
-			lead: { email: string | null; phone: string | null; name: string | null } | null;
+			lead: {
+				email: string | null;
+				phone: string | null;
+				name: string | null;
+				customFields: unknown;
+			} | null;
 			turns: Array<{ role: string; text: string }>;
 		};
 		const loaded = (await prisma.conversation.findUnique({
@@ -396,9 +412,15 @@ export class ConversationDO extends DurableObject<Bindings> {
 						fallbackMessage: true,
 						defaultModel: true,
 						identityPolicy: true,
+						naturalMessaging: true,
+						leadCaptureEnabled: true,
+						contactFields: true,
+						leadFields: true,
 					},
 				},
-				lead: { select: { email: true, phone: true, name: true } },
+				lead: {
+					select: { email: true, phone: true, name: true, customFields: true },
+				},
 				turns: {
 					orderBy: { createdAt: "asc" },
 					select: { role: true, text: true },
@@ -454,104 +476,45 @@ export class ConversationDO extends DurableObject<Bindings> {
 
 		// 3. Assemble system prompt from the agent's settings + retrieved
 		//    context + identity state.
+		const leadFields = parseLeadFields(loaded.agent.leadFields);
 		const system = assembleSystemPrompt({
-			agent: loaded.agent,
+			agent: { ...loaded.agent, leadFields },
 			retrievedChunks,
 			identity: {
 				hasEmail: Boolean(loaded.lead?.email),
 				hasPhone: Boolean(loaded.lead?.phone),
 				hasName: Boolean(loaded.lead?.name),
+				// A returning lead isn't asked again for what's already on file.
+				capturedFields: [
+					...Object.keys(asStringRecord(loaded.leadDetails)),
+					...Object.keys(asStringRecord(loaded.lead?.customFields)),
+				],
 			},
 		});
 
-		// 4. Build the AI SDK ToolSet wired with execute() callbacks that
-		//    do double duty: run the executor, broadcast tool_call /
-		//    tool_result frames, and remember the result for AI SDK's
-		//    multi-step tool flow.
-		const ctx = {
-			conversationId,
-			agentId: loaded.agentId,
-			organizationId: loaded.organizationId,
-			visitorId: loaded.visitorId,
-			prisma,
-		};
-
-		// Pre-allocate the agent turn id so we can stream tokens with a
-		// stable identifier and reuse it on agent_turn_end.
-		const turnId = newCuid();
-
-		const tools: ToolSet = {
-			capture_contact: {
-				...SYSTEM_TOOLS.capture_contact.spec,
-				execute: async (args, opts) => {
-					this.broadcast({
-						type: "tool_call",
-						turnId,
-						toolCallId: opts.toolCallId,
-						name: "capture_contact",
-						args,
-					});
-					const result = await SYSTEM_TOOLS.capture_contact.execute(
-						ctx,
-						args,
-					);
-					this.broadcast({
-						type: "tool_result",
-						turnId,
-						toolCallId: opts.toolCallId,
-						name: "capture_contact",
-						result,
-					});
-					return result;
-				},
+		// 4. Stream the reply through ReplyStream (one bubble, or several with
+		//    natural messaging) and expose the live tools.
+		const reply = new ReplyStream({
+			natural: loaded.agent.naturalMessaging,
+			newId: newCuid,
+			emit: (frame) => this.broadcast(frame),
+		});
+		const tools = buildLiveTools({
+			ctx: {
+				conversationId,
+				agentId: loaded.agentId,
+				organizationId: loaded.organizationId,
+				visitorId: loaded.visitorId,
+				leadFields,
+				prisma,
 			},
-			request_handoff: {
-				...SYSTEM_TOOLS.request_handoff.spec,
-				execute: async (args, opts) => {
-					this.broadcast({
-						type: "tool_call",
-						turnId,
-						toolCallId: opts.toolCallId,
-						name: "request_handoff",
-						args,
-					});
-					const result = await SYSTEM_TOOLS.request_handoff.execute(
-						ctx,
-						args,
-					);
-					this.broadcast({
-						type: "tool_result",
-						turnId,
-						toolCallId: opts.toolCallId,
-						name: "request_handoff",
-						result,
-					});
+			broadcast: (frame) => this.broadcast(frame),
+			turnId: () => reply.turnId,
+			after: {
+				request_handoff: () => {
 					this.broadcast({ type: "mode_change", mode: "paused" });
-					return result;
 				},
-			},
-			end_conversation: {
-				...SYSTEM_TOOLS.end_conversation.spec,
-				execute: async (args, opts) => {
-					this.broadcast({
-						type: "tool_call",
-						turnId,
-						toolCallId: opts.toolCallId,
-						name: "end_conversation",
-						args,
-					});
-					const result = await SYSTEM_TOOLS.end_conversation.execute(
-						ctx,
-						args,
-					);
-					this.broadcast({
-						type: "tool_result",
-						turnId,
-						toolCallId: opts.toolCallId,
-						name: "end_conversation",
-						result,
-					});
-
+				end_conversation: async (args) => {
 					this.broadcast({
 						type: "conversation_ended",
 						resolution: args.resolution,
@@ -559,24 +522,15 @@ export class ConversationDO extends DurableObject<Bindings> {
 						note: args.note ?? null,
 					});
 					await this.scheduleSummary(conversationId);
-					return result;
 				},
 			},
-			// set_conversation_summary is deliberately NOT exposed to the
-			// LLM — design §4.3 says we call it deterministically after
-			// end_conversation, not via the model.
-		};
+		});
 
 		// 5. Run the turn. Stream tokens to all attached WS as agent_token
 		//    frames; on completion, persist the agent Turn row and emit
 		//    agent_turn_end.
 		this.broadcast({ type: "typing", on: true });
-		const history: ConversationMessage[] = loaded.turns
-			.filter((t) => t.role === "user" || t.role === "agent")
-			.map((t) => ({
-				role: t.role === "user" ? "user" : "assistant",
-				content: t.text,
-			}));
+		const history = buildHistory(loaded.turns);
 
 		const startedAt = Date.now();
 		try {
@@ -596,30 +550,30 @@ export class ConversationDO extends DurableObject<Bindings> {
 				history,
 				userMessage: userText,
 				tools,
-				onToken: (delta) =>
-					this.broadcast({ type: "agent_token", turnId, delta }),
+				onToken: (delta) => reply.push(delta),
 			});
 			this.broadcast({ type: "typing", on: false });
-			this.broadcast({
-				type: "agent_turn_end",
-				turnId,
-				text: result.text,
-				finishReason: result.finishReason,
-			});
+			const bubbles = reply.finish(result.finishReason);
 
-			// Persist the finalized agent turn.
-			await prisma.turn.create({
-				data: {
-					id: turnId,
+			// One row per bubble. Telemetry sits on the first row so per-turn
+			// sums don't double count; explicit createdAt keeps the order.
+			const latencyMs = Date.now() - startedAt;
+			const persistedAt = Date.now();
+			await prisma.turn.createMany({
+				data: bubbles.map((bubble, i) => ({
+					id: bubble.turnId,
 					conversationId,
-					role: "agent",
-					text: result.text,
+					role: "agent" as const,
+					text: bubble.text,
 					llmProvider: "openrouter",
 					model: loaded.agent.defaultModel,
-					latencyMs: Date.now() - startedAt,
-					tokensIn: result.tokensIn ?? null,
-					tokensOut: result.tokensOut ?? null,
-				},
+					createdAt: new Date(persistedAt + i),
+					...(i === 0 && {
+						latencyMs,
+						tokensIn: result.tokensIn ?? null,
+						tokensOut: result.tokensOut ?? null,
+					}),
+				})),
 			});
 
 			// Bump the conversation's last-activity timestamp for inbox sort.

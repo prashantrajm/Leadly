@@ -4,12 +4,14 @@
 // belong to the executor.
 
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import type { LeadField } from "@leadly/schemas";
 import { getPrisma } from "../lib/prisma";
 import {
 	CaptureContactInput,
 	executeCaptureContact,
 	executeEndConversation,
 	executeRequestHandoff,
+	executeSaveLeadDetails,
 	executeSetConversationSummary,
 } from "./system-tools";
 
@@ -43,7 +45,12 @@ beforeAll(async () => {
 	});
 	orgId = org.id;
 	const agent = await prisma.agent.create({
-		data: { organizationId: orgId, name: `Agent ${tag}`, slug: `a-${tag}` },
+		data: {
+			organizationId: orgId,
+			name: `Agent ${tag}`,
+			slug: `a-${tag}`,
+			leadFields,
+		},
 	});
 	agentId = agent.id;
 
@@ -75,7 +82,20 @@ afterAll(async () => {
 		.catch(() => {});
 });
 
+const leadFields: LeadField[] = [
+	{ key: "project", label: "Project", type: "text", mode: "ask" },
+	{ key: "budget", label: "Budget", type: "text", mode: "listen" },
+	{
+		key: "timeline",
+		label: "Timeline",
+		type: "choice",
+		options: ["This month", "Next month", "Later"],
+		mode: "listen",
+	},
+];
+
 const ctx = () => ({
+	leadFields,
 	conversationId,
 	agentId,
 	organizationId: orgId,
@@ -140,6 +160,74 @@ describe("executeCaptureContact", () => {
 	});
 });
 
+// ---------- save_lead_details ----------
+
+describe("executeSaveLeadDetails", () => {
+	// Own visitor + conversation so the lead linking above doesn't leak in.
+	const fresh = async () => {
+		const visitor = await prisma.visitor.create({
+			data: {
+				organizationId: orgId,
+				agentId,
+				externalId: `ext-${tag}-${Math.random().toString(36).slice(2, 8)}`,
+			},
+		});
+		const conv = await prisma.conversation.create({
+			data: { organizationId: orgId, agentId, visitorId: visitor.id },
+		});
+		return { ...ctx(), visitorId: visitor.id, conversationId: conv.id };
+	};
+
+	it("keeps answers on the conversation, then carries them onto the lead", async () => {
+		const c = await fresh();
+		await executeSaveLeadDetails(c, {
+			details: { project: "A booking app for salons" },
+		});
+		// Labels work as keys too.
+		await executeSaveLeadDetails(c, { details: { Budget: "$500/mo" } });
+
+		const conv = await prisma.conversation.findUnique({
+			where: { id: c.conversationId },
+		});
+		expect(conv?.leadDetails).toEqual({
+			project: "A booking app for salons",
+			budget: "$500/mo",
+		});
+
+		const captured = await executeCaptureContact(c, {
+			phone: `+1555${Date.now().toString().slice(-7)}`,
+		});
+		const lead = await prisma.lead.findUnique({
+			where: { id: captured.leadId as string },
+		});
+		expect(lead?.customFields).toEqual({
+			project: "A booking app for salons",
+			budget: "$500/mo",
+		});
+	});
+
+	it("rejects keys that match no field", async () => {
+		const c = await fresh();
+		const result = await executeSaveLeadDetails(c, {
+			details: { favourite_colour: "blue" },
+		});
+		expect(result.ok).toBe(false);
+		expect(result.ignored).toEqual(["favourite_colour"]);
+	});
+
+	it("updates an identified lead directly", async () => {
+		const c = await fresh();
+		const captured = await executeCaptureContact(c, {
+			email: `${tag}-details@test.local`,
+		});
+		await executeSaveLeadDetails(c, { details: { timeline: "next month" } });
+		const lead = await prisma.lead.findUnique({
+			where: { id: captured.leadId as string },
+		});
+		expect(lead?.customFields).toEqual({ timeline: "Next month" });
+	});
+});
+
 // ---------- request_handoff ----------
 
 describe("executeRequestHandoff", () => {
@@ -174,11 +262,85 @@ describe("executeSetConversationSummary", () => {
 		expect(c?.tags).toEqual(["pricing", "self-served"]);
 	});
 
+	it("stores the analysis and copies intent, score and need onto the lead", async () => {
+		await executeSetConversationSummary(ctx(), {
+			summary: "Visitor wants a quote for a salon booking app.",
+			intent: "buying",
+			leadScore: 85,
+			qualityScore: 4,
+			resolved: true,
+			need: "Booking app for salons",
+			unansweredQuestions: ["Do you support SMS reminders?"],
+		});
+		const c = await prisma.conversation.findUnique({
+			where: { id: conversationId },
+		});
+		expect(c?.intent).toBe("buying");
+		expect(c?.leadScore).toBe(85);
+		expect(c?.qualityScore).toBe(4);
+		expect(c?.resolved).toBe(true);
+		expect(c?.insights).toEqual({
+			need: "Booking app for salons",
+			unansweredQuestions: ["Do you support SMS reminders?"],
+			objections: [],
+			nextStep: null,
+			keyFacts: [],
+		});
+		expect(c?.leadId).not.toBeNull();
+		const lead = await prisma.lead.findUnique({ where: { id: c?.leadId as string } });
+		expect(lead?.intent).toBe("buying");
+		expect(lead?.score).toBe(85);
+		expect(lead?.need).toBe("Booking app for salons");
+	});
+
+	it("fills missing lead fields and records key facts without overwriting", async () => {
+		const c = await prisma.conversation.findUnique({
+			where: { id: conversationId },
+			select: { leadId: true },
+		});
+		await prisma.lead.update({
+			where: { id: c?.leadId as string },
+			data: { customFields: { budget: "Edited by a teammate" } },
+		});
+		await executeSetConversationSummary(ctx(), {
+			summary: "Salon owner, launching soon.",
+			fields: [
+				{ key: "budget", value: "$300" },
+				{ key: "timeline", value: "this month" },
+				{ key: "unknown", value: "dropped" },
+			],
+			keyFacts: [{ label: "Language", value: "Needs Hindi support" }],
+		});
+		const conv = await prisma.conversation.findUnique({
+			where: { id: conversationId },
+		});
+		expect(conv?.leadDetails).toEqual({ budget: "$300", timeline: "This month" });
+		expect((conv?.insights as { keyFacts: unknown }).keyFacts).toEqual([
+			{ label: "Language", value: "Needs Hindi support" },
+		]);
+		const lead = await prisma.lead.findUnique({ where: { id: c?.leadId as string } });
+		expect(lead?.customFields).toEqual({
+			budget: "Edited by a teammate",
+			timeline: "This month",
+		});
+		expect(lead?.keyFacts).toEqual([
+			{ label: "Language", value: "Needs Hindi support" },
+		]);
+	});
+
 	it("accepts a summary without sentiment or tags", async () => {
 		const result = await executeSetConversationSummary(ctx(), {
 			summary: "Brief exchange.",
 		});
 		expect(result.ok).toBe(true);
+		// A thinner summary doesn't wipe the lead's earlier analysis.
+		const c = await prisma.conversation.findUnique({
+			where: { id: conversationId },
+			include: { lead: true },
+		});
+		expect((c as unknown as { lead: { intent: string | null } }).lead.intent).toBe(
+			"buying",
+		);
 	});
 });
 
