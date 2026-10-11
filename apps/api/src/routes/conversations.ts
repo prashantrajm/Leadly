@@ -15,6 +15,7 @@
 
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import {
+	ConversationInsightsSchema,
 	ConversationListItemSchema,
 	ConversationStatus,
 	ConversationMode,
@@ -23,11 +24,13 @@ import {
 	ErrorSchema,
 	HumanMessageSchema,
 	InboxCountsSchema,
+	LeadIntent,
 	SuccessSchema,
 	TakeOverResponseSchema,
 } from "@leadly/schemas";
 import { decodeCursor, encodeCursor } from "../lib/cursor";
 import { getPrisma } from "../lib/prisma";
+import { asStringRecord } from "../lib/json";
 import { verifyWidgetToken } from "../lib/widget-token";
 import { requireAgentAccess, requireOrgMember } from "../middleware/org";
 import type { AppEnv } from "../types";
@@ -506,6 +509,12 @@ async function listConversations(
 		sentiment: string | null;
 		tags: unknown;
 		lastActivityAt: Date;
+		leadDetails: unknown;
+		intent: string | null;
+		leadScore: number | null;
+		qualityScore: number | null;
+		resolved: boolean | null;
+		insights: unknown;
 		visitor: { id: string; externalId: string };
 		lead: { id: string; email: string | null; name: string | null } | null;
 		_count: { turns: number };
@@ -539,6 +548,7 @@ async function listConversations(
 				summary: r.summary,
 				sentiment: r.sentiment,
 				tags: (r.tags as string[] | null) ?? null,
+				...analysisToWire(r),
 				lastActivityAt: r.lastActivityAt.toISOString(),
 				visitor: r.visitor,
 				lead: r.lead,
@@ -599,6 +609,12 @@ conversationsInboxApp.openapi(getConversationRoute, async (c) => {
 		sentiment: string | null;
 		tags: unknown;
 		lastActivityAt: Date;
+		leadDetails: unknown;
+		intent: string | null;
+		leadScore: number | null;
+		qualityScore: number | null;
+		resolved: boolean | null;
+		insights: unknown;
 		turns: Array<{
 			id: string;
 			conversationId: string;
@@ -641,6 +657,7 @@ conversationsInboxApp.openapi(getConversationRoute, async (c) => {
 			summary: conv.summary,
 			sentiment: conv.sentiment,
 			tags: (conv.tags as string[] | null) ?? null,
+			...analysisToWire(conv),
 			lastActivityAt: conv.lastActivityAt.toISOString(),
 			turns: conv.turns.map((t) => ({
 				id: t.id,
@@ -664,3 +681,27 @@ conversationsInboxApp.openapi(getConversationRoute, async (c) => {
 		200,
 	);
 });
+
+// Lead details + post-chat analysis columns, shared by list and detail.
+// Json columns are re-validated so a malformed row reads as null instead
+// of failing the response schema.
+function analysisToWire(r: {
+	leadDetails: unknown;
+	intent: string | null;
+	leadScore: number | null;
+	qualityScore: number | null;
+	resolved: boolean | null;
+	insights: unknown;
+}) {
+	const details = asStringRecord(r.leadDetails);
+	const intent = LeadIntent.safeParse(r.intent);
+	const insights = ConversationInsightsSchema.safeParse(r.insights);
+	return {
+		leadDetails: Object.keys(details).length > 0 ? details : null,
+		intent: intent.success ? intent.data : null,
+		leadScore: r.leadScore,
+		qualityScore: r.qualityScore,
+		resolved: r.resolved,
+		insights: insights.success ? insights.data : null,
+	};
+}

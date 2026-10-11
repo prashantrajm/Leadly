@@ -3,12 +3,14 @@ import {
 	AgentSchema,
 	CreateAgentSchema,
 	ErrorSchema,
+	ContactField,
 	SuccessSchema,
 	UpdateAgentSchema,
 } from "@leadly/schemas";
 import { slugify } from "@leadly/utils";
 import { requireAgentAccess, requireOrgMember } from "../middleware/org";
 import { getPrisma } from "../lib/prisma";
+import { parseLeadFields } from "../services/lead-capture";
 import { invalidateWidgetConfigCache } from "./widget";
 import type { AppEnv } from "../types";
 
@@ -117,6 +119,19 @@ orgAgentsApp.openapi(createAgentRoute, async (c) => {
 				fallbackMessage: input.fallbackMessage,
 			}),
 			...(input.maxTurns !== undefined && { maxTurns: input.maxTurns }),
+			...(input.naturalMessaging !== undefined && {
+				naturalMessaging: input.naturalMessaging,
+			}),
+			...(input.leadCaptureEnabled !== undefined && {
+				leadCaptureEnabled: input.leadCaptureEnabled,
+			}),
+			...(input.contactFields !== undefined && {
+				contactFields: input.contactFields,
+			}),
+			...(input.leadFields !== undefined && { leadFields: input.leadFields }),
+			...(input.captureNotableDetails !== undefined && {
+				captureNotableDetails: input.captureNotableDetails,
+			}),
 		},
 	});
 
@@ -273,6 +288,11 @@ function toWire(a: {
 	systemPromptOverlay: string | null;
 	fallbackMessage: string;
 	maxTurns: number;
+	naturalMessaging: boolean;
+	leadCaptureEnabled: boolean;
+	contactFields: string[];
+	leadFields: unknown;
+	captureNotableDetails: boolean;
 	createdAt: Date;
 	updatedAt: Date;
 }) {
@@ -289,9 +309,18 @@ function toWire(a: {
 		systemPromptOverlay: a.systemPromptOverlay,
 		fallbackMessage: a.fallbackMessage,
 		maxTurns: a.maxTurns,
+		naturalMessaging: a.naturalMessaging,
+		leadCaptureEnabled: a.leadCaptureEnabled,
+		contactFields: a.contactFields.filter(isContactField),
+		leadFields: parseLeadFields(a.leadFields),
+		captureNotableDetails: a.captureNotableDetails,
 		createdAt: a.createdAt.toISOString(),
 		updatedAt: a.updatedAt.toISOString(),
 	};
+}
+
+function isContactField(f: string): f is ContactField {
+	return ContactField.safeParse(f).success;
 }
 
 async function pickAvailableAgentSlug(
