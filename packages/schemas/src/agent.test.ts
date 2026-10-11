@@ -18,6 +18,13 @@ const validAgent = {
 	systemPromptOverlay: null,
 	fallbackMessage: "I don't have that info yet.",
 	maxTurns: 50,
+	naturalMessaging: false,
+	leadCaptureEnabled: false,
+	contactFields: ["name", "email", "phone"] as Array<"name" | "email" | "phone">,
+	leadFields: [
+		{ key: "budget", label: "Budget", type: "text" as const, mode: "ask" as const },
+	],
+	captureNotableDetails: true,
 	createdAt: "2026-05-04T15:00:00.000Z",
 	updatedAt: "2026-05-04T15:00:00.000Z",
 };
@@ -66,6 +73,51 @@ describe("CreateAgentSchema", () => {
 	it("rejects maxTurns above limit", () => {
 		expect(() =>
 			CreateAgentSchema.parse({ name: "ok", maxTurns: 1000 }),
+		).toThrow();
+	});
+});
+
+describe("lead fields", () => {
+	const budget = { key: "budget", label: "Budget", type: "text", mode: "ask" };
+
+	it("accepts a field list", () => {
+		const result = CreateAgentSchema.parse({
+			name: "ok",
+			leadFields: [
+				budget,
+				{
+					key: "plan",
+					label: "Plan",
+					type: "choice",
+					options: ["Starter", "Pro"],
+					mode: "listen",
+				},
+			],
+		});
+		expect(result.leadFields).toHaveLength(2);
+	});
+
+	it("rejects duplicate keys", () => {
+		expect(() =>
+			CreateAgentSchema.parse({ name: "ok", leadFields: [budget, budget] }),
+		).toThrow();
+	});
+
+	it("rejects a key that isn't snake_case", () => {
+		expect(() =>
+			CreateAgentSchema.parse({
+				name: "ok",
+				leadFields: [{ ...budget, key: "Budget USD" }],
+			}),
+		).toThrow();
+	});
+
+	it("requires options on a choice field", () => {
+		expect(() =>
+			CreateAgentSchema.parse({
+				name: "ok",
+				leadFields: [{ ...budget, type: "choice", options: ["Only one"] }],
+			}),
 		).toThrow();
 	});
 });

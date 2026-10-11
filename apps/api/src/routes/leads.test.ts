@@ -159,6 +159,19 @@ describe("PATCH /leads/:leadId", () => {
 		expect(body.customFields.tier).toBe("gold");
 	});
 
+	it("merges customFields, with null removing a key", async () => {
+		const patch = (customFields: Record<string, unknown>) =>
+			makeApp(owner).request(`/leads/${aliceId}`, {
+				method: "PATCH",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ customFields }),
+			});
+		await patch({ budget: "5k" });
+		const res = await patch({ tier: null });
+		const body = (await res.json()) as { customFields: Record<string, unknown> };
+		expect(body.customFields).toEqual({ budget: "5k" });
+	});
+
 	it("returns 403 for outsider", async () => {
 		const res = await makeApp(outsider).request(`/leads/${aliceId}`, {
 			method: "PATCH",

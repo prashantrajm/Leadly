@@ -10,7 +10,7 @@ import {
 	TagsIcon,
 	TrashIcon,
 } from "@/components/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -25,6 +25,16 @@ import {
 	AgentFilter,
 	validateAgentSearch,
 } from "@/components/dashboard/agent-filter";
+import {
+	INTENT_LABEL,
+	IntentBadge,
+	ScoreBadge,
+} from "@/components/dashboard/lead-insights";
+import {
+	KeyFactsList,
+	LeadValueInputs,
+	LeadValuesList,
+} from "@/components/dashboard/lead-values";
 import { NoAgentsState } from "@/components/dashboard/no-agents-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,7 +71,18 @@ import {
 } from "@/components/ui/table";
 import { useOrgAgents } from "@/hooks/use-org-agents";
 import { api, LeadlyApiError } from "@/lib/api";
+import {
+	customFieldsPatch,
+	displayValue,
+	fieldValues,
+} from "@/lib/lead-fields";
 import type { Lead } from "@leadly/api-client";
+import type { LeadField } from "@leadly/schemas";
+
+// Lead field columns that fit in the table; the CSV has all of them.
+const MAX_FIELD_COLUMNS = 3;
+// Stable fallback so the drawer's reset effect doesn't re-run every render.
+const NO_FIELDS: LeadField[] = [];
 
 export const Route = createFileRoute("/$orgSlug/leads")({
 	validateSearch: validateAgentSearch,
@@ -88,15 +109,42 @@ function LeadsPage() {
 	const agentsById = new Map(agents.map((a) => [a.id, a]));
 	// Only worth a column when rows can come from more than one agent.
 	const showAgent = !agentId && agents.length > 1;
+	// Lead fields of the agents in view, one column per key (agents that
+	// share a key, e.g. "budget" from the same template, share a column).
+	const columnFields: LeadField[] = [];
+	for (const a of agents) {
+		if (agentId && a.id !== agentId) continue;
+		for (const f of a.leadFields) {
+			if (!columnFields.some((c) => c.key === f.key)) columnFields.push(f);
+		}
+	}
+	const tableFields = columnFields.slice(0, MAX_FIELD_COLUMNS);
+	const cell = (lead: Lead, key: string) => displayValue(lead.customFields[key]);
 
 	function exportCsv() {
 		if (!q.data || q.data.length === 0) return;
 		const rows = [
-			["Name", "Email", "Phone", "Agent", "Created"],
+			[
+				"Name",
+				"Email",
+				"Phone",
+				"Intent",
+				"Score",
+				"Need",
+				...columnFields.map((f) => f.label),
+				"Notable details",
+				"Agent",
+				"Created",
+			],
 			...q.data.map((l) => [
 				l.name ?? "",
 				l.email ?? "",
 				l.phone ?? "",
+				l.intent ? INTENT_LABEL[l.intent] : "",
+				l.score ?? "",
+				l.need ?? "",
+				...columnFields.map((f) => cell(l, f.key)),
+				l.keyFacts.map((k) => `${k.label}: ${k.value}`).join("; "),
 				agentsById.get(l.agentId)?.name ?? "",
 				new Date(l.createdAt).toISOString(),
 			]),
@@ -182,6 +230,14 @@ function LeadsPage() {
 								<TableHead>Name</TableHead>
 								<TableHead>Email</TableHead>
 								<TableHead>Phone</TableHead>
+								<TableHead>Intent</TableHead>
+								<TableHead>Score</TableHead>
+								<TableHead className="hidden lg:table-cell">Need</TableHead>
+								{tableFields.map((f) => (
+									<TableHead key={f.key} className="hidden xl:table-cell">
+										{f.label}
+									</TableHead>
+								))}
 								{showAgent && <TableHead>Agent</TableHead>}
 								<TableHead className="text-right">Captured</TableHead>
 							</TableRow>
@@ -218,6 +274,25 @@ function LeadsPage() {
 											<span className="text-muted-foreground">—</span>
 										)}
 									</TableCell>
+									<TableCell>
+										<IntentBadge intent={lead.intent} />
+									</TableCell>
+									<TableCell>
+										<ScoreBadge score={lead.score} />
+									</TableCell>
+									<TableCell className="hidden max-w-[260px] truncate text-sm text-muted-foreground lg:table-cell">
+										{lead.need ?? "—"}
+									</TableCell>
+									{tableFields.map((f) => (
+										<TableCell
+											key={f.key}
+											className="hidden max-w-[180px] truncate text-sm xl:table-cell"
+										>
+											{cell(lead, f.key) || (
+												<span className="text-muted-foreground">—</span>
+											)}
+										</TableCell>
+									))}
 									{showAgent && (
 										<TableCell className="text-sm text-muted-foreground">
 											{agentsById.get(lead.agentId)?.name ?? "—"}
@@ -233,7 +308,15 @@ function LeadsPage() {
 				</PageContent>
 			)}
 
-			<LeadDrawer lead={selectedLead} onClose={() => setSelectedLead(null)} />
+			<LeadDrawer
+				lead={selectedLead}
+				fields={
+					selectedLead
+						? (agentsById.get(selectedLead.agentId)?.leadFields ?? NO_FIELDS)
+						: NO_FIELDS
+				}
+				onClose={() => setSelectedLead(null)}
+			/>
 		</Page>
 	);
 }
@@ -260,23 +343,36 @@ function EmptyState({ search }: { search: string }) {
 
 function LeadDrawer({
 	lead,
+	fields,
 	onClose,
 }: {
 	lead: Lead | null;
+	fields: LeadField[];
 	onClose: () => void;
 }) {
 	const queryClient = useQueryClient();
 	const [name, setName] = useState(lead?.name ?? "");
 	const [email, setEmail] = useState(lead?.email ?? "");
 	const [phone, setPhone] = useState(lead?.phone ?? "");
+	const [values, setValues] = useState<Record<string, string>>({});
+	const [keyFacts, setKeyFacts] = useState(lead?.keyFacts ?? []);
 	const [confirmDelete, setConfirmDelete] = useState(false);
+	const formId = useId();
 
 	// Reset local state whenever the selected lead changes.
 	useEffect(() => {
 		setName(lead?.name ?? "");
 		setEmail(lead?.email ?? "");
 		setPhone(lead?.phone ?? "");
-	}, [lead]);
+		setValues(lead ? fieldValues(fields, lead.customFields) : {});
+		setKeyFacts(lead?.keyFacts ?? []);
+	}, [lead, fields]);
+
+	// Values stored under keys no field has any more (a removed field).
+	const fieldKeys = new Set(fields.map((f) => f.key));
+	const otherValues = Object.fromEntries(
+		Object.entries(lead?.customFields ?? {}).filter(([k]) => !fieldKeys.has(k)),
+	);
 
 	const saveMutation = useMutation({
 		mutationFn: () =>
@@ -285,6 +381,8 @@ function LeadDrawer({
 						name: name || null,
 						email: email || null,
 						phone: phone || null,
+						customFields: customFieldsPatch(lead.customFields, values),
+						keyFacts,
 					})
 				: Promise.reject(new Error("No lead")),
 		onSuccess: () => {
@@ -316,26 +414,25 @@ function LeadDrawer({
 				<SheetHeader>
 					<SheetTitle>Lead</SheetTitle>
 					<SheetDescription>
-						Edit the captured contact details. Saved changes invalidate the
-						list.
+						Edit what the agent captured.
 					</SheetDescription>
 				</SheetHeader>
 
 				{lead && (
 					<div className="mt-6 space-y-5 px-4">
 						<div className="space-y-1.5">
-							<Label htmlFor="lead-name">Name</Label>
+							<Label htmlFor={`${formId}-name`}>Name</Label>
 							<Input
-								id="lead-name"
+								id={`${formId}-name`}
 								value={name}
 								onChange={(e) => setName(e.target.value)}
 								placeholder="—"
 							/>
 						</div>
 						<div className="space-y-1.5">
-							<Label htmlFor="lead-email">Email</Label>
+							<Label htmlFor={`${formId}-email`}>Email</Label>
 							<Input
-								id="lead-email"
+								id={`${formId}-email`}
 								type="email"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
@@ -343,14 +440,51 @@ function LeadDrawer({
 							/>
 						</div>
 						<div className="space-y-1.5">
-							<Label htmlFor="lead-phone">Phone</Label>
+							<Label htmlFor={`${formId}-phone`}>Phone</Label>
 							<Input
-								id="lead-phone"
+								id={`${formId}-phone`}
 								value={phone}
 								onChange={(e) => setPhone(e.target.value)}
 								placeholder="—"
 							/>
 						</div>
+						{(lead.intent || lead.score !== null || lead.need) && (
+							<div className="space-y-2.5 rounded-lg bg-muted p-3 text-[13px]">
+								<div className="flex items-center justify-between gap-3">
+									<span className="text-muted-foreground">Intent</span>
+									<IntentBadge intent={lead.intent} />
+								</div>
+								<div className="flex items-center justify-between gap-3">
+									<span className="text-muted-foreground">Score</span>
+									<ScoreBadge score={lead.score} />
+								</div>
+								{lead.need && (
+									<div>
+										<div className="text-muted-foreground">Need</div>
+										<div className="mt-0.5 text-foreground">{lead.need}</div>
+									</div>
+								)}
+							</div>
+						)}
+						<LeadValueInputs
+							fields={fields}
+							values={values}
+							onChange={(key, value) =>
+								setValues((prev) => ({ ...prev, [key]: value }))
+							}
+						/>
+						<LeadValuesList fields={NO_FIELDS} details={otherValues} />
+						{keyFacts.length > 0 && (
+							<div className="space-y-2">
+								<div className="text-sm font-medium">Notable details</div>
+								<KeyFactsList
+									facts={keyFacts}
+									onRemove={(i) =>
+										setKeyFacts((prev) => prev.filter((_, j) => j !== i))
+									}
+								/>
+							</div>
+						)}
 						<div className="rounded-lg bg-muted p-3 text-xs">
 							<div className="font-mono uppercase tracking-[0.15em] text-muted-foreground">
 								Captured

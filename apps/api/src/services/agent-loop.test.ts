@@ -11,6 +11,7 @@ import {
 	type AgentRow,
 	type IdentityState,
 	assembleSystemPrompt,
+	buildHistory,
 	runTurn,
 } from "./agent-loop";
 
@@ -22,6 +23,10 @@ const baseAgent: AgentRow = {
 	fallbackMessage: "I don't have that information yet.",
 	defaultModel: "openai/gpt-4o-mini",
 	identityPolicy: "optional",
+	naturalMessaging: false,
+	leadCaptureEnabled: false,
+	contactFields: ["name", "email", "phone"],
+	leadFields: [],
 };
 
 const noIdentity: IdentityState = {
@@ -143,6 +148,143 @@ describe("assembleSystemPrompt", () => {
 			identity: noIdentity,
 		});
 		expect(a).toBe(b);
+	});
+});
+
+describe("assembleSystemPrompt — natural messaging", () => {
+	it("is absent by default", () => {
+		const prompt = assembleSystemPrompt({
+			agent: baseAgent,
+			retrievedChunks: [],
+			identity: noIdentity,
+		});
+		expect(prompt).not.toContain("Write like a person texting");
+	});
+
+	it("asks for short messages separated by blank lines when on", () => {
+		const prompt = assembleSystemPrompt({
+			agent: { ...baseAgent, naturalMessaging: true },
+			retrievedChunks: [],
+			identity: noIdentity,
+		});
+		expect(prompt).toContain("Write like a person texting");
+		expect(prompt).toContain("Separate messages with a blank line");
+	});
+});
+
+describe("assembleSystemPrompt — lead capture", () => {
+	const capturing: AgentRow = {
+		...baseAgent,
+		leadCaptureEnabled: true,
+		contactFields: ["name", "phone"],
+		leadFields: [
+			{
+				key: "project",
+				label: "Project",
+				hint: "What they want to build",
+				type: "text",
+				mode: "ask",
+			},
+			{
+				key: "timeline",
+				label: "Timeline",
+				type: "choice",
+				options: ["This month", "Later"],
+				mode: "ask",
+			},
+			{ key: "budget", label: "Budget", type: "number", mode: "listen" },
+		],
+	};
+
+	it("is absent when disabled", () => {
+		const prompt = assembleSystemPrompt({
+			agent: { ...capturing, leadCaptureEnabled: false },
+			retrievedChunks: [],
+			identity: noIdentity,
+		});
+		expect(prompt).not.toContain("Lead capture is on");
+		expect(prompt).not.toContain("offer to take their details");
+	});
+
+	it("lists missing contact and lead fields and forbids redirecting to email", () => {
+		const prompt = assembleSystemPrompt({
+			agent: capturing,
+			retrievedChunks: [],
+			identity: noIdentity,
+		});
+		expect(prompt).toContain("Lead capture is on");
+		expect(prompt).toContain("Still needed: name, phone number.");
+		expect(prompt).toContain("  - Project [project]: What they want to build");
+		expect(prompt).toContain("  - Timeline [timeline]: one of: This month, Later");
+		// Listen fields are noted, never asked for.
+		expect(prompt).toContain("Don't ask about these");
+		expect(prompt).toContain("  - Budget [budget]: a number");
+		expect(prompt).toContain("Never tell the visitor to email, call, or contact the company");
+		// A KB gap becomes a hand-off to the team rather than a dead end.
+		expect(prompt).toContain("Then offer to take their details");
+	});
+
+	it("drops what's already known", () => {
+		const prompt = assembleSystemPrompt({
+			agent: capturing,
+			retrievedChunks: [],
+			identity: {
+				hasEmail: false,
+				hasPhone: true,
+				hasName: true,
+				capturedFields: ["project"],
+			},
+		});
+		expect(prompt).not.toContain("Still needed");
+		expect(prompt).not.toContain("[project]");
+		expect(prompt).toContain("[timeline]");
+	});
+
+	it("only listens when nothing is left to ask", () => {
+		const prompt = assembleSystemPrompt({
+			agent: capturing,
+			retrievedChunks: [],
+			identity: {
+				hasEmail: false,
+				hasPhone: true,
+				hasName: true,
+				capturedFields: ["project", "timeline"],
+			},
+		});
+		expect(prompt).toContain("[budget]");
+		expect(prompt).not.toContain("Ask for one thing per reply");
+	});
+
+	it("goes quiet once everything is collected", () => {
+		const prompt = assembleSystemPrompt({
+			agent: capturing,
+			retrievedChunks: [],
+			identity: {
+				hasEmail: false,
+				hasPhone: true,
+				hasName: true,
+				capturedFields: capturing.leadFields.map((f) => f.key),
+			},
+		});
+		expect(prompt).not.toContain("Lead capture is on");
+	});
+});
+
+describe("buildHistory", () => {
+	it("folds consecutive agent bubbles into one assistant message", () => {
+		expect(
+			buildHistory([
+				{ role: "user", text: "hi" },
+				{ role: "agent", text: "Hey!" },
+				{ role: "agent", text: "What are you building?" },
+				{ role: "tool", text: "{}" },
+				{ role: "user", text: "A CRM" },
+			]),
+		).toEqual([
+			{ role: "user", content: "hi" },
+			{ role: "assistant", content: "Hey!\n\nWhat are you building?" },
+			{ role: "user", content: "A CRM" },
+		]);
 	});
 });
 

@@ -3,9 +3,10 @@ import { UpdateAgentSchema, type UpdateAgent } from "@leadly/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SaveIcon, SpinnerIcon } from "@/components/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Form,
 	FormControl,
@@ -36,9 +37,15 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	LeadFieldDefinitionsEditor,
+	type LeadFieldErrors,
+} from "@/components/dashboard/lead-field-definitions";
 import { useCurrentOrg, useOrgPath } from "@/hooks/use-current-org";
+import { cleanLeadFields } from "@/lib/lead-fields";
 import { api, LeadlyApiError } from "@/lib/api";
 import type { Agent } from "@leadly/api-client";
 
@@ -98,6 +105,7 @@ function AgentSettingsBody({
 						<TabsTrigger value="persona">Persona</TabsTrigger>
 						<TabsTrigger value="model">Model</TabsTrigger>
 						<TabsTrigger value="identity">Identity</TabsTrigger>
+						<TabsTrigger value="leads">Lead capture</TabsTrigger>
 					</TabsList>
 				</PageToolbar>
 
@@ -116,6 +124,10 @@ function AgentSettingsBody({
 
 				<TabsContent value="identity">
 					<IdentityTab agent={agent} agentId={agentId} />
+				</TabsContent>
+
+				<TabsContent value="leads">
+					<LeadCaptureTab agent={agent} agentId={agentId} />
 				</TabsContent>
 				</PageContent>
 			</Tabs>
@@ -335,6 +347,7 @@ function PersonaTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 		defaultValues: {
 			systemPromptOverlay: agent.systemPromptOverlay ?? "",
 			maxTurns: agent.maxTurns,
+			naturalMessaging: agent.naturalMessaging,
 		},
 	});
 
@@ -342,6 +355,7 @@ function PersonaTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 		form.reset({
 			systemPromptOverlay: agent.systemPromptOverlay ?? "",
 			maxTurns: agent.maxTurns,
+			naturalMessaging: agent.naturalMessaging,
 		});
 	}, [agent, form]);
 
@@ -386,6 +400,22 @@ function PersonaTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 										Appended to the base system prompt on every turn. Empty
 										falls back to the library default.
 									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							control={form.control}
+							name="naturalMessaging"
+							render={({ field }) => (
+								<FormItem>
+									<SwitchRow
+										label="Natural messaging"
+										description="Reply like a person texting: one to three short messages of a sentence or two, instead of one long paragraph."
+										checked={field.value ?? false}
+										onCheckedChange={field.onChange}
+									/>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -789,8 +819,216 @@ function IdentityTab({ agent, agentId }: { agent: Agent; agentId: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// Lead capture — contact fields + the business's own lead fields
+// ---------------------------------------------------------------------------
+
+const LEAD_FIELD_OPTIONS = [
+	{ value: "name", label: "Name" },
+	{ value: "email", label: "Email" },
+	{ value: "phone", label: "Phone number" },
+] as const;
+
+function leadCaptureValues(a: Agent): UpdateAgent {
+	return {
+		leadCaptureEnabled: a.leadCaptureEnabled,
+		contactFields: a.contactFields,
+		leadFields: a.leadFields,
+		captureNotableDetails: a.captureNotableDetails,
+	};
+}
+
+function LeadCaptureTab({ agent, agentId }: { agent: Agent; agentId: string }) {
+	const queryClient = useQueryClient();
+
+	const form = useForm<UpdateAgent>({
+		resolver: zodResolver(UpdateAgentSchema),
+		defaultValues: leadCaptureValues(agent),
+	});
+
+	useEffect(() => {
+		form.reset(leadCaptureValues(agent));
+	}, [agent, form]);
+
+	const mutation = useMutation({
+		mutationFn: (body: UpdateAgent) => api.agents.update(agentId, body),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
+			form.reset(form.getValues());
+		},
+	});
+
+	const enabled = form.watch("leadCaptureEnabled") ?? false;
+	const fieldIdPrefix = useId();
+	const savedKeys = new Set(agent.leadFields.map((f) => f.key));
+
+	return (
+		<PageSection>
+			<PageSectionHeader>
+				<PageSectionTitle>Lead capture</PageSectionTitle>
+				<PageSectionDescription>
+					Have the agent collect contact details and qualify the visitor
+					during the chat, instead of pointing them to your email.
+				</PageSectionDescription>
+			</PageSectionHeader>
+			<PageSectionContent>
+				<Form {...form}>
+					<form
+						onSubmit={form.handleSubmit((v) =>
+							mutation.mutate({
+								...v,
+								leadFields: v.leadFields && cleanLeadFields(v.leadFields),
+							}),
+						)}
+						className="space-y-6"
+					>
+						<FormField
+							control={form.control}
+							name="leadCaptureEnabled"
+							render={({ field }) => (
+								<FormItem>
+									<SwitchRow
+										label="Collect leads in chat"
+										description="After answering the visitor's first question, the agent asks for the details below, one at a time. If the visitor declines, it drops it."
+										checked={field.value ?? false}
+										onCheckedChange={field.onChange}
+									/>
+								</FormItem>
+							)}
+						/>
+
+						<fieldset disabled={!enabled} className="space-y-6 disabled:opacity-50">
+							<FormField
+								control={form.control}
+								name="contactFields"
+								render={({ field }) => {
+									const selected = field.value ?? [];
+									return (
+										<FormItem>
+											<FormLabel>Contact details to ask for</FormLabel>
+											<div className="flex flex-wrap gap-x-6 gap-y-2">
+												{LEAD_FIELD_OPTIONS.map((opt) => (
+													<label
+														key={opt.value}
+														htmlFor={`${fieldIdPrefix}-${opt.value}`}
+														className="flex cursor-pointer items-center gap-2 text-sm"
+													>
+														<Checkbox
+															id={`${fieldIdPrefix}-${opt.value}`}
+															checked={selected.includes(opt.value)}
+															onCheckedChange={(checked) =>
+																field.onChange(
+																	checked
+																		? [...selected, opt.value]
+																		: selected.filter((f) => f !== opt.value),
+																)
+															}
+														/>
+														{opt.label}
+													</label>
+												))}
+											</div>
+											<FormDescription>
+												A lead is saved once the visitor shares an email or
+												phone number.
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									);
+								}}
+							/>
+
+							<FormField
+								control={form.control}
+								name="leadFields"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Lead fields</FormLabel>
+										<FormDescription>
+											What your team needs to know about a lead. "Ask for it"
+											fields are asked one per reply; "Only if mentioned"
+											fields are noted when the visitor brings them up. Values
+											show on the lead, where your team can edit them.
+										</FormDescription>
+										<LeadFieldDefinitionsEditor
+											fields={field.value ?? []}
+											onChange={field.onChange}
+											savedKeys={savedKeys}
+											errors={
+												form.formState.errors.leadFields as
+													| LeadFieldErrors
+													| undefined
+											}
+										/>
+										{form.formState.errors.leadFields?.root?.message && (
+											<p className="text-xs text-destructive">
+												{form.formState.errors.leadFields.root.message}
+											</p>
+										)}
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="captureNotableDetails"
+								render={({ field }) => (
+									<FormItem>
+										<SwitchRow
+											label="Capture other notable details"
+											description="After the chat, pick out up to 5 other things worth knowing that no field covers, like a special requirement or a competitor they use. Only what the visitor actually said."
+											checked={field.value ?? false}
+											onCheckedChange={field.onChange}
+										/>
+									</FormItem>
+								)}
+							/>
+						</fieldset>
+
+						{mutation.isError && <ErrorRow err={mutation.error} />}
+
+						<div className="flex justify-end">
+							<SaveButton
+								pending={mutation.isPending}
+								disabled={!form.formState.isDirty}
+							/>
+						</div>
+					</form>
+				</Form>
+			</PageSectionContent>
+		</PageSection>
+	);
+}
+
+// ---------------------------------------------------------------------------
 // Shared bits
 // ---------------------------------------------------------------------------
+
+function SwitchRow({
+	label,
+	description,
+	checked,
+	onCheckedChange,
+}: {
+	label: string;
+	description: string;
+	checked: boolean;
+	onCheckedChange: (checked: boolean) => void;
+}) {
+	const id = useId();
+	return (
+		<div className="flex items-start justify-between gap-6">
+			<div className="min-w-0">
+				<Label htmlFor={id} className="text-sm font-medium">
+					{label}
+				</Label>
+				<p className="mt-1 text-xs text-muted-foreground">{description}</p>
+			</div>
+			<FormControl>
+				<Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+			</FormControl>
+		</div>
+	);
+}
 
 function SaveButton({
 	pending,

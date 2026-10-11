@@ -20,8 +20,8 @@ function makeEnv(): Bindings {
 		WIDGET_CACHE: {} as any,
 		// biome-ignore lint/suspicious/noExplicitAny: bindings the reaper doesn't touch
 		KB_REEMBED: {} as any,
-		// biome-ignore lint/suspicious/noExplicitAny: bindings the reaper doesn't touch
-		CONVERSATION_SUMMARIZE: {} as any,
+		// biome-ignore lint/suspicious/noExplicitAny: workflow binding stub
+		CONVERSATION_SUMMARIZE: { createBatch: async () => [] } as any,
 		// biome-ignore lint/suspicious/noExplicitAny: bindings the reaper doesn't touch
 		CONVERSATION: {} as any,
 	};

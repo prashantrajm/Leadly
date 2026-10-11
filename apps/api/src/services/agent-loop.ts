@@ -18,10 +18,16 @@ import {
 } from "ai";
 import { flushLangSmithTraces, streamText } from "../lib/langsmith";
 import type { RetrievedChunk } from "../lib/retrieval";
+import {
+	FALLBACK_HANDOFF,
+	type LeadCaptureConfig,
+	leadCapturePrompt,
+} from "./lead-capture";
+import { NATURAL_MESSAGING_PROMPT } from "./natural-messaging";
 
 // ---------- types ----------
 
-export type AgentRow = {
+export type AgentRow = LeadCaptureConfig & {
 	id: string;
 	name: string;
 	greeting: string;
@@ -29,6 +35,7 @@ export type AgentRow = {
 	fallbackMessage: string;
 	defaultModel: string;
 	identityPolicy: "optional" | "required_before_chat" | "identified_only";
+	naturalMessaging: boolean;
 };
 
 export type IdentityState = {
@@ -37,11 +44,35 @@ export type IdentityState = {
 	hasEmail: boolean;
 	hasPhone: boolean;
 	hasName: boolean;
+	// Lead field keys already on file for this conversation or its lead.
+	capturedFields?: string[];
 };
 
 export type ConversationMessage =
 	| { role: "user"; content: string }
 	| { role: "assistant"; content: string };
+
+// ---------- history ----------
+
+// Turn rows → model history. Natural messaging stores one agent row per
+// bubble; consecutive ones fold back into a single assistant message,
+// joined by the same blank line the model used to separate them.
+export function buildHistory(
+	turns: Array<{ role: string; text: string }>,
+): ConversationMessage[] {
+	const history: ConversationMessage[] = [];
+	for (const t of turns) {
+		if (t.role !== "user" && t.role !== "agent") continue;
+		const role = t.role === "user" ? "user" : "assistant";
+		const last = history[history.length - 1];
+		if (role === "assistant" && last?.role === "assistant") {
+			last.content = `${last.content}\n\n${t.text}`;
+			continue;
+		}
+		history.push({ role, content: t.text });
+	}
+	return history;
+}
 
 // ---------- system prompt ----------
 
@@ -65,6 +96,8 @@ export function assembleSystemPrompt({
 			`Greeting on first turn: "${agent.greeting}".`,
 	);
 
+	if (agent.naturalMessaging) sections.push(NATURAL_MESSAGING_PROMPT);
+
 	// Customer overlay — appended verbatim so the customer can override or
 	// extend the base persona. Empty / null is fine.
 	if (agent.systemPromptOverlay && agent.systemPromptOverlay.trim().length > 0) {
@@ -76,16 +109,30 @@ export function assembleSystemPrompt({
 	const idCapture = identityCaptureBlock(agent.identityPolicy, identity);
 	if (idCapture) sections.push(idCapture);
 
+	const leadCapture = leadCapturePrompt(agent, {
+		...identity,
+		capturedFields: identity.capturedFields ?? [],
+	});
+	if (leadCapture) sections.push(leadCapture);
+
 	// Retrieved context. Empty array is meaningful: the agent should fall back
 	// to fallbackMessage rather than hallucinating.
-	sections.push(retrievedBlock(retrievedChunks, agent.fallbackMessage));
+	sections.push(
+		retrievedBlock(
+			retrievedChunks,
+			agent.fallbackMessage,
+			agent.leadCaptureEnabled,
+		),
+	);
 
 	// Tool-use guidance. Without this the model might describe an action in
 	// prose instead of calling the tool.
 	sections.push(
 		`When you have enough information to identify the visitor, call ` +
-			`\`capture_contact\`. When the visitor explicitly asks for a human or ` +
-			`you can't help, call \`request_handoff\` with a short reason.`,
+			`\`capture_contact\`. When the visitor tells you something about ` +
+			`their needs (what they're building, team size, budget, timeline), ` +
+			`call \`save_lead_details\`. When the visitor explicitly asks for a ` +
+			`human or you can't help, call \`request_handoff\` with a short reason.`,
 	);
 
 	return sections.join("\n\n");
@@ -120,11 +167,14 @@ function identityCaptureBlock(
 function retrievedBlock(
 	chunks: RetrievedChunk[],
 	fallback: string,
+	leadCaptureEnabled: boolean,
 ): string {
+	const afterFallback = leadCaptureEnabled ? ` ${FALLBACK_HANDOFF}` : "";
 	if (chunks.length === 0) {
 		return (
 			`Knowledge base context: (none retrieved for this query). ` +
-			`If the visitor asks something the KB doesn't cover, reply: "${fallback}"`
+			`If the visitor asks something the KB doesn't cover, reply: "${fallback}"` +
+			afterFallback
 		);
 	}
 	const body = chunks
@@ -135,7 +185,8 @@ function retrievedBlock(
 		.join("\n\n---\n\n");
 	return (
 		`Knowledge base context (cite by article title when relevant):\n\n${body}\n\n` +
-			`If the visitor asks something not covered above, say: "${fallback}"`
+			`If the visitor asks something not covered above, say: "${fallback}"` +
+			afterFallback
 	);
 }
 

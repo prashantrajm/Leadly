@@ -8,8 +8,10 @@ import {
 	LeadSchema,
 	SuccessSchema,
 	UpdateLeadSchema,
+	LeadIntent,
 } from "@leadly/schemas";
 import { getPrisma } from "../lib/prisma";
+import { parseKeyFacts, patchLeadCustomFields } from "../services/lead-capture";
 import { requireAgentAccess, requireOrgMember } from "../middleware/org";
 import type { AppEnv } from "../types";
 
@@ -151,9 +153,11 @@ leadsApp.openapi(patchLeadRoute, async (c) => {
 	if (!access.ok) return c.json(access.body, access.status);
 
 	const prisma = getPrisma(c.env.DATABASE_URL);
+	const { customFields, ...fields } = patch;
+	if (customFields) await patchLeadCustomFields(prisma, leadId, customFields);
 	const updated = await prisma.lead.update({
 		where: { id: leadId },
-		data: patch,
+		data: fields,
 	});
 	return c.json(toWire(updated), 200);
 });
@@ -248,9 +252,14 @@ function toWire(l: {
 	phone: string | null;
 	name: string | null;
 	customFields: unknown;
+	intent: string | null;
+	score: number | null;
+	need: string | null;
+	keyFacts: unknown;
 	createdAt: Date;
 	updatedAt: Date;
 }) {
+	const intent = LeadIntent.safeParse(l.intent);
 	return {
 		id: l.id,
 		organizationId: l.organizationId,
@@ -259,6 +268,10 @@ function toWire(l: {
 		phone: l.phone,
 		name: l.name,
 		customFields: (l.customFields as Record<string, unknown>) ?? {},
+		intent: intent.success ? intent.data : null,
+		score: l.score,
+		need: l.need,
+		keyFacts: parseKeyFacts(l.keyFacts),
 		createdAt: l.createdAt.toISOString(),
 		updatedAt: l.updatedAt.toISOString(),
 	};

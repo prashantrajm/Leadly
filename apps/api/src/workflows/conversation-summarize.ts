@@ -1,21 +1,14 @@
-// ConversationSummarizeWorkflow — fired deterministically after a
-// conversation is marked `ended`. Loads the full turn history, asks the
-// LLM for a one-paragraph summary plus a sentiment label and a few tags,
-// and persists via the same executor the agent's set_conversation_summary
-// tool uses (services/system-tools.ts).
+// ConversationSummarizeWorkflow — fired after a conversation ends or is
+// abandoned. Per design §4.2 the model never calls set_conversation_summary
+// itself; this workflow runs it deterministically:
 //
-// Per design §4.2 we don't trust the model to invoke the summary tool
-// itself — so we expose set_conversation_summary as a deterministic
-// post-end call instead. That's what this workflow is.
-//
-// Steps:
-//   1. load conversation + turns
-//   2. generateObject({ schema: SummarySchema, prompt }) via OpenRouter
-//   3. write summary/sentiment/tags atomically
+//   1. load the conversation, its agent's lead config and turns
+//   2. generateObject with the request from services/conversation-analysis
+//   3. persist through executeSetConversationSummary
 
 import { WorkflowEntrypoint, type WorkflowStep } from "cloudflare:workers";
 import type { WorkflowEvent } from "cloudflare:workers";
-import { z } from "zod";
+import type { LeadField } from "@leadly/schemas";
 import {
 	configureLangSmith,
 	flushLangSmithTraces,
@@ -24,6 +17,9 @@ import {
 import { getPrisma } from "../lib/prisma";
 import { makeOpenRouterModel } from "../services/agent-loop";
 import { resolveCredentialForAgent } from "../services/credential-resolver";
+import { asStringRecord } from "../lib/json";
+import { buildAnalysisRequest } from "../services/conversation-analysis";
+import { parseLeadFields, planExtraction } from "../services/lead-capture";
 import {
 	executeSetConversationSummary,
 	SetConversationSummaryInput,
@@ -31,10 +27,6 @@ import {
 import type { Bindings } from "../types";
 
 export type ConversationSummarizeParams = { conversationId: string };
-
-// We re-use the system-tool's input schema so the wire shape and the
-// "what the model is allowed to emit" stay in lockstep.
-const SummaryOutput = SetConversationSummaryInput;
 
 export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 	Bindings,
@@ -55,14 +47,27 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 			agentId: string;
 			organizationId: string;
 			visitorId: string;
-			agent: { defaultModel: string };
+			leadDetails: Record<string, string>;
+			agent: {
+				defaultModel: string;
+				leadCaptureEnabled: boolean;
+				leadFields: LeadField[];
+				captureNotableDetails: boolean;
+			};
 			turns: Array<{ role: string; text: string; createdAt: Date }>;
 		};
 		const conv = (await step.do("load-conversation", async () => {
 			const row = await prisma.conversation.findUnique({
 				where: { id: conversationId },
 				include: {
-					agent: { select: { defaultModel: true } },
+					agent: {
+						select: {
+							defaultModel: true,
+							leadCaptureEnabled: true,
+							leadFields: true,
+							captureNotableDetails: true,
+						},
+					},
 					turns: {
 						orderBy: { createdAt: "asc" },
 						select: { role: true, text: true, createdAt: true },
@@ -70,7 +75,19 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 				},
 			});
 			if (!row) throw new Error(`Conversation ${conversationId} not found`);
-			return row as unknown as Loaded;
+			// Json columns are parsed here so the step result is serializable.
+			const loaded = row as unknown as Omit<Loaded, "leadDetails" | "agent"> & {
+				leadDetails: unknown;
+				agent: Omit<Loaded["agent"], "leadFields"> & { leadFields: unknown };
+			};
+			return {
+				...loaded,
+				leadDetails: asStringRecord(loaded.leadDetails),
+				agent: {
+					...loaded.agent,
+					leadFields: parseLeadFields(loaded.agent.leadFields),
+				},
+			} satisfies Loaded;
 		})) as Loaded;
 
 		if (conv.turns.length === 0) {
@@ -83,10 +100,6 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 		// schema accepts; we don't have to parse / validate the response
 		// ourselves because the AI SDK round-trips through the schema for us.
 		const summary = await step.do("generate-summary", async () => {
-			const transcript = conv.turns
-				.map((t) => `[${t.role.toUpperCase()}] ${t.text}`)
-				.join("\n\n");
-
 			// Use the same credential the conversation's agent would use for
 			// chat — keeps usage consistent in the customer's OpenRouter
 			// dashboard and respects per-agent BYOK overrides.
@@ -100,24 +113,16 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 				conv.agent.defaultModel,
 			);
 
-			const { object } = await generateObject({
-				model,
-				schema: SummaryOutput,
-				system:
-					"You summarize support conversations. Be concise. " +
-					"Return ONLY the structured fields.",
-				prompt:
-					"Transcript:\n\n" +
-					transcript +
-					"\n\nWrite a one-paragraph summary, infer the visitor's overall " +
-					"sentiment, and pick up to 5 short topic tags (lowercase, " +
-					"hyphenated, no punctuation).",
-			}).finally(() => flushLangSmithTraces());
-
-			// generateObject already validated against SummaryOutput, but the
-			// summary length is enforced with .min(2).max(2000) so a model
-			// returning whitespace would have already thrown above.
-			return object;
+			const request = buildAnalysisRequest(
+				conv.turns,
+				planExtraction(conv.agent, conv.leadDetails),
+			);
+			const { object } = await generateObject({ model, ...request }).finally(
+				() => flushLangSmithTraces(),
+			);
+			// The per-agent schema narrows the base one, so this only restores
+			// the static type.
+			return SetConversationSummaryInput.parse(object);
 		});
 
 		// Step 3 — persist via the system tool's executor so the durable
@@ -129,6 +134,7 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 					agentId: conv.agentId,
 					organizationId: conv.organizationId,
 					visitorId: conv.visitorId,
+					leadFields: conv.agent.leadFields,
 					prisma,
 				},
 				summary,
@@ -138,6 +144,3 @@ export class ConversationSummarizeWorkflow extends WorkflowEntrypoint<
 		return { conversationId, summarized: true };
 	}
 }
-
-// Inputs schema is re-exported for unit tests if Phase 12 adds them.
-void z;

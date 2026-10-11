@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { KeyFactSchema } from "./agent.ts";
 import { Cuid, IsoDate } from "./common.ts";
 import {
 	ConversationChannel,
@@ -34,6 +35,27 @@ export const TurnSchema = z
 	.openapi("Turn");
 export type Turn = z.infer<typeof TurnSchema>;
 
+// ---------- Post-chat analysis ----------
+
+export const LeadIntent = z
+	.enum(["buying", "pricing", "demo", "support", "partnership", "job", "browsing", "other"])
+	.openapi("LeadIntent");
+export type LeadIntent = z.infer<typeof LeadIntent>;
+
+export const ConversationInsightsSchema = z
+	.object({
+		// One line on what the visitor wants (their product idea, use case…).
+		need: z.string().nullable().optional(),
+		// Questions the agent couldn't answer — knowledge-base gaps.
+		unansweredQuestions: z.array(z.string()).optional(),
+		objections: z.array(z.string()).optional(),
+		nextStep: z.string().nullable().optional(),
+		// Notable details outside the agent's configured lead fields.
+		keyFacts: z.array(KeyFactSchema).optional(),
+	})
+	.openapi("ConversationInsights");
+export type ConversationInsights = z.infer<typeof ConversationInsightsSchema>;
+
 // ---------- Conversation ----------
 
 export const ConversationSchema = z
@@ -51,6 +73,14 @@ export const ConversationSchema = z
 		summary: z.string().nullable(),
 		sentiment: z.string().nullable(),
 		tags: z.array(z.string()).nullable(),
+		leadDetails: z.record(z.string(), z.string()).nullable(),
+		intent: LeadIntent.nullable(),
+		// 0–100: how likely this visitor is to become a customer.
+		leadScore: z.number().int().min(0).max(100).nullable(),
+		// 1–5: how well the agent handled the chat.
+		qualityScore: z.number().int().min(1).max(5).nullable(),
+		resolved: z.boolean().nullable(),
+		insights: ConversationInsightsSchema.nullable(),
 		lastActivityAt: IsoDate,
 	})
 	.openapi("Conversation");

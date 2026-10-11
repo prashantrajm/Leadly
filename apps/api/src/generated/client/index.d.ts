@@ -13016,6 +13016,9 @@ export namespace Prisma {
     systemPromptOverlay: string | null
     fallbackMessage: string | null
     maxTurns: number | null
+    naturalMessaging: boolean | null
+    leadCaptureEnabled: boolean | null
+    captureNotableDetails: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -13033,6 +13036,9 @@ export namespace Prisma {
     systemPromptOverlay: string | null
     fallbackMessage: string | null
     maxTurns: number | null
+    naturalMessaging: boolean | null
+    leadCaptureEnabled: boolean | null
+    captureNotableDetails: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -13050,6 +13056,11 @@ export namespace Prisma {
     systemPromptOverlay: number
     fallbackMessage: number
     maxTurns: number
+    naturalMessaging: number
+    leadCaptureEnabled: number
+    contactFields: number
+    leadFields: number
+    captureNotableDetails: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -13077,6 +13088,9 @@ export namespace Prisma {
     systemPromptOverlay?: true
     fallbackMessage?: true
     maxTurns?: true
+    naturalMessaging?: true
+    leadCaptureEnabled?: true
+    captureNotableDetails?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -13094,6 +13108,9 @@ export namespace Prisma {
     systemPromptOverlay?: true
     fallbackMessage?: true
     maxTurns?: true
+    naturalMessaging?: true
+    leadCaptureEnabled?: true
+    captureNotableDetails?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -13111,6 +13128,11 @@ export namespace Prisma {
     systemPromptOverlay?: true
     fallbackMessage?: true
     maxTurns?: true
+    naturalMessaging?: true
+    leadCaptureEnabled?: true
+    contactFields?: true
+    leadFields?: true
+    captureNotableDetails?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -13215,6 +13237,11 @@ export namespace Prisma {
     systemPromptOverlay: string | null
     fallbackMessage: string
     maxTurns: number
+    naturalMessaging: boolean
+    leadCaptureEnabled: boolean
+    contactFields: string[]
+    leadFields: JsonValue
+    captureNotableDetails: boolean
     createdAt: Date
     updatedAt: Date
     _count: AgentCountAggregateOutputType | null
@@ -13251,6 +13278,11 @@ export namespace Prisma {
     systemPromptOverlay?: boolean
     fallbackMessage?: boolean
     maxTurns?: boolean
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: boolean
+    leadFields?: boolean
+    captureNotableDetails?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
@@ -13277,6 +13309,11 @@ export namespace Prisma {
     systemPromptOverlay?: boolean
     fallbackMessage?: boolean
     maxTurns?: boolean
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: boolean
+    leadFields?: boolean
+    captureNotableDetails?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
@@ -13295,6 +13332,11 @@ export namespace Prisma {
     systemPromptOverlay?: boolean
     fallbackMessage?: boolean
     maxTurns?: boolean
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: boolean
+    leadFields?: boolean
+    captureNotableDetails?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
@@ -13313,11 +13355,16 @@ export namespace Prisma {
     systemPromptOverlay?: boolean
     fallbackMessage?: boolean
     maxTurns?: boolean
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: boolean
+    leadFields?: boolean
+    captureNotableDetails?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type AgentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "name" | "slug" | "greeting" | "accentColor" | "identityPolicy" | "defaultProvider" | "defaultModel" | "systemPromptOverlay" | "fallbackMessage" | "maxTurns" | "createdAt" | "updatedAt", ExtArgs["result"]["agent"]>
+  export type AgentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "name" | "slug" | "greeting" | "accentColor" | "identityPolicy" | "defaultProvider" | "defaultModel" | "systemPromptOverlay" | "fallbackMessage" | "maxTurns" | "naturalMessaging" | "leadCaptureEnabled" | "contactFields" | "leadFields" | "captureNotableDetails" | "createdAt" | "updatedAt", ExtArgs["result"]["agent"]>
   export type AgentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     kbArticles?: boolean | Agent$kbArticlesArgs<ExtArgs>
@@ -13361,6 +13408,11 @@ export namespace Prisma {
       systemPromptOverlay: string | null
       fallbackMessage: string
       maxTurns: number
+      naturalMessaging: boolean
+      leadCaptureEnabled: boolean
+      contactFields: string[]
+      leadFields: Prisma.JsonValue
+      captureNotableDetails: boolean
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["agent"]>
@@ -13806,6 +13858,11 @@ export namespace Prisma {
     readonly systemPromptOverlay: FieldRef<"Agent", 'String'>
     readonly fallbackMessage: FieldRef<"Agent", 'String'>
     readonly maxTurns: FieldRef<"Agent", 'Int'>
+    readonly naturalMessaging: FieldRef<"Agent", 'Boolean'>
+    readonly leadCaptureEnabled: FieldRef<"Agent", 'Boolean'>
+    readonly contactFields: FieldRef<"Agent", 'String[]'>
+    readonly leadFields: FieldRef<"Agent", 'Json'>
+    readonly captureNotableDetails: FieldRef<"Agent", 'Boolean'>
     readonly createdAt: FieldRef<"Agent", 'DateTime'>
     readonly updatedAt: FieldRef<"Agent", 'DateTime'>
   }
@@ -18812,8 +18869,18 @@ export namespace Prisma {
 
   export type AggregateLead = {
     _count: LeadCountAggregateOutputType | null
+    _avg: LeadAvgAggregateOutputType | null
+    _sum: LeadSumAggregateOutputType | null
     _min: LeadMinAggregateOutputType | null
     _max: LeadMaxAggregateOutputType | null
+  }
+
+  export type LeadAvgAggregateOutputType = {
+    score: number | null
+  }
+
+  export type LeadSumAggregateOutputType = {
+    score: number | null
   }
 
   export type LeadMinAggregateOutputType = {
@@ -18823,6 +18890,9 @@ export namespace Prisma {
     email: string | null
     phone: string | null
     name: string | null
+    intent: string | null
+    score: number | null
+    need: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -18834,6 +18904,9 @@ export namespace Prisma {
     email: string | null
     phone: string | null
     name: string | null
+    intent: string | null
+    score: number | null
+    need: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -18846,11 +18919,23 @@ export namespace Prisma {
     phone: number
     name: number
     customFields: number
+    intent: number
+    score: number
+    need: number
+    keyFacts: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
+
+  export type LeadAvgAggregateInputType = {
+    score?: true
+  }
+
+  export type LeadSumAggregateInputType = {
+    score?: true
+  }
 
   export type LeadMinAggregateInputType = {
     id?: true
@@ -18859,6 +18944,9 @@ export namespace Prisma {
     email?: true
     phone?: true
     name?: true
+    intent?: true
+    score?: true
+    need?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -18870,6 +18958,9 @@ export namespace Prisma {
     email?: true
     phone?: true
     name?: true
+    intent?: true
+    score?: true
+    need?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -18882,6 +18973,10 @@ export namespace Prisma {
     phone?: true
     name?: true
     customFields?: true
+    intent?: true
+    score?: true
+    need?: true
+    keyFacts?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -18925,6 +19020,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: LeadAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: LeadSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: LeadMinAggregateInputType
@@ -18955,6 +19062,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: LeadCountAggregateInputType | true
+    _avg?: LeadAvgAggregateInputType
+    _sum?: LeadSumAggregateInputType
     _min?: LeadMinAggregateInputType
     _max?: LeadMaxAggregateInputType
   }
@@ -18967,9 +19076,15 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     customFields: JsonValue
+    intent: string | null
+    score: number | null
+    need: string | null
+    keyFacts: JsonValue
     createdAt: Date
     updatedAt: Date
     _count: LeadCountAggregateOutputType | null
+    _avg: LeadAvgAggregateOutputType | null
+    _sum: LeadSumAggregateOutputType | null
     _min: LeadMinAggregateOutputType | null
     _max: LeadMaxAggregateOutputType | null
   }
@@ -18996,6 +19111,10 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     customFields?: boolean
+    intent?: boolean
+    score?: boolean
+    need?: boolean
+    keyFacts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     agent?: boolean | AgentDefaultArgs<ExtArgs>
@@ -19012,6 +19131,10 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     customFields?: boolean
+    intent?: boolean
+    score?: boolean
+    need?: boolean
+    keyFacts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     agent?: boolean | AgentDefaultArgs<ExtArgs>
@@ -19025,6 +19148,10 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     customFields?: boolean
+    intent?: boolean
+    score?: boolean
+    need?: boolean
+    keyFacts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     agent?: boolean | AgentDefaultArgs<ExtArgs>
@@ -19038,11 +19165,15 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     customFields?: boolean
+    intent?: boolean
+    score?: boolean
+    need?: boolean
+    keyFacts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LeadOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "agentId" | "email" | "phone" | "name" | "customFields" | "createdAt" | "updatedAt", ExtArgs["result"]["lead"]>
+  export type LeadOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "agentId" | "email" | "phone" | "name" | "customFields" | "intent" | "score" | "need" | "keyFacts" | "createdAt" | "updatedAt", ExtArgs["result"]["lead"]>
   export type LeadInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     agent?: boolean | AgentDefaultArgs<ExtArgs>
     visitors?: boolean | Lead$visitorsArgs<ExtArgs>
@@ -19071,6 +19202,10 @@ export namespace Prisma {
       phone: string | null
       name: string | null
       customFields: Prisma.JsonValue
+      intent: string | null
+      score: number | null
+      need: string | null
+      keyFacts: Prisma.JsonValue
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["lead"]>
@@ -19506,6 +19641,10 @@ export namespace Prisma {
     readonly phone: FieldRef<"Lead", 'String'>
     readonly name: FieldRef<"Lead", 'String'>
     readonly customFields: FieldRef<"Lead", 'Json'>
+    readonly intent: FieldRef<"Lead", 'String'>
+    readonly score: FieldRef<"Lead", 'Int'>
+    readonly need: FieldRef<"Lead", 'String'>
+    readonly keyFacts: FieldRef<"Lead", 'Json'>
     readonly createdAt: FieldRef<"Lead", 'DateTime'>
     readonly updatedAt: FieldRef<"Lead", 'DateTime'>
   }
@@ -19981,8 +20120,20 @@ export namespace Prisma {
 
   export type AggregateConversation = {
     _count: ConversationCountAggregateOutputType | null
+    _avg: ConversationAvgAggregateOutputType | null
+    _sum: ConversationSumAggregateOutputType | null
     _min: ConversationMinAggregateOutputType | null
     _max: ConversationMaxAggregateOutputType | null
+  }
+
+  export type ConversationAvgAggregateOutputType = {
+    leadScore: number | null
+    qualityScore: number | null
+  }
+
+  export type ConversationSumAggregateOutputType = {
+    leadScore: number | null
+    qualityScore: number | null
   }
 
   export type ConversationMinAggregateOutputType = {
@@ -19998,6 +20149,10 @@ export namespace Prisma {
     endedAt: Date | null
     summary: string | null
     sentiment: string | null
+    intent: string | null
+    leadScore: number | null
+    qualityScore: number | null
+    resolved: boolean | null
     lastActivityAt: Date | null
   }
 
@@ -20014,6 +20169,10 @@ export namespace Prisma {
     endedAt: Date | null
     summary: string | null
     sentiment: string | null
+    intent: string | null
+    leadScore: number | null
+    qualityScore: number | null
+    resolved: boolean | null
     lastActivityAt: Date | null
   }
 
@@ -20031,10 +20190,26 @@ export namespace Prisma {
     summary: number
     sentiment: number
     tags: number
+    leadDetails: number
+    intent: number
+    leadScore: number
+    qualityScore: number
+    resolved: number
+    insights: number
     lastActivityAt: number
     _all: number
   }
 
+
+  export type ConversationAvgAggregateInputType = {
+    leadScore?: true
+    qualityScore?: true
+  }
+
+  export type ConversationSumAggregateInputType = {
+    leadScore?: true
+    qualityScore?: true
+  }
 
   export type ConversationMinAggregateInputType = {
     id?: true
@@ -20049,6 +20224,10 @@ export namespace Prisma {
     endedAt?: true
     summary?: true
     sentiment?: true
+    intent?: true
+    leadScore?: true
+    qualityScore?: true
+    resolved?: true
     lastActivityAt?: true
   }
 
@@ -20065,6 +20244,10 @@ export namespace Prisma {
     endedAt?: true
     summary?: true
     sentiment?: true
+    intent?: true
+    leadScore?: true
+    qualityScore?: true
+    resolved?: true
     lastActivityAt?: true
   }
 
@@ -20082,6 +20265,12 @@ export namespace Prisma {
     summary?: true
     sentiment?: true
     tags?: true
+    leadDetails?: true
+    intent?: true
+    leadScore?: true
+    qualityScore?: true
+    resolved?: true
+    insights?: true
     lastActivityAt?: true
     _all?: true
   }
@@ -20124,6 +20313,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: ConversationAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ConversationSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: ConversationMinAggregateInputType
@@ -20154,6 +20355,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: ConversationCountAggregateInputType | true
+    _avg?: ConversationAvgAggregateInputType
+    _sum?: ConversationSumAggregateInputType
     _min?: ConversationMinAggregateInputType
     _max?: ConversationMaxAggregateInputType
   }
@@ -20172,8 +20375,16 @@ export namespace Prisma {
     summary: string | null
     sentiment: string | null
     tags: JsonValue | null
+    leadDetails: JsonValue | null
+    intent: string | null
+    leadScore: number | null
+    qualityScore: number | null
+    resolved: boolean | null
+    insights: JsonValue | null
     lastActivityAt: Date
     _count: ConversationCountAggregateOutputType | null
+    _avg: ConversationAvgAggregateOutputType | null
+    _sum: ConversationSumAggregateOutputType | null
     _min: ConversationMinAggregateOutputType | null
     _max: ConversationMaxAggregateOutputType | null
   }
@@ -20206,6 +20417,12 @@ export namespace Prisma {
     summary?: boolean
     sentiment?: boolean
     tags?: boolean
+    leadDetails?: boolean
+    intent?: boolean
+    leadScore?: boolean
+    qualityScore?: boolean
+    resolved?: boolean
+    insights?: boolean
     lastActivityAt?: boolean
     agent?: boolean | AgentDefaultArgs<ExtArgs>
     visitor?: boolean | VisitorDefaultArgs<ExtArgs>
@@ -20228,6 +20445,12 @@ export namespace Prisma {
     summary?: boolean
     sentiment?: boolean
     tags?: boolean
+    leadDetails?: boolean
+    intent?: boolean
+    leadScore?: boolean
+    qualityScore?: boolean
+    resolved?: boolean
+    insights?: boolean
     lastActivityAt?: boolean
     agent?: boolean | AgentDefaultArgs<ExtArgs>
     visitor?: boolean | VisitorDefaultArgs<ExtArgs>
@@ -20248,6 +20471,12 @@ export namespace Prisma {
     summary?: boolean
     sentiment?: boolean
     tags?: boolean
+    leadDetails?: boolean
+    intent?: boolean
+    leadScore?: boolean
+    qualityScore?: boolean
+    resolved?: boolean
+    insights?: boolean
     lastActivityAt?: boolean
     agent?: boolean | AgentDefaultArgs<ExtArgs>
     visitor?: boolean | VisitorDefaultArgs<ExtArgs>
@@ -20268,10 +20497,16 @@ export namespace Prisma {
     summary?: boolean
     sentiment?: boolean
     tags?: boolean
+    leadDetails?: boolean
+    intent?: boolean
+    leadScore?: boolean
+    qualityScore?: boolean
+    resolved?: boolean
+    insights?: boolean
     lastActivityAt?: boolean
   }
 
-  export type ConversationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "agentId" | "visitorId" | "leadId" | "channel" | "mode" | "status" | "startedAt" | "endedAt" | "summary" | "sentiment" | "tags" | "lastActivityAt", ExtArgs["result"]["conversation"]>
+  export type ConversationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "agentId" | "visitorId" | "leadId" | "channel" | "mode" | "status" | "startedAt" | "endedAt" | "summary" | "sentiment" | "tags" | "leadDetails" | "intent" | "leadScore" | "qualityScore" | "resolved" | "insights" | "lastActivityAt", ExtArgs["result"]["conversation"]>
   export type ConversationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     agent?: boolean | AgentDefaultArgs<ExtArgs>
     visitor?: boolean | VisitorDefaultArgs<ExtArgs>
@@ -20312,6 +20547,12 @@ export namespace Prisma {
       summary: string | null
       sentiment: string | null
       tags: Prisma.JsonValue | null
+      leadDetails: Prisma.JsonValue | null
+      intent: string | null
+      leadScore: number | null
+      qualityScore: number | null
+      resolved: boolean | null
+      insights: Prisma.JsonValue | null
       lastActivityAt: Date
     }, ExtArgs["result"]["conversation"]>
     composites: {}
@@ -20753,6 +20994,12 @@ export namespace Prisma {
     readonly summary: FieldRef<"Conversation", 'String'>
     readonly sentiment: FieldRef<"Conversation", 'String'>
     readonly tags: FieldRef<"Conversation", 'Json'>
+    readonly leadDetails: FieldRef<"Conversation", 'Json'>
+    readonly intent: FieldRef<"Conversation", 'String'>
+    readonly leadScore: FieldRef<"Conversation", 'Int'>
+    readonly qualityScore: FieldRef<"Conversation", 'Int'>
+    readonly resolved: FieldRef<"Conversation", 'Boolean'>
+    readonly insights: FieldRef<"Conversation", 'Json'>
     readonly lastActivityAt: FieldRef<"Conversation", 'DateTime'>
   }
     
@@ -23723,6 +23970,11 @@ export namespace Prisma {
     systemPromptOverlay: 'systemPromptOverlay',
     fallbackMessage: 'fallbackMessage',
     maxTurns: 'maxTurns',
+    naturalMessaging: 'naturalMessaging',
+    leadCaptureEnabled: 'leadCaptureEnabled',
+    contactFields: 'contactFields',
+    leadFields: 'leadFields',
+    captureNotableDetails: 'captureNotableDetails',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -23798,6 +24050,10 @@ export namespace Prisma {
     phone: 'phone',
     name: 'name',
     customFields: 'customFields',
+    intent: 'intent',
+    score: 'score',
+    need: 'need',
+    keyFacts: 'keyFacts',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -23819,6 +24075,12 @@ export namespace Prisma {
     summary: 'summary',
     sentiment: 'sentiment',
     tags: 'tags',
+    leadDetails: 'leadDetails',
+    intent: 'intent',
+    leadScore: 'leadScore',
+    qualityScore: 'qualityScore',
+    resolved: 'resolved',
+    insights: 'insights',
     lastActivityAt: 'lastActivityAt'
   };
 
@@ -24008,6 +24270,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
    * Reference to a field of type 'KbArticleSource'
    */
   export type EnumKbArticleSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'KbArticleSource'>
@@ -24032,20 +24308,6 @@ export namespace Prisma {
    * Reference to a field of type 'ToolScope[]'
    */
   export type ListEnumToolScopeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ToolScope[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Json'
-   */
-  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-  /**
-   * Reference to a field of type 'QueryMode'
-   */
-  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -24791,6 +25053,11 @@ export namespace Prisma {
     systemPromptOverlay?: StringNullableFilter<"Agent"> | string | null
     fallbackMessage?: StringFilter<"Agent"> | string
     maxTurns?: IntFilter<"Agent"> | number
+    naturalMessaging?: BoolFilter<"Agent"> | boolean
+    leadCaptureEnabled?: BoolFilter<"Agent"> | boolean
+    contactFields?: StringNullableListFilter<"Agent">
+    leadFields?: JsonFilter<"Agent">
+    captureNotableDetails?: BoolFilter<"Agent"> | boolean
     createdAt?: DateTimeFilter<"Agent"> | Date | string
     updatedAt?: DateTimeFilter<"Agent"> | Date | string
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
@@ -24816,6 +25083,11 @@ export namespace Prisma {
     systemPromptOverlay?: SortOrderInput | SortOrder
     fallbackMessage?: SortOrder
     maxTurns?: SortOrder
+    naturalMessaging?: SortOrder
+    leadCaptureEnabled?: SortOrder
+    contactFields?: SortOrder
+    leadFields?: SortOrder
+    captureNotableDetails?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     organization?: OrganizationOrderByWithRelationInput
@@ -24845,6 +25117,11 @@ export namespace Prisma {
     systemPromptOverlay?: StringNullableFilter<"Agent"> | string | null
     fallbackMessage?: StringFilter<"Agent"> | string
     maxTurns?: IntFilter<"Agent"> | number
+    naturalMessaging?: BoolFilter<"Agent"> | boolean
+    leadCaptureEnabled?: BoolFilter<"Agent"> | boolean
+    contactFields?: StringNullableListFilter<"Agent">
+    leadFields?: JsonFilter<"Agent">
+    captureNotableDetails?: BoolFilter<"Agent"> | boolean
     createdAt?: DateTimeFilter<"Agent"> | Date | string
     updatedAt?: DateTimeFilter<"Agent"> | Date | string
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
@@ -24870,6 +25147,11 @@ export namespace Prisma {
     systemPromptOverlay?: SortOrderInput | SortOrder
     fallbackMessage?: SortOrder
     maxTurns?: SortOrder
+    naturalMessaging?: SortOrder
+    leadCaptureEnabled?: SortOrder
+    contactFields?: SortOrder
+    leadFields?: SortOrder
+    captureNotableDetails?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: AgentCountOrderByAggregateInput
@@ -24895,6 +25177,11 @@ export namespace Prisma {
     systemPromptOverlay?: StringNullableWithAggregatesFilter<"Agent"> | string | null
     fallbackMessage?: StringWithAggregatesFilter<"Agent"> | string
     maxTurns?: IntWithAggregatesFilter<"Agent"> | number
+    naturalMessaging?: BoolWithAggregatesFilter<"Agent"> | boolean
+    leadCaptureEnabled?: BoolWithAggregatesFilter<"Agent"> | boolean
+    contactFields?: StringNullableListFilter<"Agent">
+    leadFields?: JsonWithAggregatesFilter<"Agent">
+    captureNotableDetails?: BoolWithAggregatesFilter<"Agent"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Agent"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Agent"> | Date | string
   }
@@ -25226,6 +25513,10 @@ export namespace Prisma {
     phone?: StringNullableFilter<"Lead"> | string | null
     name?: StringNullableFilter<"Lead"> | string | null
     customFields?: JsonFilter<"Lead">
+    intent?: StringNullableFilter<"Lead"> | string | null
+    score?: IntNullableFilter<"Lead"> | number | null
+    need?: StringNullableFilter<"Lead"> | string | null
+    keyFacts?: JsonFilter<"Lead">
     createdAt?: DateTimeFilter<"Lead"> | Date | string
     updatedAt?: DateTimeFilter<"Lead"> | Date | string
     agent?: XOR<AgentScalarRelationFilter, AgentWhereInput>
@@ -25241,6 +25532,10 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     customFields?: SortOrder
+    intent?: SortOrderInput | SortOrder
+    score?: SortOrderInput | SortOrder
+    need?: SortOrderInput | SortOrder
+    keyFacts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     agent?: AgentOrderByWithRelationInput
@@ -25259,6 +25554,10 @@ export namespace Prisma {
     phone?: StringNullableFilter<"Lead"> | string | null
     name?: StringNullableFilter<"Lead"> | string | null
     customFields?: JsonFilter<"Lead">
+    intent?: StringNullableFilter<"Lead"> | string | null
+    score?: IntNullableFilter<"Lead"> | number | null
+    need?: StringNullableFilter<"Lead"> | string | null
+    keyFacts?: JsonFilter<"Lead">
     createdAt?: DateTimeFilter<"Lead"> | Date | string
     updatedAt?: DateTimeFilter<"Lead"> | Date | string
     agent?: XOR<AgentScalarRelationFilter, AgentWhereInput>
@@ -25274,11 +25573,17 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     customFields?: SortOrder
+    intent?: SortOrderInput | SortOrder
+    score?: SortOrderInput | SortOrder
+    need?: SortOrderInput | SortOrder
+    keyFacts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: LeadCountOrderByAggregateInput
+    _avg?: LeadAvgOrderByAggregateInput
     _max?: LeadMaxOrderByAggregateInput
     _min?: LeadMinOrderByAggregateInput
+    _sum?: LeadSumOrderByAggregateInput
   }
 
   export type LeadScalarWhereWithAggregatesInput = {
@@ -25292,6 +25597,10 @@ export namespace Prisma {
     phone?: StringNullableWithAggregatesFilter<"Lead"> | string | null
     name?: StringNullableWithAggregatesFilter<"Lead"> | string | null
     customFields?: JsonWithAggregatesFilter<"Lead">
+    intent?: StringNullableWithAggregatesFilter<"Lead"> | string | null
+    score?: IntNullableWithAggregatesFilter<"Lead"> | number | null
+    need?: StringNullableWithAggregatesFilter<"Lead"> | string | null
+    keyFacts?: JsonWithAggregatesFilter<"Lead">
     createdAt?: DateTimeWithAggregatesFilter<"Lead"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Lead"> | Date | string
   }
@@ -25313,6 +25622,12 @@ export namespace Prisma {
     summary?: StringNullableFilter<"Conversation"> | string | null
     sentiment?: StringNullableFilter<"Conversation"> | string | null
     tags?: JsonNullableFilter<"Conversation">
+    leadDetails?: JsonNullableFilter<"Conversation">
+    intent?: StringNullableFilter<"Conversation"> | string | null
+    leadScore?: IntNullableFilter<"Conversation"> | number | null
+    qualityScore?: IntNullableFilter<"Conversation"> | number | null
+    resolved?: BoolNullableFilter<"Conversation"> | boolean | null
+    insights?: JsonNullableFilter<"Conversation">
     lastActivityAt?: DateTimeFilter<"Conversation"> | Date | string
     agent?: XOR<AgentScalarRelationFilter, AgentWhereInput>
     visitor?: XOR<VisitorScalarRelationFilter, VisitorWhereInput>
@@ -25334,6 +25649,12 @@ export namespace Prisma {
     summary?: SortOrderInput | SortOrder
     sentiment?: SortOrderInput | SortOrder
     tags?: SortOrderInput | SortOrder
+    leadDetails?: SortOrderInput | SortOrder
+    intent?: SortOrderInput | SortOrder
+    leadScore?: SortOrderInput | SortOrder
+    qualityScore?: SortOrderInput | SortOrder
+    resolved?: SortOrderInput | SortOrder
+    insights?: SortOrderInput | SortOrder
     lastActivityAt?: SortOrder
     agent?: AgentOrderByWithRelationInput
     visitor?: VisitorOrderByWithRelationInput
@@ -25358,6 +25679,12 @@ export namespace Prisma {
     summary?: StringNullableFilter<"Conversation"> | string | null
     sentiment?: StringNullableFilter<"Conversation"> | string | null
     tags?: JsonNullableFilter<"Conversation">
+    leadDetails?: JsonNullableFilter<"Conversation">
+    intent?: StringNullableFilter<"Conversation"> | string | null
+    leadScore?: IntNullableFilter<"Conversation"> | number | null
+    qualityScore?: IntNullableFilter<"Conversation"> | number | null
+    resolved?: BoolNullableFilter<"Conversation"> | boolean | null
+    insights?: JsonNullableFilter<"Conversation">
     lastActivityAt?: DateTimeFilter<"Conversation"> | Date | string
     agent?: XOR<AgentScalarRelationFilter, AgentWhereInput>
     visitor?: XOR<VisitorScalarRelationFilter, VisitorWhereInput>
@@ -25379,10 +25706,18 @@ export namespace Prisma {
     summary?: SortOrderInput | SortOrder
     sentiment?: SortOrderInput | SortOrder
     tags?: SortOrderInput | SortOrder
+    leadDetails?: SortOrderInput | SortOrder
+    intent?: SortOrderInput | SortOrder
+    leadScore?: SortOrderInput | SortOrder
+    qualityScore?: SortOrderInput | SortOrder
+    resolved?: SortOrderInput | SortOrder
+    insights?: SortOrderInput | SortOrder
     lastActivityAt?: SortOrder
     _count?: ConversationCountOrderByAggregateInput
+    _avg?: ConversationAvgOrderByAggregateInput
     _max?: ConversationMaxOrderByAggregateInput
     _min?: ConversationMinOrderByAggregateInput
+    _sum?: ConversationSumOrderByAggregateInput
   }
 
   export type ConversationScalarWhereWithAggregatesInput = {
@@ -25402,6 +25737,12 @@ export namespace Prisma {
     summary?: StringNullableWithAggregatesFilter<"Conversation"> | string | null
     sentiment?: StringNullableWithAggregatesFilter<"Conversation"> | string | null
     tags?: JsonNullableWithAggregatesFilter<"Conversation">
+    leadDetails?: JsonNullableWithAggregatesFilter<"Conversation">
+    intent?: StringNullableWithAggregatesFilter<"Conversation"> | string | null
+    leadScore?: IntNullableWithAggregatesFilter<"Conversation"> | number | null
+    qualityScore?: IntNullableWithAggregatesFilter<"Conversation"> | number | null
+    resolved?: BoolNullableWithAggregatesFilter<"Conversation"> | boolean | null
+    insights?: JsonNullableWithAggregatesFilter<"Conversation">
     lastActivityAt?: DateTimeWithAggregatesFilter<"Conversation"> | Date | string
   }
 
@@ -26322,6 +26663,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutAgentsInput
@@ -26347,6 +26693,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleUncheckedCreateNestedManyWithoutAgentInput
@@ -26370,6 +26721,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutAgentsNestedInput
@@ -26395,6 +26751,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUncheckedUpdateManyWithoutAgentNestedInput
@@ -26419,6 +26780,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -26435,6 +26801,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26452,6 +26823,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26768,6 +27144,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     agent: AgentCreateNestedOneWithoutLeadsInput
@@ -26783,6 +27163,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     visitors?: VisitorUncheckedCreateNestedManyWithoutLeadInput
@@ -26796,6 +27180,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agent?: AgentUpdateOneRequiredWithoutLeadsNestedInput
@@ -26811,6 +27199,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     visitors?: VisitorUncheckedUpdateManyWithoutLeadNestedInput
@@ -26825,6 +27217,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -26836,6 +27232,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26848,6 +27248,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26863,6 +27267,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     agent: AgentCreateNestedOneWithoutConversationsInput
     visitor: VisitorCreateNestedOneWithoutConversationsInput
@@ -26884,6 +27294,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     turns?: TurnUncheckedCreateNestedManyWithoutConversationInput
   }
@@ -26899,6 +27315,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agent?: AgentUpdateOneRequiredWithoutConversationsNestedInput
     visitor?: VisitorUpdateOneRequiredWithoutConversationsNestedInput
@@ -26920,6 +27342,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     turns?: TurnUncheckedUpdateManyWithoutConversationNestedInput
   }
@@ -26938,6 +27366,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
   }
 
@@ -26952,6 +27386,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -26969,6 +27409,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -27775,6 +28221,37 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
   export type KbArticleListRelationFilter = {
     every?: KbArticleWhereInput
     some?: KbArticleWhereInput
@@ -27858,6 +28335,11 @@ export namespace Prisma {
     systemPromptOverlay?: SortOrder
     fallbackMessage?: SortOrder
     maxTurns?: SortOrder
+    naturalMessaging?: SortOrder
+    leadCaptureEnabled?: SortOrder
+    contactFields?: SortOrder
+    leadFields?: SortOrder
+    captureNotableDetails?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27879,6 +28361,9 @@ export namespace Prisma {
     systemPromptOverlay?: SortOrder
     fallbackMessage?: SortOrder
     maxTurns?: SortOrder
+    naturalMessaging?: SortOrder
+    leadCaptureEnabled?: SortOrder
+    captureNotableDetails?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27896,6 +28381,9 @@ export namespace Prisma {
     systemPromptOverlay?: SortOrder
     fallbackMessage?: SortOrder
     maxTurns?: SortOrder
+    naturalMessaging?: SortOrder
+    leadCaptureEnabled?: SortOrder
+    captureNotableDetails?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27928,6 +28416,32 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type EnumKbArticleSourceFilter<$PrismaModel = never> = {
@@ -28037,29 +28551,6 @@ export namespace Prisma {
     notIn?: $Enums.ToolScope[] | ListEnumToolScopeFieldRefInput<$PrismaModel>
     not?: NestedEnumToolScopeFilter<$PrismaModel> | $Enums.ToolScope
   }
-  export type JsonFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type ToolAgentIdNameCompoundUniqueInput = {
     agentId: string
@@ -28112,32 +28603,6 @@ export namespace Prisma {
     _min?: NestedEnumToolScopeFilter<$PrismaModel>
     _max?: NestedEnumToolScopeFilter<$PrismaModel>
   }
-  export type JsonWithAggregatesFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedJsonFilter<$PrismaModel>
-    _max?: NestedJsonFilter<$PrismaModel>
-  }
 
   export type LeadNullableScalarRelationFilter = {
     is?: LeadWhereInput | null
@@ -28185,6 +28650,17 @@ export namespace Prisma {
     leadId?: SortOrder
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type LeadCountOrderByAggregateInput = {
     id?: SortOrder
     organizationId?: SortOrder
@@ -28193,8 +28669,16 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     customFields?: SortOrder
+    intent?: SortOrder
+    score?: SortOrder
+    need?: SortOrder
+    keyFacts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type LeadAvgOrderByAggregateInput = {
+    score?: SortOrder
   }
 
   export type LeadMaxOrderByAggregateInput = {
@@ -28204,6 +28688,9 @@ export namespace Prisma {
     email?: SortOrder
     phone?: SortOrder
     name?: SortOrder
+    intent?: SortOrder
+    score?: SortOrder
+    need?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -28215,8 +28702,31 @@ export namespace Prisma {
     email?: SortOrder
     phone?: SortOrder
     name?: SortOrder
+    intent?: SortOrder
+    score?: SortOrder
+    need?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type LeadSumOrderByAggregateInput = {
+    score?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type EnumConversationChannelFilter<$PrismaModel = never> = {
@@ -28263,6 +28773,11 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type VisitorScalarRelationFilter = {
     is?: VisitorWhereInput
     isNot?: VisitorWhereInput
@@ -28292,7 +28807,18 @@ export namespace Prisma {
     summary?: SortOrder
     sentiment?: SortOrder
     tags?: SortOrder
+    leadDetails?: SortOrder
+    intent?: SortOrder
+    leadScore?: SortOrder
+    qualityScore?: SortOrder
+    resolved?: SortOrder
+    insights?: SortOrder
     lastActivityAt?: SortOrder
+  }
+
+  export type ConversationAvgOrderByAggregateInput = {
+    leadScore?: SortOrder
+    qualityScore?: SortOrder
   }
 
   export type ConversationMaxOrderByAggregateInput = {
@@ -28308,6 +28834,10 @@ export namespace Prisma {
     endedAt?: SortOrder
     summary?: SortOrder
     sentiment?: SortOrder
+    intent?: SortOrder
+    leadScore?: SortOrder
+    qualityScore?: SortOrder
+    resolved?: SortOrder
     lastActivityAt?: SortOrder
   }
 
@@ -28324,7 +28854,16 @@ export namespace Prisma {
     endedAt?: SortOrder
     summary?: SortOrder
     sentiment?: SortOrder
+    intent?: SortOrder
+    leadScore?: SortOrder
+    qualityScore?: SortOrder
+    resolved?: SortOrder
     lastActivityAt?: SortOrder
+  }
+
+  export type ConversationSumOrderByAggregateInput = {
+    leadScore?: SortOrder
+    qualityScore?: SortOrder
   }
 
   export type EnumConversationChannelWithAggregatesFilter<$PrismaModel = never> = {
@@ -28383,22 +28922,19 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type EnumTurnRoleFilter<$PrismaModel = never> = {
     equals?: $Enums.TurnRole | EnumTurnRoleFieldRefInput<$PrismaModel>
     in?: $Enums.TurnRole[] | ListEnumTurnRoleFieldRefInput<$PrismaModel>
     notIn?: $Enums.TurnRole[] | ListEnumTurnRoleFieldRefInput<$PrismaModel>
     not?: NestedEnumTurnRoleFilter<$PrismaModel> | $Enums.TurnRole
-  }
-
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type FloatNullableFilter<$PrismaModel = never> = {
@@ -28494,22 +29030,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumTurnRoleFilter<$PrismaModel>
     _max?: NestedEnumTurnRoleFilter<$PrismaModel>
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -29145,6 +29665,10 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutInvitationsSentInput, UserUpdateWithoutInvitationsSentInput>, UserUncheckedUpdateWithoutInvitationsSentInput>
   }
 
+  export type AgentCreatecontactFieldsInput = {
+    set: string[]
+  }
+
   export type OrganizationCreateNestedOneWithoutAgentsInput = {
     create?: XOR<OrganizationCreateWithoutAgentsInput, OrganizationUncheckedCreateWithoutAgentsInput>
     connectOrCreate?: OrganizationCreateOrConnectWithoutAgentsInput
@@ -29251,6 +29775,11 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type AgentUpdatecontactFieldsInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type OrganizationUpdateOneRequiredWithoutAgentsNestedInput = {
@@ -29627,6 +30156,14 @@ export namespace Prisma {
     connect?: ConversationWhereUniqueInput | ConversationWhereUniqueInput[]
   }
 
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type AgentUpdateOneRequiredWithoutLeadsNestedInput = {
     create?: XOR<AgentCreateWithoutLeadsInput, AgentUncheckedCreateWithoutLeadsInput>
     connectOrCreate?: AgentCreateOrConnectWithoutLeadsInput
@@ -29735,6 +30272,10 @@ export namespace Prisma {
     set?: $Enums.ConversationStatus
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type AgentUpdateOneRequiredWithoutConversationsNestedInput = {
     create?: XOR<AgentCreateWithoutConversationsInput, AgentUncheckedCreateWithoutConversationsInput>
     connectOrCreate?: AgentCreateOrConnectWithoutConversationsInput
@@ -29797,14 +30338,6 @@ export namespace Prisma {
 
   export type EnumTurnRoleFieldUpdateOperationsInput = {
     set?: $Enums.TurnRole
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type NullableFloatFieldUpdateOperationsInput = {
@@ -30055,6 +30588,29 @@ export namespace Prisma {
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
   }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type NestedEnumKbArticleSourceFilter<$PrismaModel = never> = {
     equals?: $Enums.KbArticleSource | EnumKbArticleSourceFieldRefInput<$PrismaModel>
@@ -30089,28 +30645,32 @@ export namespace Prisma {
     _min?: NestedEnumToolScopeFilter<$PrismaModel>
     _max?: NestedEnumToolScopeFilter<$PrismaModel>
   }
-  export type NestedJsonFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
 
-  export type NestedJsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedEnumConversationChannelFilter<$PrismaModel = never> = {
@@ -30132,6 +30692,11 @@ export namespace Prisma {
     in?: $Enums.ConversationStatus[] | ListEnumConversationStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.ConversationStatus[] | ListEnumConversationStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumConversationStatusFilter<$PrismaModel> | $Enums.ConversationStatus
+  }
+
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
   }
 
   export type NestedEnumConversationChannelWithAggregatesFilter<$PrismaModel = never> = {
@@ -30187,22 +30752,19 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type NestedEnumTurnRoleFilter<$PrismaModel = never> = {
     equals?: $Enums.TurnRole | EnumTurnRoleFieldRefInput<$PrismaModel>
     in?: $Enums.TurnRole[] | ListEnumTurnRoleFieldRefInput<$PrismaModel>
     notIn?: $Enums.TurnRole[] | ListEnumTurnRoleFieldRefInput<$PrismaModel>
     not?: NestedEnumTurnRoleFilter<$PrismaModel> | $Enums.TurnRole
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedEnumTurnRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -30213,22 +30775,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumTurnRoleFilter<$PrismaModel>
     _max?: NestedEnumTurnRoleFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -30782,6 +31328,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutAgentsInput
@@ -30806,6 +31357,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleUncheckedCreateNestedManyWithoutAgentInput
@@ -30877,6 +31433,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutAgentsNestedInput
@@ -30901,6 +31462,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUncheckedUpdateManyWithoutAgentNestedInput
@@ -31022,6 +31588,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleCreateNestedManyWithoutAgentInput
@@ -31045,6 +31616,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleUncheckedCreateNestedManyWithoutAgentInput
@@ -31168,6 +31744,11 @@ export namespace Prisma {
     systemPromptOverlay?: StringNullableFilter<"Agent"> | string | null
     fallbackMessage?: StringFilter<"Agent"> | string
     maxTurns?: IntFilter<"Agent"> | number
+    naturalMessaging?: BoolFilter<"Agent"> | boolean
+    leadCaptureEnabled?: BoolFilter<"Agent"> | boolean
+    contactFields?: StringNullableListFilter<"Agent">
+    leadFields?: JsonFilter<"Agent">
+    captureNotableDetails?: BoolFilter<"Agent"> | boolean
     createdAt?: DateTimeFilter<"Agent"> | Date | string
     updatedAt?: DateTimeFilter<"Agent"> | Date | string
   }
@@ -31605,6 +32186,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     visitors?: VisitorCreateNestedManyWithoutLeadInput
@@ -31618,6 +32203,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     visitors?: VisitorUncheckedCreateNestedManyWithoutLeadInput
@@ -31645,6 +32234,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     visitor: VisitorCreateNestedOneWithoutConversationsInput
     lead?: LeadCreateNestedOneWithoutConversationsInput
@@ -31664,6 +32259,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     turns?: TurnUncheckedCreateNestedManyWithoutConversationInput
   }
@@ -31873,6 +32474,10 @@ export namespace Prisma {
     phone?: StringNullableFilter<"Lead"> | string | null
     name?: StringNullableFilter<"Lead"> | string | null
     customFields?: JsonFilter<"Lead">
+    intent?: StringNullableFilter<"Lead"> | string | null
+    score?: IntNullableFilter<"Lead"> | number | null
+    need?: StringNullableFilter<"Lead"> | string | null
+    keyFacts?: JsonFilter<"Lead">
     createdAt?: DateTimeFilter<"Lead"> | Date | string
     updatedAt?: DateTimeFilter<"Lead"> | Date | string
   }
@@ -31910,6 +32515,12 @@ export namespace Prisma {
     summary?: StringNullableFilter<"Conversation"> | string | null
     sentiment?: StringNullableFilter<"Conversation"> | string | null
     tags?: JsonNullableFilter<"Conversation">
+    leadDetails?: JsonNullableFilter<"Conversation">
+    intent?: StringNullableFilter<"Conversation"> | string | null
+    leadScore?: IntNullableFilter<"Conversation"> | number | null
+    qualityScore?: IntNullableFilter<"Conversation"> | number | null
+    resolved?: BoolNullableFilter<"Conversation"> | boolean | null
+    insights?: JsonNullableFilter<"Conversation">
     lastActivityAt?: DateTimeFilter<"Conversation"> | Date | string
   }
 
@@ -31948,6 +32559,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutAgentsInput
@@ -31972,6 +32588,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbChunks?: KbChunkUncheckedCreateNestedManyWithoutAgentInput
@@ -32010,6 +32631,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutAgentsNestedInput
@@ -32034,6 +32660,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbChunks?: KbChunkUncheckedUpdateManyWithoutAgentNestedInput
@@ -32130,6 +32761,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutAgentsInput
@@ -32154,6 +32790,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleUncheckedCreateNestedManyWithoutAgentInput
@@ -32192,6 +32833,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutAgentsNestedInput
@@ -32216,6 +32862,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUncheckedUpdateManyWithoutAgentNestedInput
@@ -32238,6 +32889,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutAgentsInput
@@ -32262,6 +32918,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleUncheckedCreateNestedManyWithoutAgentInput
@@ -32300,6 +32961,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutAgentsNestedInput
@@ -32324,6 +32990,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUncheckedUpdateManyWithoutAgentNestedInput
@@ -32346,6 +33017,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutAgentsInput
@@ -32370,6 +33046,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleUncheckedCreateNestedManyWithoutAgentInput
@@ -32392,6 +33073,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     agent: AgentCreateNestedOneWithoutLeadsInput
@@ -32406,6 +33091,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     conversations?: ConversationUncheckedCreateNestedManyWithoutLeadInput
@@ -32427,6 +33116,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     agent: AgentCreateNestedOneWithoutConversationsInput
     lead?: LeadCreateNestedOneWithoutConversationsInput
@@ -32446,6 +33141,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     turns?: TurnUncheckedCreateNestedManyWithoutConversationInput
   }
@@ -32483,6 +33184,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutAgentsNestedInput
@@ -32507,6 +33213,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUncheckedUpdateManyWithoutAgentNestedInput
@@ -32535,6 +33246,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agent?: AgentUpdateOneRequiredWithoutLeadsNestedInput
@@ -32549,6 +33264,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     conversations?: ConversationUncheckedUpdateManyWithoutLeadNestedInput
@@ -32582,6 +33301,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutAgentsInput
@@ -32606,6 +33330,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleUncheckedCreateNestedManyWithoutAgentInput
@@ -32666,6 +33395,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     agent: AgentCreateNestedOneWithoutConversationsInput
     visitor: VisitorCreateNestedOneWithoutConversationsInput
@@ -32685,6 +33420,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     turns?: TurnUncheckedCreateNestedManyWithoutConversationInput
   }
@@ -32722,6 +33463,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutAgentsNestedInput
@@ -32746,6 +33492,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUncheckedUpdateManyWithoutAgentNestedInput
@@ -32800,6 +33551,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutAgentsInput
@@ -32824,6 +33580,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     kbArticles?: KbArticleUncheckedCreateNestedManyWithoutAgentInput
@@ -32875,6 +33636,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     agent: AgentCreateNestedOneWithoutLeadsInput
@@ -32889,6 +33654,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     visitors?: VisitorUncheckedCreateNestedManyWithoutLeadInput
@@ -32968,6 +33737,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutAgentsNestedInput
@@ -32992,6 +33766,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUncheckedUpdateManyWithoutAgentNestedInput
@@ -33055,6 +33834,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agent?: AgentUpdateOneRequiredWithoutLeadsNestedInput
@@ -33069,6 +33852,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     visitors?: VisitorUncheckedUpdateManyWithoutLeadNestedInput
@@ -33123,6 +33910,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
     agent: AgentCreateNestedOneWithoutConversationsInput
     visitor: VisitorCreateNestedOneWithoutConversationsInput
@@ -33143,6 +33936,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
   }
 
@@ -33173,6 +33972,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agent?: AgentUpdateOneRequiredWithoutConversationsNestedInput
     visitor?: VisitorUpdateOneRequiredWithoutConversationsNestedInput
@@ -33193,6 +33998,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -33432,6 +34243,11 @@ export namespace Prisma {
     systemPromptOverlay?: string | null
     fallbackMessage?: string
     maxTurns?: number
+    naturalMessaging?: boolean
+    leadCaptureEnabled?: boolean
+    contactFields?: AgentCreatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -33521,6 +34337,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUpdateManyWithoutAgentNestedInput
@@ -33544,6 +34365,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     kbArticles?: KbArticleUncheckedUpdateManyWithoutAgentNestedInput
@@ -33567,6 +34393,11 @@ export namespace Prisma {
     systemPromptOverlay?: NullableStringFieldUpdateOperationsInput | string | null
     fallbackMessage?: StringFieldUpdateOperationsInput | string
     maxTurns?: IntFieldUpdateOperationsInput | number
+    naturalMessaging?: BoolFieldUpdateOperationsInput | boolean
+    leadCaptureEnabled?: BoolFieldUpdateOperationsInput | boolean
+    contactFields?: AgentUpdatecontactFieldsInput | string[]
+    leadFields?: JsonNullValueInput | InputJsonValue
+    captureNotableDetails?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -33653,6 +34484,10 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: string | null
+    score?: number | null
+    need?: string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -33670,6 +34505,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
   }
 
@@ -33816,6 +34657,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     visitors?: VisitorUpdateManyWithoutLeadNestedInput
@@ -33829,6 +34674,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     visitors?: VisitorUncheckedUpdateManyWithoutLeadNestedInput
@@ -33842,6 +34691,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     customFields?: JsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    score?: NullableIntFieldUpdateOperationsInput | number | null
+    need?: NullableStringFieldUpdateOperationsInput | string | null
+    keyFacts?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -33857,6 +34710,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     visitor?: VisitorUpdateOneRequiredWithoutConversationsNestedInput
     lead?: LeadUpdateOneWithoutConversationsNestedInput
@@ -33876,6 +34735,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     turns?: TurnUncheckedUpdateManyWithoutConversationNestedInput
   }
@@ -33893,6 +34758,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -33939,6 +34810,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
   }
 
@@ -33953,6 +34830,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agent?: AgentUpdateOneRequiredWithoutConversationsNestedInput
     lead?: LeadUpdateOneWithoutConversationsNestedInput
@@ -33972,6 +34855,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     turns?: TurnUncheckedUpdateManyWithoutConversationNestedInput
   }
@@ -33989,6 +34878,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -34016,6 +34911,12 @@ export namespace Prisma {
     summary?: string | null
     sentiment?: string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: string | null
+    leadScore?: number | null
+    qualityScore?: number | null
+    resolved?: boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: Date | string
   }
 
@@ -34065,6 +34966,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agent?: AgentUpdateOneRequiredWithoutConversationsNestedInput
     visitor?: VisitorUpdateOneRequiredWithoutConversationsNestedInput
@@ -34084,6 +34991,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
     turns?: TurnUncheckedUpdateManyWithoutConversationNestedInput
   }
@@ -34101,6 +35014,12 @@ export namespace Prisma {
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     sentiment?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: NullableJsonNullValueInput | InputJsonValue
+    leadDetails?: NullableJsonNullValueInput | InputJsonValue
+    intent?: NullableStringFieldUpdateOperationsInput | string | null
+    leadScore?: NullableIntFieldUpdateOperationsInput | number | null
+    qualityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    resolved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    insights?: NullableJsonNullValueInput | InputJsonValue
     lastActivityAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
