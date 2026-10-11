@@ -231,6 +231,11 @@ exports.Prisma.AgentScalarFieldEnum = {
   systemPromptOverlay: 'systemPromptOverlay',
   fallbackMessage: 'fallbackMessage',
   maxTurns: 'maxTurns',
+  naturalMessaging: 'naturalMessaging',
+  leadCaptureEnabled: 'leadCaptureEnabled',
+  contactFields: 'contactFields',
+  leadFields: 'leadFields',
+  captureNotableDetails: 'captureNotableDetails',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -291,6 +296,10 @@ exports.Prisma.LeadScalarFieldEnum = {
   phone: 'phone',
   name: 'name',
   customFields: 'customFields',
+  intent: 'intent',
+  score: 'score',
+  need: 'need',
+  keyFacts: 'keyFacts',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -309,6 +318,12 @@ exports.Prisma.ConversationScalarFieldEnum = {
   summary: 'summary',
   sentiment: 'sentiment',
   tags: 'tags',
+  leadDetails: 'leadDetails',
+  intent: 'intent',
+  leadScore: 'leadScore',
+  qualityScore: 'qualityScore',
+  resolved: 'resolved',
+  insights: 'insights',
   lastActivityAt: 'lastActivityAt'
 };
 

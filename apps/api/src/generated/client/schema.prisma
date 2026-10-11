@@ -166,20 +166,31 @@ model Invitation {
 // ---------------------------------------------------------------------------
 
 model Agent {
-  id                  String              @id @default(cuid())
-  organizationId      String
-  name                String
-  slug                String
-  greeting            String              @default("Hi! How can I help?")
-  accentColor         String              @default("#0F172A")
-  identityPolicy      AgentIdentityPolicy @default(optional)
-  defaultProvider     LlmProvider         @default(openrouter)
-  defaultModel        String              @default("tencent/hy3-preview:free")
-  systemPromptOverlay String?
-  fallbackMessage     String              @default("I don't have that information yet.")
-  maxTurns            Int                 @default(50)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  id                    String              @id @default(cuid())
+  organizationId        String
+  name                  String
+  slug                  String
+  greeting              String              @default("Hi! How can I help?")
+  accentColor           String              @default("#0F172A")
+  identityPolicy        AgentIdentityPolicy @default(optional)
+  defaultProvider       LlmProvider         @default(openrouter)
+  defaultModel          String              @default("tencent/hy3-preview:free")
+  systemPromptOverlay   String?
+  fallbackMessage       String              @default("I don't have that information yet.")
+  maxTurns              Int                 @default(50)
+  // Natural messaging: replies go out as 1–3 short chat bubbles instead
+  // of one paragraph. Enforced server-side, not just prompted.
+  naturalMessaging      Boolean             @default(false)
+  // Lead capture: contact details plus the business's own lead fields,
+  // collected once the agent has helped. identityPolicy is the hard gate.
+  leadCaptureEnabled    Boolean             @default(false)
+  contactFields         String[]            @default(["name", "email", "phone"])
+  // LeadField[] — see packages/schemas/src/agent.ts.
+  leadFields            Json                @default("[]")
+  // Post-chat extraction of notable details no lead field covers.
+  captureNotableDetails Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
 
   organization  Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   kbArticles    KbArticle[]
@@ -295,6 +306,13 @@ model Lead {
   phone          String?
   name           String?
   customFields   Json     @default("{}")
+  // Latest post-chat analysis, copied from the lead's most recent
+  // analyzed conversation by the ConversationSummarize workflow.
+  intent         String?
+  score          Int?
+  need           String?
+  // KeyFact[] gathered across the lead's conversations.
+  keyFacts       Json     @default("[]")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -327,6 +345,15 @@ model Conversation {
   summary        String?
   sentiment      String?
   tags           Json?
+  // Qualifying answers the agent recorded live (save_lead_details). Merged
+  // into Lead.customFields once the visitor is identified.
+  leadDetails    Json?
+  // Post-chat analysis (ConversationSummarize workflow).
+  intent         String?
+  leadScore      Int?
+  qualityScore   Int?
+  resolved       Boolean?
+  insights       Json?
   lastActivityAt DateTime            @default(now())
 
   agent   Agent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
