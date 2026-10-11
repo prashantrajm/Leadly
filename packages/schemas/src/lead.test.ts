@@ -45,6 +45,10 @@ describe("LeadSchema", () => {
 			phone: "+15551234567",
 			name: "Test User",
 			customFields: { source: "widget" },
+			intent: "buying" as const,
+			score: 80,
+			need: "A support bot for a Shopify store",
+			keyFacts: [{ label: "Budget", value: "$2k/month" }],
 			createdAt: "2026-05-04T15:00:00.000Z",
 			updatedAt: "2026-05-04T15:00:00.000Z",
 		};
@@ -60,6 +64,10 @@ describe("LeadSchema", () => {
 			phone: null,
 			name: null,
 			customFields: {},
+			intent: null,
+			score: null,
+			need: null,
+			keyFacts: [],
 			createdAt: "2026-05-04T15:00:00.000Z",
 			updatedAt: "2026-05-04T15:00:00.000Z",
 		};

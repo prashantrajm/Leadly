@@ -1,5 +1,7 @@
 import { z } from "@hono/zod-openapi";
+import { KeyFactSchema } from "./agent.ts";
 import { Cuid, IsoDate } from "./common.ts";
+import { LeadIntent } from "./conversation.ts";
 
 export const LeadSchema = z
 	.object({
@@ -10,6 +12,12 @@ export const LeadSchema = z
 		phone: z.string().nullable(),
 		name: z.string().nullable(),
 		customFields: z.record(z.string(), z.unknown()),
+		// Latest post-chat analysis. Null until a conversation is analyzed.
+		intent: LeadIntent.nullable(),
+		score: z.number().int().min(0).max(100).nullable(),
+		need: z.string().nullable(),
+		// Notable details gathered across the lead's conversations.
+		keyFacts: z.array(KeyFactSchema),
 		createdAt: IsoDate,
 		updatedAt: IsoDate,
 	})
@@ -38,7 +46,9 @@ export const UpdateLeadSchema = z
 		email: z.string().email().nullable().optional(),
 		phone: z.string().min(5).max(40).nullable().optional(),
 		name: z.string().min(1).max(120).nullable().optional(),
+		// Merge patch: given keys are set, null removes a key, others are kept.
 		customFields: z.record(z.string(), z.unknown()).optional(),
+		keyFacts: z.array(KeyFactSchema).max(20).optional(),
 	})
 	.openapi("UpdateLead");
 export type UpdateLead = z.infer<typeof UpdateLeadSchema>;
