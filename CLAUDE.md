@@ -58,6 +58,8 @@ docs/
 | Changing the schema | `apps/api/prisma/domain.prisma` → `bun run --filter=api migrate` → **re-add HNSW index** |
 | Adding a Zod schema | `packages/schemas/src/<area>.ts` — mirror the route, type via `z.infer` |
 | Tweaking the live conversation logic | `apps/api/src/durable/conversation.ts` — `runUserTurn` is the per-turn flow |
+| Lead capture (lead fields, key facts) | `apps/api/src/services/lead-capture/` — `prompt.ts` (live), `extraction.ts` (post-chat), `store.ts` (atomic JSONB writes) |
+| Natural messaging (multi-bubble replies) | `apps/api/src/services/natural-messaging/` — `ReplyStream` maps a streamed reply to frames + Turn rows |
 | Adding a workflow | `apps/api/src/workflows/<name>.ts`, export from `src/index.ts`, register in `wrangler.jsonc` |
 | Adding a cron | `apps/api/src/crons/<name>.ts`, dispatch in `src/index.ts` `scheduled()`, add to `triggers.crons` |
 | Touching auth | `apps/api/src/lib/auth.ts` (Better Auth config). Sign-in lands on `/dashboard` (`apps/web/src/lib/dashboard-entry.ts`), which opens the last-used workspace or, for a user with none, the create-workspace dialog |
