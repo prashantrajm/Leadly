@@ -1,4 +1,5 @@
 import type { ConversationWithTurns } from "@leadly/api-client";
+import type { LeadField } from "@leadly/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format, formatDistanceToNow } from "date-fns";
@@ -11,11 +12,18 @@ import {
 	SpinnerIcon,
 	StopIcon,
 } from "@/components/icons";
+import { IntentBadge, ScoreBadge } from "@/components/dashboard/lead-insights";
+import {
+	KeyFactsList,
+	LeadValuesEditor,
+	LeadValuesList,
+} from "@/components/dashboard/lead-values";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useOrgPath } from "@/hooks/use-current-org";
+import { useOrgAgents } from "@/hooks/use-org-agents";
 import {
 	type InboxSearch,
 	useInboxConversations,
@@ -384,6 +392,25 @@ function DetailsPane({
 					mono={Boolean(c.leadId)}
 				/>
 			</DetailsGroup>
+			{(c.intent || c.leadScore !== null || c.qualityScore !== null) && (
+				<DetailsGroup title="Analysis">
+					<div className="flex items-center justify-between gap-3 text-[13px]">
+						<span className="text-muted-foreground">Intent</span>
+						<IntentBadge intent={c.intent} />
+					</div>
+					<div className="flex items-center justify-between gap-3 text-[13px]">
+						<span className="text-muted-foreground">Lead score</span>
+						<ScoreBadge score={c.leadScore} />
+					</div>
+					{c.qualityScore !== null && (
+						<KV label="Chat quality" value={`${c.qualityScore} / 5`} />
+					)}
+					{c.resolved !== null && (
+						<KV label="Resolved" value={c.resolved ? "Yes" : "No"} />
+					)}
+				</DetailsGroup>
+			)}
+			<LeadDetailsGroup conversation={c} />
 			{c.summary && (
 				<DetailsGroup title="Summary">
 					<p className="text-[13px] leading-relaxed text-muted-foreground">
@@ -391,7 +418,95 @@ function DetailsPane({
 					</p>
 				</DetailsGroup>
 			)}
+			{c.insights && <InsightsGroups insights={c.insights} />}
 		</aside>
+	);
+}
+
+const NO_FIELDS: LeadField[] = [];
+
+// The agent's lead fields for this chat. Once the visitor is a lead the
+// values are the lead's and editable here; before that, what this chat
+// captured, read-only.
+function LeadDetailsGroup({
+	conversation: c,
+}: {
+	conversation: ConversationWithTurns;
+}) {
+	const { agents } = useOrgAgents();
+	const fields =
+		agents.find((a) => a.id === c.agentId)?.leadFields ?? NO_FIELDS;
+	const leadQuery = useQuery({
+		queryKey: ["lead", c.leadId],
+		queryFn: () => api.leads.get(c.leadId as string),
+		enabled: Boolean(c.leadId),
+	});
+
+	if (c.leadId) {
+		if (!leadQuery.data || fields.length === 0) {
+			return c.leadDetails ? (
+				<DetailsGroup title="Lead details">
+					<LeadValuesList fields={fields} details={c.leadDetails} />
+				</DetailsGroup>
+			) : null;
+		}
+		return (
+			<DetailsGroup title="Lead details">
+				<LeadValuesEditor lead={leadQuery.data} fields={fields} />
+			</DetailsGroup>
+		);
+	}
+	if (!c.leadDetails) return null;
+	return (
+		<DetailsGroup title="Lead details">
+			<LeadValuesList fields={fields} details={c.leadDetails} />
+		</DetailsGroup>
+	);
+}
+
+function InsightsGroups({
+	insights,
+}: {
+	insights: NonNullable<ConversationWithTurns["insights"]>;
+}) {
+	const lists = [
+		{ title: "Unanswered questions", items: insights.unansweredQuestions ?? [] },
+		{ title: "Objections", items: insights.objections ?? [] },
+	];
+	return (
+		<>
+			{insights.need && (
+				<DetailsGroup title="Need">
+					<p className="text-[13px] leading-relaxed text-foreground">
+						{insights.need}
+					</p>
+				</DetailsGroup>
+			)}
+			{lists.map(
+				(list) =>
+					list.items.length > 0 && (
+						<DetailsGroup key={list.title} title={list.title}>
+							<ul className="list-disc space-y-1 pl-4 text-[13px] leading-relaxed text-muted-foreground">
+								{list.items.map((item) => (
+									<li key={item}>{item}</li>
+								))}
+							</ul>
+						</DetailsGroup>
+					),
+			)}
+			{insights.keyFacts && insights.keyFacts.length > 0 && (
+				<DetailsGroup title="Notable details">
+					<KeyFactsList facts={insights.keyFacts} />
+				</DetailsGroup>
+			)}
+			{insights.nextStep && (
+				<DetailsGroup title="Next step">
+					<p className="text-[13px] leading-relaxed text-foreground">
+						{insights.nextStep}
+					</p>
+				</DetailsGroup>
+			)}
+		</>
 	);
 }
 
