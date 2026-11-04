@@ -103,4 +103,4 @@ Both exit non-zero on failure with a clear message of what didn't match.
 
 ## License
 
-Apache-2.0.
+[MIT](./LICENSE).
