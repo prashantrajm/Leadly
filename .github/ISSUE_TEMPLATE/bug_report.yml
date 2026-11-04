@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in Leadly isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! **Security vulnerabilities must not be reported here.** See [SECURITY.md](https://github.com/prashantrajm/Leadly/blob/main/SECURITY.md).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Chat widget / embed
+        - AI agent (replies, tools, knowledge base)
+        - Leads / lead analysis
+        - Inbox / human takeover
+        - Dashboard (other pages)
+        - Workspaces, members, invitations
+        - Auth / sign-in
+        - API / self-hosting / deploy
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, errors or screenshots
+      description: Browser console, `wrangler dev` / `wrangler tail` output, or screenshots. Remove any secrets, API keys or personal data first.
+      render: shell
+  - type: input
+    id: commit
+    attributes:
+      label: Commit / version
+      description: Output of `git rev-parse --short HEAD`, or "hosted" if you're using a hosted instance.
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Browser + OS, Bun version, and the OpenRouter model if the bug is AI-related.
+      placeholder: Chrome 140 / macOS, Bun 1.3, tencent/hy3-preview:free
