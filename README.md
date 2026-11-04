@@ -182,11 +182,9 @@ Both exit non-zero on failure with a clear message of what didn't match.
 
 ## Contributing
 
-Issues and pull requests are welcome. Before opening a PR:
+Issues and pull requests are welcome! Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md) for setup, conventions and the architectural invariants every PR has to keep. In short: read [`CLAUDE.md`](./CLAUDE.md), and run `bun typecheck`, `bun lint` and `bun test` before opening a PR.
 
-1. Read [`CLAUDE.md`](./CLAUDE.md) for the architecture map and the invariants that must hold (stable WS protocol, `organizationId` on every table, and so on).
-2. Run `bun typecheck`, `bun lint` and `bun test`.
-3. If you change the Prisma schema, re-add the HNSW vector index in your migration (see "Things that bite" in `CLAUDE.md`).
+Please follow the [Code of Conduct](./CODE_OF_CONDUCT.md). To report a vulnerability, see [`SECURITY.md`](./SECURITY.md). Don't open a public issue.
 
 ## License
 
