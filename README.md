@@ -17,8 +17,6 @@
 
 ---
 
-> **Status:** v1 (chat) is pre-launch. The backend is live-tested end to end, and the dashboard covers the full v1 surface. Voice is planned for v2. See [`docs/v1-design.md`](./docs/v1-design.md) for the product and architecture decisions and [`docs/v1-backend-plan.md`](./docs/v1-backend-plan.md) for the build spec.
-
 ## Features
 
 **AI agent**
