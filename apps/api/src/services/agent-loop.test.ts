@@ -3,6 +3,7 @@
 // simulateReadableStream test helper.
 
 import { describe, expect, it } from "bun:test";
+import { jsonSchema, tool } from "ai";
 import {
 	MockLanguageModelV3,
 	simulateReadableStream,
@@ -369,5 +370,120 @@ describe("runTurn", () => {
 		// shape. Last entry must be the user message we just supplied.
 		const last = call.prompt[call.prompt.length - 1];
 		expect(last.role).toBe("user");
+	});
+
+	function makeToolThenModel(
+		toolName: string,
+		after: string[],
+		before: string[] = [],
+	): MockLanguageModelV3 {
+		const usage = {
+			inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
+			outputTokens: { total: 5, text: 5, reasoning: 0 },
+		};
+		const steps = [
+			[
+				{ type: "stream-start", warnings: [] },
+				...(before.length > 0
+					? [
+							{ type: "text-start", id: "1" },
+							...before.map((delta) => ({ type: "text-delta", id: "1", delta })),
+							{ type: "text-end", id: "1" },
+						]
+					: []),
+				{
+					type: "tool-call",
+					toolCallId: "call-1",
+					toolName,
+					input: JSON.stringify({ phone: "+15551234567" }),
+				},
+				{
+					type: "finish",
+					finishReason: { unified: "tool-calls" as const, raw: "tool_calls" },
+					usage,
+				},
+			],
+			[
+				{ type: "stream-start", warnings: [] },
+				{ type: "text-start", id: "2" },
+				...after.map((delta) => ({ type: "text-delta", id: "2", delta })),
+				{ type: "text-end", id: "2" },
+				{
+					type: "finish",
+					finishReason: { unified: "stop" as const, raw: "stop" },
+					usage,
+				},
+			],
+		];
+		let call = 0;
+		return new MockLanguageModelV3({
+			doStream: async () => ({
+				// biome-ignore lint/suspicious/noExplicitAny: provider stream-part union not surfaced from `ai`
+				stream: simulateReadableStream({ chunks: steps[call++] as any }),
+			}),
+		});
+	}
+
+	function fakeTool(name: string, calls: string[]) {
+		return {
+			[name]: tool({
+				description: name,
+				inputSchema: jsonSchema<{ phone: string }>({
+					type: "object",
+					properties: { phone: { type: "string" } },
+				}),
+				execute: async () => {
+					calls.push(name);
+					return { ok: true };
+				},
+			}),
+		};
+	}
+
+	it("keeps replying after a tool call instead of stopping empty", async () => {
+		const model = makeToolThenModel("capture_contact", ["Thanks", ", got it!"]);
+		const calls: string[] = [];
+		const tokens: string[] = [];
+		const result = await runTurn({
+			model,
+			system: "sys",
+			history: [],
+			userMessage: "my number is +15551234567",
+			tools: fakeTool("capture_contact", calls),
+			onToken: (d) => tokens.push(d),
+		});
+		expect(calls).toEqual(["capture_contact"]);
+		expect(model.doStreamCalls).toHaveLength(2);
+		expect(result.text).toBe("Thanks, got it!");
+		expect(tokens.join("")).toBe("Thanks, got it!");
+		expect(result.finishReason).toBe("stop");
+		expect(result.tokensIn).toBe(20);
+	});
+
+	it("separates text from different steps with a blank line", async () => {
+		const model = makeToolThenModel("capture_contact", ["Got it!"], ["One sec."]);
+		const result = await runTurn({
+			model,
+			system: "sys",
+			history: [],
+			userMessage: "my number is +15551234567",
+			tools: fakeTool("capture_contact", []),
+		});
+		expect(result.text).toBe("One sec.\n\nGot it!");
+	});
+
+	it("stops after end_conversation", async () => {
+		const model = makeToolThenModel("end_conversation", ["should not run"]);
+		const calls: string[] = [];
+		const result = await runTurn({
+			model,
+			system: "sys",
+			history: [],
+			userMessage: "bye",
+			tools: fakeTool("end_conversation", calls),
+		});
+		expect(calls).toEqual(["end_conversation"]);
+		expect(model.doStreamCalls).toHaveLength(1);
+		expect(result.text).toBe("");
 	});
 });

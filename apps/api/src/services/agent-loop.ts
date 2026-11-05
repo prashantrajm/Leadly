@@ -13,7 +13,9 @@
 
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import {
+	hasToolCall,
 	type LanguageModel,
+	stepCountIs,
 	type ToolSet,
 } from "ai";
 import { flushLangSmithTraces, streamText } from "../lib/langsmith";
@@ -192,13 +194,15 @@ function retrievedBlock(
 
 // ---------- runTurn ----------
 
+export const DEFAULT_MAX_STEPS = 5;
+
 export type RunTurnArgs = {
 	model: LanguageModel;
 	system: string;
 	history: ConversationMessage[];
 	userMessage: string;
 	tools?: ToolSet;
-	maxTurns?: number;
+	maxSteps?: number;
 	onToken?: (delta: string) => void;
 	abortSignal?: AbortSignal;
 };
@@ -230,16 +234,30 @@ export async function runTurn(args: RunTurnArgs): Promise<RunTurnResult> {
 		messages,
 		tools: args.tools,
 		abortSignal: args.abortSignal,
+		// The default (one step) ends the reply at the tool call.
+		stopWhen: [
+			stepCountIs(args.maxSteps ?? DEFAULT_MAX_STEPS),
+			hasToolCall("end_conversation"),
+		],
 	});
 
 	let text = "";
+	let stepBreakPending = false;
 	try {
-		for await (const delta of result.textStream) {
+		for await (const part of result.fullStream) {
+			if (part.type === "start-step") {
+				stepBreakPending = text.trim().length > 0;
+				continue;
+			}
+			if (part.type === "error") throw part.error;
+			if (part.type !== "text-delta" || part.text.length === 0) continue;
+			const delta = stepBreakPending ? `\n\n${part.text}` : part.text;
+			stepBreakPending = false;
 			text += delta;
 			args.onToken?.(delta);
 		}
 
-		const usage = await result.usage;
+		const usage = await result.totalUsage;
 		const finishReason = await result.finishReason;
 
 		return {
